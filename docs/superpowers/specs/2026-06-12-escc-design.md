@@ -331,3 +331,133 @@ Multi-harness adapters & build scripts (Claude-only) · npm package (git + marke
 
 ---
 *Attribution: machinery and architectural patterns adapted from [Everything Claude Code](https://github.com/affaan-m/ECC) (MIT) by Affaan Mustafa. ESCC reverses ECC's skill-adaptation policy: ideas adapted into ESCC-native surfaces with upstream credit.*
+
+---
+
+# Amendment A — Audit-Driven v1-Complete Expansion (2026-06-15)
+
+**Status:** Approved by Lucas. Source: 12-agent completeness audit (run wf_5aa4682d-eda). Where this amendment conflicts with earlier catalog counts (§2/§5) or machinery scope (§6/§7), **this amendment wins.** Directive: "high level, not mid-level, cover all gaps from day 1." Build scope = absorb ALL validated gaps.
+
+## A.0 Product Pillars (headline capabilities — over-index here)
+
+v1 must be *exceptional*, not adequate, at these five. Every relevant component serves at least one:
+
+1. **Prospecting & trigger-led outreach** — find the right accounts and the reason to reach out now.
+2. **Multi-channel reply mastery** — when a prospect replies, decide call-vs-email and execute the response brilliantly.
+3. **Long-horizon account context** — understand a company/prospect record across MONTHS and many sessions, not one conversation.
+4. **Trigger detection → play** — proactively surface buying/timing triggers (job changes, funding, tech adoption, news, engagement spikes) and recommend how to play off each.
+5. **Efficiency** — token/time economy throughout (model routing, capped context with priority budgeting, lean files).
+
+## A.1 Locked Decisions
+
+- **Build scope:** absorb all validated gaps (Critical→Medium) into v1. Nothing deferred to roadmap.
+- **CS/post-sale:** explicit cut in §1 non-goals; retain only the AE→CS handoff trigger + closed-won checklist as the seam. Renewal/expansion stay in scope (AE work).
+- **Alerts/monitoring:** BOTH notification delivery (`notify.js`) AND scheduled trigger-watch (`escc watch`) in v1 (Pillar 4).
+- **Instinct engine runtime:** Node rewrite (NOT the ECC Python+bash subsystem). Keeps §3 deps = `ajv` only.
+
+## A.2 Context / Memory Correctness Fixes (Pillar 3 — non-negotiable)
+
+The audit's most important finding: all persistence was session-scoped; ESCC did not actually hold context over months. Fixes, all wired into the lifecycle:
+
+| # | Fix | Detail |
+|---|---|---|
+| C1 | **account-memory is the canonical per-entity store** | `session:end` APPENDS tagged events to the active account/deal memory file; `session:start` hydrates the ACTIVE deal's memory, not just last session's summary. Session summaries demoted to a secondary index. |
+| C2 | **Decouple open loops/promises/near-close from the 7-day gate** | `session:start` aggregates ALL unresolved loops + due follow-ups + near-close deals from the state store (within retention or until resolved); "welcome back" digest after a gap. |
+| C3 | **Promises are first-class state-store records** | `{account_id, deal_id, text, due_date, status, source_session}`; per-account recall via `escc` CLI + account-memory hydration; `follow-through-check` scans ALL open promises, not just this session's. |
+| C4 | **`pre:compact` payload specified** | task intent, active account/deal, un-applied agent findings, pending tool actions → resumable scratch file; post-compaction session resumes from it. Round-trip test added. |
+| C5 | **account-memory is the handoff payload** | `sales-handoffs` exports deal memory + open loops to a shared location / attached to the HubSpot deal; receiving persona's `session:start` ingests them (SDR→AE→CS). |
+| C6 | **Instinct applicability by account/segment** | instinct schema gains `applies_to`; `session:start` filters injected instincts by the active account's segment; generic process instincts stay global. |
+| C7 | **Priority-budgeted SessionStart injection** | the `ESCC_SESSION_START_MAX_CHARS` cap is budgeted by category (overdue promises > imminent-close deals > active-account context > recent summary > instincts), not a single truncated blob. |
+| C8 | **Tests** | §12 + `tests/run-all.js` add: pre:compact→resume round-trip; >7-day-gap resume (loops still surface); multi-account session (per-account attribution of promises/loops). |
+
+## A.3 Instinct Re-Model for Sales
+
+| # | Fix | Detail |
+|---|---|---|
+| I1 | **Re-key workspace on rep identity** | ECC's git-remote/repo-path keying doesn't exist on a HubSpot+Gmail surface. Personal scope = rep identity (HubSpot owner / sender); team = shared; account/segment via `applies_to` (not the workspace hash). |
+| I2 | **Outcome signal** | new `outcome` observation event (`reply_received`, `meeting_booked`, `deal_stage_advanced`, `sequence_step_engaged`) with a content-fingerprint key, emitted by `stop:evaluate-session` + CRM/calendar post-hooks; `instinct-observer` weights confidence by REAL results, not frequency. |
+| I3 | **Enforce untrusted-content guard in code** | `observe-runner` tags observations from untrusted tools `untrusted:true`; `instinct-observer` may derive instincts ONLY from user-prompt corrections, user-initiated tool sequences, and error resolutions — never from tool-OUTPUT content. Content-guard test asserts this. |
+| I4 | **Decay model** | schema gains `created` + `last_observed`; SessionStart decay sweep (−0.02/week, −0.1 on contradiction, +0.05 on confirmation); faster decay for deals/outreach/crm domains; seed/inherited safety instincts decay-exempt. |
+| I5 | **Manager-gated promotion** | disable automatic personal→team promotion; require explicit role-checked `/instinct-promote`; team instincts inject only when `applies_to` matches the active segment. |
+| I6 | **`/evolve` threshold + validation** | pinned graduation threshold (≥3 instincts same domain, avg confidence ≥0.7); evolved artifacts routed through the same frontmatter + content-guard + CI validators as curated, provenance `evolved`; diffed against compliance rules. |
+| I7 | **Actionable review gate** | `/instinct-status` gains approve/reject affordance — the human-review guarantee becomes enforceable, not advisory. |
+| I8 | **Expanded seed instincts** | add: speed-to-lead-within-SLA, multi-thread-before-close, one-CTA-per-outreach, confirm-meeting/no-show-recovery, no-ToS-violating-scraping, suppression-check-before-sequence-add, log-call-disposition-after-dial. All seeds tagged `scope: team`, decay-exempt. |
+
+## A.4 Machinery Glue Added to Port/Build List
+
+These were implied by the spec's prose but never named; without them the harness does not run as designed.
+
+| Module | Action | Note |
+|---|---|---|
+| `scripts/hooks/run-with-flags.js` (+ `pretooluse-visible-output.js`) | PORT | THE dispatch runner enforcing `ESCC_HOOK_PROFILE`/`ESCC_DISABLED_HOOKS`, fail-open on oversized stdin, path-traversal rejection. Every hooks.json command invokes it. |
+| `scripts/lib/session-bridge.js` | PORT | statusline/metrics-bridge/context-monitor all depend on it. Bridge file → `escc-metrics-${sessionId}.json`. **Delete the spec's fabricated `harness-cost-<session_id>.json` (§6.1) — no such file exists; the bridge is the source.** |
+| `scripts/hooks/session-start-bootstrap.js` | PORT (simplified) | SessionStart must route through `run-with-flags.js` so cap/gating env vars apply, even with native `${CLAUDE_PLUGIN_ROOT}`. |
+| `scripts/lib/install-lifecycle.js`, `install-manifests.js`, `install-executor.js`, `install-state.js` | PORT (trim to `claude` target) | doctor/repair/installer logic lives here; collapse `install-targets/` to claude-home + claude-project + helpers + registry. |
+| `scripts/lib/state-store/queries.js` + `index.js` | **REWRITE (not port)** | ECC has ~46 raw SQL statements + sql.js wrapper → rewrite against JSONL behind the SAME exported function signatures (the stable contract). Only `state-store/schema.js` (ajv) ports as-is. |
+| `scripts/lib/notify.js` | **NEW** | notification delivery layer: routes severity-tagged events to Slack MCP / Gmail-draft-to-self / desktop fallback. Closes the "compute alerts but never deliver" gap. |
+| `scripts/ci/generate-command-registry.js` + `tests/run-all.js` glob | PORT | registry generator complements cross-ref validation; run-all is the content-guard harness. Added to §7. |
+| Paired SUMMARY markers | FIX | use `<!-- ESCC:SUMMARY:START -->` / `<!-- ESCC:SUMMARY:END -->` (paired, with migration regex) in session-end.js + session-start.js — not the single marker §6.1 showed. |
+
+## A.5 New Content Components (full v1 catalog additions)
+
+**New skills (25).** Cross/foundational (6): `product-knowledge` (P1/P2 — the durable "what we sell" layer: value prop per persona/segment, use-cases, proof points, claims library; everything that demands "concrete proof" sources from here), `playbook-library` (P1 — approved exemplars: winning emails, sequences, call/voicemail openers, objection rebuttals + collateral index), `opt-out-handling` (compliance — inbound unsubscribe/DNC *request* processing; new `inbox-triage` tier `opt_out_request`), `meeting-followthrough` (P2 — orchestrates transcript-analyzer→MEDDPICC update via crm-operator→recap draft), `trigger-detection` (P4 — detects buying/timing triggers and maps each to a recommended play; backed by `escc watch`), `reply-handling` (P2 — reply disposition taxonomy: interested/OOO/wrong-person/referral/unsubscribe → call-vs-email decision → execute).
+SDR (2): `cold-calling` (P1/P2 — call-block prep, openers/talk-tracks, gatekeeper/voicemail scripts, live disposition taxonomy → HubSpot call log), `outreach-analytics` (P1/P5 — step/variant open/reply/meeting conversion, A/B compare, promote/retire variants).
+AE (7): `quote-desk` (CPQ — discount-tier math, packaging/ramp, approval routing), `business-case` (ROI/value-engineering model), `evaluation-plan` (POC/pilot success criteria + go/no-go), `paper-process` (MSA/DPA/order-form/security-review tracking), `multi-threading` (P2 — warm intra-account outreach within an active deal), `close-plan` (backward date-planning to signature through enterprise gates), `reference-coordination` (match + coordinate reference customers).
+Manager/RevOps (10): `deal-desk` (approval intake→matrix→approve/deny/escalate + audit log), `sales-reporting` (canonical RevOps metric rollup; absorbs funnel-analysis, pipeline-coverage, board-narrative, rep-scorecard as modes), `lead-routing` (ownership assignment/territory/round-robin/named-account), `dedupe-merge` (survivorship + association-preservation), `capacity-planning` (top-down target→required ramped-rep capacity), `forecast-accuracy` (snapshot history + commit-vs-actual variance), `activity-audit` (per-rep cadence/logging-compliance scorecard), `rep-onboarding` (30/60/90 ramp + certification), `methodology-audit` (MEDDPICC completeness across pipeline), `retention-rollup` (NRR/GRR/churn + at-risk renewal portfolio).
+
+**Modes on existing skills (no new skill):** committee-coverage scoring → `deal-review`; champion-enablement → `stakeholder-mapping`; displacement play → `competitor-battlecards`; territory-rebalance → `territory-planning`; data-health audit → `crm-hygiene`; expansion/whitespace → broaden `renewal-playbook`; closed-won checklist + bidirectional accept/reject → `sales-handoffs`; recycle-and-refer → `follow-up-ops`.
+
+**New agents (2):** `metrics-analyst` (read-only — reporting/funnel/coverage/forecast-accuracy), `trigger-scout` (read-only — scheduled signal/trigger monitoring for `escc watch`). Activity-audit reuses `pipeline-auditor`.
+
+**New commands (~28):** `/dial /sequence-stats /quote /roi /poc /paper /thread /close-plan /reference /deal-desk /report /route /merge /capacity /forecast-accuracy /activity /onboard /meddpicc-audit /retention /product /templates /recap /triggers /reply /my-pipeline /commit /deal-debrief /standup /quota /erase` (opt-out-handling is auto-trigger, no command). Self-scoped shims (`/my-pipeline`, `/commit`, `/deal-debrief`) reuse manager skills scoped to owner.
+
+**New rules (9):** `routing-rules.md`, `approval-matrix.md` (tiered manager/VP/CRO by discount%+ACV), `lifecycle-stages.md` (canonical stages + SQL/SAL accept-reject + disqualify/recycle), `jurisdiction-routing.md` + overlay dir `rules/jurisdictions/{au,us,eu-uk}.md`, `lawful-basis.md`, `targets.md` (quota/ramp/activity-target source of truth). Sections added: suppression-screening → `outbound-compliance.md`; retention/PII-purge + per-field source provenance → `data-handling.md`.
+
+## A.6 New Hooks, State-Store Tables, Env Vars, CLI
+
+- **Hooks:** `pre:attachment-quarantine` (enforce, not advisory — blocks privileged agents from ingesting prospect files; routes to quarantine subagent), `stop:sla-check` (or fold into follow-through-check — surfaces breached response/routing SLAs from timestamps), strengthen `pre:crm-write-guard` to check destination-stage exit-criteria fields + property/schema-mutation guard.
+- **State-store tables (added):** `promises` (C3), `forecast_snapshots` (forecast-accuracy), `outcomes` (I2).
+- **Env vars (added):** `ESCC_MEMORY_RETENTION_DAYS`, `ESCC_OBSERVATION_RETENTION_DAYS` (durable-store retention beyond session summaries), `ESCC_WATCH_INTERVAL` (trigger-watch cadence).
+- **CLI subcommands (added):** `escc privacy-purge <identifier>` (GDPR erasure across HubSpot-pointer + account-memory + session-data + observations + instinct evidence), `escc watch` (scheduled read-only signal/trigger sweep → notify.js).
+- **Docs added:** `docs/GLOSSARY.md` (MEDDPICC/ACV/MQL-SQL/disposition/commit-best-pipeline/stage-exit/bridge-score — escc-guide answers "what does X mean" from it), `docs/INCIDENT-RESPONSE.md` (breach triage, 72-hr GDPR trigger, credential rotation).
+
+## A.7 Revised Approximate Totals (CI catalog-pinned at build)
+
+| Surface | v1 (spec) | v1-complete (this amendment) |
+|---|---|---|
+| Skills | 39 | ~64 |
+| Agents | 16 | 18 |
+| Commands | 38 | ~66 |
+| Rules | 14 | ~23 |
+| Hooks (scripts) | ~17 | ~22 |
+| Schemas | 10 | ~12 |
+| CLI subcommands | 10 | 12 |
+| State-store tables | 7 | 10 |
+
+## A.8 Revised Build Order (supersedes §11)
+
+1. **Chassis** (unchanged).
+2. **Machinery + glue** — scripts/lib (utils, hook-flags, **session-bridge**, state-store REWRITE, session helpers) → hooks.json + hook scripts + **run-with-flags.js** + statusline → **notify.js** → instinct engine (Node rewrite) → installer/lifecycle/CLI (+ privacy-purge, watch) → schemas. Includes all A.4 modules.
+3. **Context + instinct correctness fixes (A.2 + A.3)** — implemented as part of the lifecycle hooks + state store + instinct engine, with the A.2/A.3 tests. **Gate: these must pass before content.**
+4. **Config & seeds** — rules (23 files incl. jurisdiction overlays), contexts, mcp-configs, gtm-stack-mappings + outbound-tools.json, expanded seed instincts, examples, .claude dogfood.
+5. **Content wave** — ~64 skills + 18 agents + ~66 commands, parallel batches: SDR (incl. cold-calling, reply-handling, outreach-analytics, trigger-detection), AE (incl. quote-desk, business-case, evaluation-plan, paper-process, close-plan, multi-threading, reference-coordination), Manager/RevOps (the 10), foundational (product-knowledge, playbook-library, opt-out-handling, meeting-followthrough). Pillar-priority order: P1/P2/P3/P4 components first.
+6. **Quality** — validators (+ command-registry generator), content-guard tests (incl. A.2/A.3/instinct-untrusted/compliance-presence/outbound-reviewer guards), CI, catalog pinning, docs (incl. GLOSSARY, INCIDENT-RESPONSE).
+7. **Verify** — `npm test` green; catalog --check; install --dry-run per persona (incl. revops profile now populated); send-gate + attachment-quarantine fixtures; context round-trip + >7-day-resume + multi-account fixtures; trigger-watch dry run.
+
+## A.9 Revised Success Criteria (adds to §12)
+
+- Long-horizon context proof: a multi-session fixture where session N surfaces a promise + account context created in session 1 (>7 days prior) for the active deal.
+- Trigger→play proof: `escc watch` detects a synthetic trigger and `notify.js` routes a severity-tagged alert with a recommended play.
+- Reply-mastery proof: a synthetic inbound reply is dispositioned and routed to the correct channel (call vs email) by `reply-handling`.
+- Instinct outcome-weighting proof: an instinct's confidence moves on a synthetic `outcome` event, and no instinct forms from an `untrusted:true` observation.
+- `revops` install profile resolves to a non-empty module set.
+
+## A.10 Working Protocol — Context-Budget Save Loop (2026-06-15)
+
+To protect output quality across this large multi-session build, ESCC work follows a **45% context save-loop** (Lucas's rule):
+
+1. When context utilization approaches ~45% (or at any major artifact boundary, whichever comes first), proactively run the save-session protocol → write/update `~/.claude/session-data/<date>-escc-build-session.tmp` with current state + exact next step.
+2. Hand off: Lucas clears and resumes (`/resume-session`).
+3. Resume building per the task list (TaskList #3 plan → #4 build) in fresh context.
+
+This rule is persisted in project memory so it survives each clear. The loop continues until the build is complete and `npm test` is green.
