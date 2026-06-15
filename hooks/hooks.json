@@ -1,0 +1,335 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js pre:outbound-send-gate scripts/hooks/outbound-send-gate.js minimal,standard,strict",
+            "timeout": 10
+          }
+        ],
+        "description": "FAIL-CLOSED outbound send gate. Blocks a live send via a send-capable tool (per config/outbound-tools.json) unless a review-evidence marker is recorded in the state store; enforces ESCC_BULK_SEND_MAX. Gmail is draft-only by construction.",
+        "id": "pre:outbound-send-gate"
+      },
+      {
+        "matcher": "mcp__hubspot__manage_crm_objects",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js pre:crm-write-guard scripts/hooks/crm-write-guard.js standard,strict",
+            "timeout": 5
+          }
+        ],
+        "description": "CRM write guard: warn on deletes; check stage-advance writes for next-step + destination-stage exit-criteria presence; property/schema-mutation guard (strict: block).",
+        "id": "pre:crm-write-guard"
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js pre:compliance-protection scripts/hooks/compliance-protection.js minimal,standard,strict",
+            "timeout": 5
+          }
+        ],
+        "description": "Block agent edits to compliance-bearing files (rules/common/outbound-compliance.md, data-handling.md) and to sequence unsubscribe/identity blocks.",
+        "id": "pre:compliance-protection"
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js pre:attachment-quarantine scripts/hooks/attachment-quarantine.js minimal,standard,strict",
+            "timeout": 5
+          }
+        ],
+        "description": "Enforce attachment quarantine: block privileged contexts from directly ingesting prospect-supplied files; route them through the quarantine subagent (ESCC_QUARANTINE_CONTEXT=1).",
+        "id": "pre:attachment-quarantine"
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js pre:bash:dispatcher scripts/hooks/pre-bash-dispatcher.js standard,strict",
+            "timeout": 10
+          }
+        ],
+        "description": "Bash preflight dispatcher: destructive-command guard (rm -rf outside tmp) and CLI bulk-mail guard.",
+        "id": "pre:bash:dispatcher"
+      },
+      {
+        "matcher": "mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js pre:mcp-health-check scripts/hooks/mcp-health-check.js standard,strict"
+          }
+        ],
+        "description": "Check MCP server health before MCP tool execution; block unhealthy MCP calls unless ESCC_MCP_HEALTH_FAIL_OPEN=true.",
+        "id": "pre:mcp-health-check"
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js pre:edit-write:suggest-compact scripts/hooks/suggest-compact.js standard,strict"
+          }
+        ],
+        "description": "Suggest a strategic compaction at logical intervals (~50 tool calls, then every 25).",
+        "id": "pre:edit-write:suggest-compact"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js pre:observe scripts/hooks/observe-runner.js minimal,standard,strict",
+            "async": true,
+            "timeout": 10
+          }
+        ],
+        "description": "Capture tool-use intent observations for continuous learning (untrusted tool output is tagged, never used to form instincts).",
+        "id": "pre:observe"
+      },
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js pre:governance-capture scripts/hooks/governance-capture.js standard,strict",
+            "timeout": 10
+          }
+        ],
+        "description": "Capture governance events (secret_detected, policy_violation, approval_requested, bulk_send_attempt, unapproved_send, crm_destructive_op). Enable with ESCC_GOVERNANCE_CAPTURE=1.",
+        "id": "pre:governance-capture"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__claude_ai_Gmail__create_draft|mcp__claude_ai_Google_Calendar__create_event|mcp__claude_ai_Fireflies__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js post:crm-log-reminder scripts/hooks/crm-log-reminder.js standard,strict",
+            "timeout": 10
+          }
+        ],
+        "description": "Nudge/enforce HubSpot activity logging after a Gmail draft, Calendar event, or Fireflies transcript fetch.",
+        "id": "post:crm-log-reminder"
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js post:outbound-style-check scripts/hooks/outbound-style-check.js standard,strict",
+            "async": true,
+            "timeout": 10
+          }
+        ],
+        "description": "Warn-only outbound copy heuristics on deliverables/outbound files: subject length, spam-trigger words, missing unsubscribe in sequences, broken merge fields (ESCC_QUALITY_GATE_STRICT).",
+        "id": "post:outbound-style-check"
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js post:deliverables-location scripts/hooks/deliverables-location.js standard,strict",
+            "timeout": 5
+          }
+        ],
+        "description": "Nudge stray generated docs into the deliverables/ structure.",
+        "id": "post:deliverables-location"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js post:observe scripts/hooks/observe-runner.js minimal,standard,strict",
+            "async": true,
+            "timeout": 10
+          }
+        ],
+        "description": "Capture tool-result observations for continuous learning.",
+        "id": "post:observe"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js post:metrics-bridge scripts/hooks/metrics-bridge.js minimal,standard,strict",
+            "timeout": 10
+          }
+        ],
+        "description": "Update the statusline metrics bridge file (escc-metrics-${sessionId}.json) after each tool call.",
+        "id": "post:metrics-bridge"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js post:context-monitor scripts/hooks/context-monitor.js minimal,standard,strict",
+            "timeout": 10
+          }
+        ],
+        "description": "Context-utilization warnings (ESCC_CONTEXT_MONITOR_COST_WARNINGS).",
+        "id": "post:context-monitor"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js post:session-activity-tracker scripts/hooks/session-activity-tracker.js minimal,standard,strict",
+            "timeout": 10
+          }
+        ],
+        "description": "Record per-session tool calls, accounts touched, and file activity for status and metrics.",
+        "id": "post:session-activity-tracker"
+      },
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js post:governance-capture scripts/hooks/governance-capture.js standard,strict",
+            "timeout": 10
+          }
+        ],
+        "description": "Capture post-execution governance events. Enable with ESCC_GOVERNANCE_CAPTURE=1.",
+        "id": "post:governance-capture"
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js stop:follow-through-check scripts/hooks/follow-through-check.js standard,strict",
+            "timeout": 10
+          }
+        ],
+        "description": "WARN-ONLY: unsent drafts, promised-but-unlogged activities, and missing next steps for accounts touched this session (scans all open promises).",
+        "id": "stop:follow-through-check"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js stop:sla-check scripts/hooks/sla-check.js standard,strict",
+            "timeout": 10
+          }
+        ],
+        "description": "Surface breached response/routing SLAs from open-loop timestamps.",
+        "id": "stop:sla-check"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js stop:evaluate-session scripts/hooks/evaluate-session.js minimal,standard,strict",
+            "async": true,
+            "timeout": 10
+          }
+        ],
+        "description": "Session-outcome learning signal (>=10 user messages -> extractable patterns; sales metrics: meetings booked, follow-ups created vs promised).",
+        "id": "stop:evaluate-session"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js stop:cost-tracker scripts/hooks/cost-tracker.js minimal,standard,strict",
+            "async": true,
+            "timeout": 10
+          }
+        ],
+        "description": "Append a per-session cost row to metrics/costs.jsonl.",
+        "id": "stop:cost-tracker"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js stop:desktop-notify scripts/hooks/desktop-notify.js standard,strict",
+            "async": true,
+            "timeout": 10
+          }
+        ],
+        "description": "macOS/iTerm2 session-complete notification.",
+        "id": "stop:desktop-notify"
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/session-start-bootstrap.js",
+            "timeout": 30
+          }
+        ],
+        "description": "Inject prior summary + open loops + active-deal account memory + high-confidence instincts (priority-budgeted, capped by ESCC_SESSION_START_MAX_CHARS). Routes through run-with-flags via the bootstrap.",
+        "id": "session:start"
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js session:end scripts/hooks/session-end.js minimal,standard,strict",
+            "async": true,
+            "timeout": 10
+          }
+        ],
+        "description": "Transcript JSONL -> markdown summary (accounts touched, drafts/sends, meetings, deals updated, promises); appends tagged events to active account-memory.",
+        "id": "session:end"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js session:end:marker scripts/hooks/session-activity-tracker.js minimal,standard,strict",
+            "async": true,
+            "timeout": 10
+          }
+        ],
+        "description": "Finalize session activity metrics at session end.",
+        "id": "session:end:marker"
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js pre:compact scripts/hooks/pre-compact.js minimal,standard,strict",
+            "timeout": 10
+          }
+        ],
+        "description": "Persist working state before compaction (task intent, active account/deal, un-applied findings, pending actions) to a resumable scratch file.",
+        "id": "pre:compact"
+      }
+    ]
+  }
+}

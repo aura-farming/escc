@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "description": "Send-capable tool classification read by pre:outbound-send-gate. A tool whose name matches any `deny` pattern AND no `allow` pattern is a LIVE SEND and is gated (requires a review-evidence marker + obeys ESCC_BULK_SEND_MAX). Patterns are JavaScript regular expressions, anchored with ^...$ at match time. Built-in defaults in scripts/lib/outbound-review.js apply when this file is missing or unreadable (fail-closed).",
+  "deny": [
+    "mcp__.*__execute_zapier_write_action",
+    "mcp__.*[Ss]end.*",
+    "mcp__.*__send_.*",
+    "mcp__.*__create_message",
+    "mcp__.*__send_email",
+    "mcp__.*__send_message",
+    "mcp__.*__reply.*"
+  ],
+  "allow": [
+    "mcp__claude_ai_Gmail__create_draft",
+    "mcp__.*__create_draft",
+    "mcp__.*__list_drafts",
+    "mcp__hubspot__.*",
+    "mcp__.*__search.*",
+    "mcp__.*__get_.*",
+    "mcp__.*__list_.*"
+  ],
+  "notes": "Gmail is draft-only by construction (create_draft is allow-listed). Zapier write actions and any *send*/*reply* mail tool are gated. HubSpot writes go through pre:crm-write-guard, not this gate, so hubspot tools are allow-listed here."
+}

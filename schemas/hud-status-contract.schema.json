@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aura-farming/escc/schemas/hud-status-contract.schema.json",
+  "title": "ESCC HUD / statusline bridge contract",
+  "description": "Shape of the session-bridge file (escc-metrics-${sessionId}.json) that post:metrics-bridge writes and escc-statusline.js reads. The bridge is the SINGLE statusline metrics source (Amendment A.4 — there is no harness-cost-<id>.json). All fields are optional/additive; readers must tolerate missing keys.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "session_id": { "type": "string" },
+    "total_cost_usd": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Cumulative session cost in USD (rendered as $N.NN)."
+    },
+    "total_input_tokens": { "type": "integer", "minimum": 0 },
+    "total_output_tokens": { "type": "integer", "minimum": 0 },
+    "tool_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Tool calls this session (rendered as Nt)."
+    },
+    "files_modified_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Distinct files written/edited this session (rendered as Nf)."
+    },
+    "files_modified": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Distinct file paths touched this session."
+    },
+    "recent_tools": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "first_timestamp": {
+      "type": "string",
+      "description": "ISO timestamp of the first tool call; drives the duration segment (Nm)."
+    },
+    "last_timestamp": { "type": "string" },
+    "context_remaining_pct": {
+      "type": ["number", "null"],
+      "description": "Raw remaining context % from Claude Code, written back by the statusline for context-monitor to read."
+    },
+    "persona": {
+      "type": "string",
+      "description": "Active sales persona (sdr | ae | sales-manager | revops). Overridden by the ESCC_PERSONA env var if set."
+    },
+    "workspace_name": {
+      "type": "string",
+      "description": "Rep workspace / account label shown in the persona/workspace segment; falls back to the directory basename."
+    }
+  }
+}
