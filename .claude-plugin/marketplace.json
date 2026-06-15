@@ -1,0 +1,46 @@
+{
+  "name": "escc",
+  "owner": {
+    "name": "Lucas"
+  },
+  "metadata": {
+    "description": "EverythingSales Claude Code - sales harness skills, agents, hooks, rules, and operator workflows for Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "escc",
+      "source": "./",
+      "description": "EverythingSales Claude Code (ESCC) - a sales harness for SDRs, AEs, Sales Managers, and RevOps. Skills-first content, profile-gated hooks, instinct-based continuous learning, session/context persistence, and a CI-enforced quality pipeline. Adapted from Everything Claude Code (MIT).",
+      "version": "0.1.0",
+      "author": {
+        "name": "Lucas"
+      },
+      "homepage": "https://github.com/aura-farming/escc",
+      "repository": "https://github.com/aura-farming/escc",
+      "license": "MIT",
+      "keywords": [
+        "sales",
+        "sdr",
+        "ae",
+        "sales-manager",
+        "revops",
+        "hubspot",
+        "meddpicc",
+        "skills",
+        "hooks",
+        "rules"
+      ],
+      "category": "workflow",
+      "tags": [
+        "sales",
+        "skills",
+        "hooks",
+        "commands",
+        "crm",
+        "outbound",
+        "compliance"
+      ],
+      "strict": false
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+# ESCC agent manifest
+# EverythingSales Claude Code (ESCC) — a skills-first sales harness for Claude Code.
+# Machinery adapted from Everything Claude Code (ECC, MIT) by Affaan Mustafa:
+# https://github.com/affaan-m/ECC
+spec_version: "0.1.0"
+name: escc
+version: "0.1.0"
+author: lucas
+license: MIT
+description: EverythingSales Claude Code — a skills-first Claude Code sales harness for SDRs, AEs, Sales Managers, and RevOps.
+model:
+  preferred: claude-sonnet-4-6
+  fallback:
+    - claude-haiku-4-5
+    - opus
