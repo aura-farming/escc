@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Secrets / local env
+.env
+.env.local
+.env.*.local
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+
+# Test / coverage output
+coverage/
+.nyc_output/
+
+# Logs and scratch
+*.log
+*.tmp
+
+# Local agent/session state (runtime, not source)
+.pqa/
+
+# Claude Code local overrides (never commit — machine-local settings/locks)
+.claude/settings.local.json
+.claude/*.lock
