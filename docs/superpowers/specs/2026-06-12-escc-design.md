@@ -3,7 +3,7 @@
 - **Date:** 2026-06-12
 - **Status:** Approved by Lucas (design + catalog + run-2/run-3 amendments)
 - **Source analysis:** Full 3-pass teardown of affaan-m/ecc v2.0.0 (clone at `/tmp/ecc-analysis`, 2026-06-11/12)
-- **Repo:** `/Users/user/Desktop/ESDRCC` (this directory becomes the plugin repo)
+- **Repo:** the plugin repository root (this directory becomes the plugin repo)
 
 ## 1. Purpose
 
