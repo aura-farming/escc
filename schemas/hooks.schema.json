@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aura-farming/escc/schemas/hooks.schema.json",
+  "title": "ESCC hooks.json",
+  "description": "Validates hooks/hooks.json: the Claude Code hook graph. Every command routes through scripts/hooks/run-with-flags.js (or session-start-bootstrap.js for SessionStart) using ${CLAUDE_PLUGIN_ROOT} directly — no inline bootstrap resolver. Enforced by scripts/ci/validate-hooks.js.",
+  "type": "object",
+  "required": ["hooks"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "hooks": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "description": "Keys are Claude Code hook event names; values are arrays of matcher groups.",
+      "properties": {
+        "PreToolUse": { "$ref": "#/$defs/matcherGroupArray" },
+        "PostToolUse": { "$ref": "#/$defs/matcherGroupArray" },
+        "PostToolUseFailure": { "$ref": "#/$defs/matcherGroupArray" },
+        "Stop": { "$ref": "#/$defs/matcherGroupArray" },
+        "SubagentStop": { "$ref": "#/$defs/matcherGroupArray" },
+        "SessionStart": { "$ref": "#/$defs/matcherGroupArray" },
+        "SessionEnd": { "$ref": "#/$defs/matcherGroupArray" },
+        "PreCompact": { "$ref": "#/$defs/matcherGroupArray" },
+        "Notification": { "$ref": "#/$defs/matcherGroupArray" },
+        "UserPromptSubmit": { "$ref": "#/$defs/matcherGroupArray" }
+      }
+    }
+  },
+  "$defs": {
+    "matcherGroupArray": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/matcherGroup" }
+    },
+    "matcherGroup": {
+      "type": "object",
+      "required": ["hooks", "id"],
+      "additionalProperties": false,
+      "properties": {
+        "matcher": {
+          "type": "string",
+          "description": "Tool-name matcher (regex/glob). Optional for lifecycle events (Stop, SessionStart, SessionEnd, PreCompact)."
+        },
+        "description": { "type": "string", "minLength": 1 },
+        "id": {
+          "type": "string",
+          "pattern": "^(pre|post|stop|session|notification|prompt):[a-z0-9-]+(:[a-z0-9-]+)*$",
+          "description": "Stable hook id using ECC's pre:/post:/stop:/session: grammar."
+        },
+        "hooks": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/commandHook" }
+        }
+      }
+    },
+    "commandHook": {
+      "type": "object",
+      "required": ["type", "command"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "command" },
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Shell command. ESCC commands invoke node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js <hookId> <scriptRelPath> <profilesCsv>."
+        },
+        "async": { "type": "boolean" },
+        "timeout": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Timeout in seconds; 0 or omitted means the harness default."
+        }
+      }
+    }
+  }
+}

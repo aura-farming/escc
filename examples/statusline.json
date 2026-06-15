@@ -1,0 +1,21 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/escc-statusline.js\"",
+    "description": "ESCC statusline: model | task | $cost Nt Nf Nm | persona/workspace | context bar"
+  },
+  "_comments": {
+    "setup": "Copy the statusLine object into your settings.json. For plugin installs, ${CLAUDE_PLUGIN_ROOT} is supplied by Claude Code; for a manual install replace it with the ESCC install path.",
+    "display": "Shows model name, current task (in-progress todo activeForm), session cost, tool count, files modified, session duration, persona/workspace, and a context-usage bar.",
+    "persona_workspace": "Persona comes from the ESCC_PERSONA env var (sdr|ae|sales-manager|revops) or the bridge; workspace is the rep workspace name or the directory basename.",
+    "colors": {
+      "green": "Context used < 50%",
+      "yellow": "Context used < 65%",
+      "orange": "Context used < 80%",
+      "red_bold": "Context used >= 80%"
+    },
+    "output_example": "Opus 4.8 | Drafting follow-up to Acme | $1.23 47t 5f 15m | ae/acme-corp ███████░░░ 68%",
+    "dependencies": "Reads the session-bridge file written by the post:metrics-bridge PostToolUse hook (escc-metrics-${session_id}.json). Both must be active for full metrics. The HUD contract is schemas/hud-status-contract.schema.json.",
+    "usage": "Copy the statusLine object to your settings.json (~/.claude/settings.json or project .claude/settings.json)."
+  }
+}
