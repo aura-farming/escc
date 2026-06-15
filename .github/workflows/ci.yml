@@ -22,9 +22,11 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
 
-      # No lockfile is committed yet, so use `npm install` (not `npm ci`).
+      # Lockfile is committed — use `npm ci` for reproducible installs.
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
+      # `npm test` wires in the scripts/ci/ validators in Phase 6 (quality plane);
+      # until then CI runs the hermetic test suite, which is the canonical green metric.
       - name: Run tests
-        run: npm test
+        run: node tests/run-all.js
