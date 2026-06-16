@@ -66,7 +66,7 @@ function seedOverduePromise(text) {
 
 test('returns a SessionStart-shaped payload even with no data', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined }, () => {
     const ctx = contextOf(hook.run(startInput('startup')));
     assert.equal(typeof ctx, 'string');
   });
@@ -74,7 +74,7 @@ test('returns a SessionStart-shaped payload even with no data', () => {
 
 test('injects overdue promises ahead of everything (C2/C3)', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined }, () => {
     seedOverduePromise('Send Acme the renewal quote');
     const ctx = contextOf(hook.run(startInput('startup')));
     assert.ok(/overdue/i.test(ctx), 'overdue section present');
@@ -84,7 +84,7 @@ test('injects overdue promises ahead of everything (C2/C3)', () => {
 
 test('resume-from-compaction block is injected when a scratch file exists (C4)', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'acme', ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'acme', ESCC_INSTINCTS_DIR: undefined }, () => {
     // Build a compaction scratch via the pre:compact hook's own writer.
     const tdir = path.join(home, 'transcripts');
     fs.mkdirSync(tdir, { recursive: true });
@@ -104,7 +104,7 @@ test('resume-from-compaction block is injected when a scratch file exists (C4)',
 
 test('hydrates the active account context (C1)', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'globex', ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'globex', ESCC_INSTINCTS_DIR: undefined }, () => {
     accountMemory.appendEvent('globex', { type: 'note', text: 'Champion is the VP of RevOps', segment: 'enterprise' });
     const ctx = contextOf(hook.run(startInput('startup')));
     assert.ok(/globex/i.test(ctx), 'active account named');
@@ -114,7 +114,7 @@ test('hydrates the active account context (C1)', () => {
 
 test('surfaces a recent summary with a welcome-back note after a >7-day gap (C2)', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined }, () => {
     const dir = path.join(home, 'session-data');
     fs.mkdirSync(dir, { recursive: true });
     const fp = path.join(dir, '2026-05-01-old-session.tmp');
@@ -135,7 +135,7 @@ test('injects instincts filtered by the active account segment (C6)', () => {
   fs.writeFileSync(path.join(instDir, 'b.md'), '---\nid: smb-only\nconfidence: 0.9\napplies_to: smb\n---\n## Action\nKeep SMB cadence short.\n');
   fs.writeFileSync(path.join(instDir, 'c.md'), '---\nid: draft-before-send\nconfidence: 0.9\n---\n## Action\nAlways draft before sending.\n');
 
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'acme', ESCC_INSTINCTS_DIR: instDir }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'acme', ESCC_INSTINCTS_DIR: instDir }, () => {
     accountMemory.appendEvent('acme', { type: 'segment', segment: 'enterprise' });
     const ctx = contextOf(hook.run(startInput('startup')));
     assert.ok(/enterprise inbound within SLA/i.test(ctx), 'segment-matching instinct injected');
@@ -146,7 +146,7 @@ test('injects instincts filtered by the active account segment (C6)', () => {
 
 test('respects ESCC_SESSION_START_CONTEXT=off (empty context)', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_SESSION_START_CONTEXT: 'off', ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_SESSION_START_CONTEXT: 'off', ESCC_INSTINCTS_DIR: undefined }, () => {
     seedOverduePromise('should not appear');
     const ctx = contextOf(hook.run(startInput('startup')));
     assert.equal(ctx, '', 'context injection disabled');
@@ -155,7 +155,7 @@ test('respects ESCC_SESSION_START_CONTEXT=off (empty context)', () => {
 
 test('respects the ESCC_SESSION_START_MAX_CHARS budget (C7)', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_SESSION_START_MAX_CHARS: '120', ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_SESSION_START_MAX_CHARS: '120', ESCC_INSTINCTS_DIR: undefined }, () => {
     for (let i = 0; i < 10; i++) seedOverduePromise(`Overdue commitment number ${i} with a fair bit of text to consume budget`);
     const ctx = contextOf(hook.run(startInput('startup')));
     assert.ok(ctx.length <= 120, `context within budget (was ${ctx.length})`);
@@ -165,7 +165,7 @@ test('respects the ESCC_SESSION_START_MAX_CHARS budget (C7)', () => {
 
 test('never blocks — malformed input still yields a valid SessionStart payload', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home }, () => {
     const ctx = contextOf(hook.run('not json at all'));
     assert.equal(typeof ctx, 'string');
   });
@@ -173,7 +173,7 @@ test('never blocks — malformed input still yields a valid SessionStart payload
 
 test('resume block is one-shot — not re-injected on a second SessionStart (C4)', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined }, () => {
     const tdir = path.join(home, 'transcripts');
     fs.mkdirSync(tdir, { recursive: true });
     const tp = path.join(tdir, 'tx.jsonl');
@@ -192,7 +192,7 @@ test('resume block is one-shot — not re-injected on a second SessionStart (C4)
 
 test('a stale compaction scratch is discarded and cleared, not resumed', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined, ESCC_COMPACTION_TTL_HOURS: '1' }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined, ESCC_COMPACTION_TTL_HOURS: '1' }, () => {
     const dir = path.join(home, 'escc', 'compaction');
     fs.mkdirSync(dir, { recursive: true });
     const fp = path.join(dir, 'stale.json');
