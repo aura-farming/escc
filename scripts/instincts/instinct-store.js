@@ -74,6 +74,35 @@ function observationsPath() {
   return path.join(resolveWorkspaceDir(), OBSERVATIONS_FILE);
 }
 
+/**
+ * Reject any instinct id that could escape the instincts directory. Ids are
+ * slugs from distill, but the CLI/promote/reject paths accept arbitrary
+ * human-supplied ids, so the path layer must refuse traversal (`..`, separators)
+ * before building a filename a write/delete would act on.
+ */
+function sanitizeInstinctId(id) {
+  const s = String(id == null ? '' : id);
+  if (!s || s.includes('..') || /[\\/]/.test(s) || !/^[A-Za-z0-9._-]+$/.test(s)) {
+    throw new Error(`Unsafe instinct id: ${JSON.stringify(id)}`);
+  }
+  return s;
+}
+
+/** Absolute path to a single instinct file. Throws on an unsafe id. */
+function instinctPath(id, scope = 'personal') {
+  return path.join(instinctsDir(scope), `${sanitizeInstinctId(id)}.md`);
+}
+
+/** Evolved-artifact directory (I6 graduation target), e.g. evolved/skills. */
+function evolvedDir(kind = 'skills') {
+  return path.join(resolveWorkspaceDir(), 'evolved', kind);
+}
+
+/** Path to a small JSON id-registry under the workspace (e.g. rejected/approved). */
+function registryPath(name) {
+  return path.join(resolveWorkspaceDir(), 'instincts', `${name}.json`);
+}
+
 // --- observations (append-only signal log) ----------------------------------
 
 /**
@@ -81,13 +110,11 @@ function observationsPath() {
  * (e.g. `untrusted: true`, `kind`, `text`, `outcome`). Returns the stored row.
  */
 function appendObservation(observation = {}) {
-  const stored = {
-    id: observation.id || `obs-${Date.now().toString(36)}-${crypto.randomBytes(4).toString('hex')}`,
-    ts: observation.ts || new Date().toISOString(),
-    ...observation,
-  };
-  stored.id = observation.id || stored.id;
-  stored.ts = observation.ts || stored.ts;
+  // Spread first, THEN fill id/ts, so a falsy explicit id ('' / null) is replaced
+  // rather than stored blank — the id is computed exactly once.
+  const stored = { ...observation };
+  stored.id = observation.id || `obs-${Date.now().toString(36)}-${crypto.randomBytes(4).toString('hex')}`;
+  stored.ts = observation.ts || new Date().toISOString();
   const file = observationsPath();
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.appendFileSync(file, `${JSON.stringify(stored)}\n`);
@@ -139,18 +166,28 @@ const SCALAR_FIELDS = [
   'workspace_id', 'workspace_name', 'created', 'last_observed', 'decay_exempt',
 ];
 
+/**
+ * Collapse newlines (and CRs) to single spaces. Free-text fields (a rep
+ * correction becomes `action`/`evidence`) could otherwise inject a line that
+ * looks like frontmatter (`---`) or a section header (`## …`) and corrupt the
+ * round-trip. The frontmatter format is strictly one line per scalar.
+ */
+function flattenLine(value) {
+  return String(value).replace(/[\r\n]+/g, ' ').trim();
+}
+
 function serializeInstinct(instinct) {
   const lines = ['---'];
   for (const key of SCALAR_FIELDS) {
     const value = instinct[key];
     if (value === undefined || value === null || value === '') continue;
-    lines.push(`${key}: ${value}`);
+    lines.push(`${key}: ${flattenLine(value)}`);
   }
   lines.push('---', '');
-  lines.push('## Action', instinct.action ? String(instinct.action) : '', '');
+  lines.push('## Action', instinct.action ? flattenLine(instinct.action) : '', '');
   if (Array.isArray(instinct.evidence) && instinct.evidence.length) {
     lines.push('## Evidence');
-    for (const e of instinct.evidence) lines.push(`- ${e}`);
+    for (const e of instinct.evidence) lines.push(`- ${flattenLine(e)}`);
     lines.push('');
   }
   return `${lines.join('\n').trimEnd()}\n`;
@@ -161,7 +198,8 @@ const BOOLEAN_FIELDS = new Set(['decay_exempt']);
 
 function parseInstinct(content) {
   const obj = {};
-  const fm = String(content).match(/^---\n([\s\S]*?)\n---/);
+  if (typeof content !== 'string') return obj;
+  const fm = content.match(/^---\n([\s\S]*?)\n---/);
   if (fm) {
     for (const line of fm[1].split('\n')) {
       const idx = line.indexOf(':');
@@ -181,12 +219,12 @@ function parseInstinct(content) {
       }
     }
   }
-  const actionMatch = String(content).match(/##\s*Action\s*\n+([\s\S]+?)(?:\n##\s|\n*$)/i);
+  const actionMatch = content.match(/##\s*Action\s*\n+([\s\S]+?)(?:\n##\s|\n*$)/i);
   if (actionMatch) {
     const action = actionMatch[1].split('\n').map(l => l.trim()).filter(Boolean).join(' ').trim();
     if (action) obj.action = action;
   }
-  const evidenceMatch = String(content).match(/##\s*Evidence\s*\n+([\s\S]+?)(?:\n##\s|\n*$)/i);
+  const evidenceMatch = content.match(/##\s*Evidence\s*\n+([\s\S]+?)(?:\n##\s|\n*$)/i);
   if (evidenceMatch) {
     const evidence = evidenceMatch[1].split('\n')
       .map(l => l.trim())
@@ -202,9 +240,9 @@ function parseInstinct(content) {
 /** Validate then write an instinct as a frontmatter .md file. Returns the path. */
 function writeInstinct(instinct, scope = instinct && instinct.scope) {
   assertValidInstinct(instinct); // fail loud at the write boundary
-  const dir = instinctsDir(scope || 'personal');
-  fs.mkdirSync(dir, { recursive: true });
-  const file = path.join(dir, `${instinct.id}.md`);
+  const resolvedScope = scope || 'personal';
+  const file = instinctPath(instinct && instinct.id, resolvedScope); // throws on an unsafe id
+  fs.mkdirSync(instinctsDir(resolvedScope), { recursive: true });
   const tmp = `${file}.${process.pid}.${crypto.randomBytes(4).toString('hex')}.tmp`;
   fs.writeFileSync(tmp, serializeInstinct(instinct), 'utf8');
   fs.renameSync(tmp, file);
@@ -233,12 +271,57 @@ function readInstincts(scope = 'personal') {
   return out;
 }
 
+/** Delete an instinct file. Returns true if a file was removed, false if absent. */
+function removeInstinct(id, scope = 'personal') {
+  const file = instinctPath(id, scope);
+  try {
+    fs.unlinkSync(file);
+    return true;
+  } catch (err) {
+    if (err && err.code === 'ENOENT') return false;
+    throw err;
+  }
+}
+
+/** Read a workspace id-registry (e.g. 'rejected', 'approved') as a string array. */
+function readIdRegistry(name) {
+  let contents;
+  try {
+    contents = fs.readFileSync(registryPath(name), 'utf8');
+  } catch (err) {
+    if (err && err.code === 'ENOENT') return [];
+    throw err;
+  }
+  try {
+    const parsed = JSON.parse(contents);
+    return Array.isArray(parsed) ? parsed.filter(x => typeof x === 'string') : [];
+  } catch (_err) {
+    return []; // tolerate a corrupt registry rather than throw
+  }
+}
+
+/** Add an id to a workspace id-registry (idempotent). Returns the full list. */
+function addIdToRegistry(name, id) {
+  const current = readIdRegistry(name);
+  if (!current.includes(id)) current.push(id);
+  const file = registryPath(name);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = `${file}.${process.pid}.${crypto.randomBytes(4).toString('hex')}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(current), 'utf8');
+  fs.renameSync(tmp, file);
+  return current;
+}
+
 module.exports = {
   resolveRepIdentity,
   workspaceId,
   resolveStoreRoot,
   resolveWorkspaceDir,
   instinctsDir,
+  sanitizeInstinctId,
+  instinctPath,
+  evolvedDir,
+  registryPath,
   observationsPath,
   appendObservation,
   readObservations,
@@ -248,4 +331,7 @@ module.exports = {
   parseInstinct,
   writeInstinct,
   readInstincts,
+  removeInstinct,
+  readIdRegistry,
+  addIdToRegistry,
 };

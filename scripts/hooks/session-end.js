@@ -41,6 +41,7 @@ const {
 const accountMemory = require('../lib/account-memory');
 const promiseExtract = require('../lib/promise-extract');
 const { createStateStoreSync } = require('../lib/state-store/index.js');
+const distill = require('../instincts/distill');
 
 const MAX_TRANSCRIPT_BYTES = 8 * 1024 * 1024;
 const SESSION_SEPARATOR = '\n---\n';
@@ -232,12 +233,34 @@ function persistSummaryFile(sessionId, transcriptPath, body) {
 }
 
 /**
+ * Runtime DERIVE step (A.3): turn this rep's accumulated observations into
+ * instincts once per session. distill is idempotent (it recomputes from the full
+ * observation log, preserving timestamps and honouring the reject registry), so
+ * running it every SessionEnd is safe. Fully self-contained and fail-open — it
+ * must never block a session from ending — and intentionally decoupled from the
+ * transcript-summary path below so it still runs when there is nothing to
+ * summarise (e.g. a short session, or unparseable input).
+ */
+function distillInstincts() {
+  let store;
+  try {
+    store = createStateStoreSync();
+    distill.distill({ store, now: new Date().toISOString() });
+  } catch (_err) {
+    /* fail open — distillation must never block a session from ending */
+  } finally {
+    try { if (store) store.close(); } catch (_e) { /* ignore */ }
+  }
+}
+
+/**
  * @param {string|object} raw
  * @param {object} [ctx] dispatcher context (unused; always fails open)
  * @returns {{exitCode:number}|undefined}
  */
 function run(raw, _ctx = {}) {
   try {
+    distillInstincts(); // A.3 derive — before anything that can early-return
     const input = parseHookInput(raw);
     const sessionId =
       sanitizeSessionId(getSessionId(input)) ||
@@ -314,6 +337,7 @@ function run(raw, _ctx = {}) {
 
 module.exports = {
   run,
+  distillInstincts,
   analyzeTranscript,
   readTranscript,
   resolveTranscriptPath,
