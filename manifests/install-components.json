@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "components": [
+    {
+      "id": "persona:sdr",
+      "family": "persona",
+      "description": "The SDR persona skill slice (pulls foundational skills via dependency).",
+      "modules": ["skills-sdr"]
+    },
+    {
+      "id": "persona:ae",
+      "family": "persona",
+      "description": "The AE persona skill slice (pulls foundational skills via dependency).",
+      "modules": ["skills-ae"]
+    },
+    {
+      "id": "persona:sales-manager",
+      "family": "persona",
+      "description": "The sales-manager persona skill slice (pulls foundational skills via dependency).",
+      "modules": ["skills-manager"]
+    },
+    {
+      "id": "persona:revops",
+      "family": "persona",
+      "description": "The RevOps persona skill slice (pulls foundational skills via dependency).",
+      "modules": ["skills-revops"]
+    },
+    {
+      "id": "capability:foundation",
+      "family": "capability",
+      "description": "Foundational proof + playbook skills shared by every persona.",
+      "modules": ["skills-foundation"]
+    },
+    {
+      "id": "capability:cross",
+      "family": "capability",
+      "description": "Cross-cutting skills (inbox, outbound ops, brand voice, handoffs, account memory, triggers, replies).",
+      "modules": ["skills-cross"]
+    },
+    {
+      "id": "capability:meta",
+      "family": "capability",
+      "description": "Meta skills: instincts surface, team-init, navigation guide, install wizard.",
+      "modules": ["skills-meta"]
+    },
+    {
+      "id": "capability:instincts",
+      "family": "capability",
+      "description": "The instinct learning engine and its hook runtime.",
+      "modules": ["instincts-engine"]
+    },
+    {
+      "id": "capability:statusline",
+      "family": "capability",
+      "description": "The statusline renderer and example configuration.",
+      "modules": ["statusline"]
+    },
+    {
+      "id": "capability:mcp",
+      "family": "capability",
+      "description": "Placeholder MCP server templates for the GTM stack.",
+      "modules": ["mcp-templates"]
+    },
+    {
+      "id": "methodology:meddpicc",
+      "family": "methodology",
+      "description": "MEDDPICC qualification surface: the deal-review scoring skill and the methodology-audit skill (MEDDPICC rules ride along with rules-core).",
+      "modules": ["skill-deal-review", "skill-methodology-audit"]
+    }
+  ]
+}

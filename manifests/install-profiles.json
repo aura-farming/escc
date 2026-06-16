@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "profiles": {
+    "sdr": {
+      "description": "SDR bundle: foundational + cross-cutting + meta skills, the SDR skill set, all agents/commands, and the hook + instinct runtime.",
+      "modules": [
+        "rules-core",
+        "skills-foundation",
+        "skills-cross",
+        "skills-meta",
+        "skills-sdr",
+        "agents-core",
+        "commands-core",
+        "hooks-runtime",
+        "instincts-engine",
+        "statusline",
+        "mcp-templates"
+      ]
+    },
+    "ae": {
+      "description": "AE bundle: foundational + cross-cutting + meta skills, the full AE skill set, all agents/commands, and the hook + instinct runtime.",
+      "modules": [
+        "rules-core",
+        "skills-foundation",
+        "skills-cross",
+        "skills-meta",
+        "skills-ae",
+        "agents-core",
+        "commands-core",
+        "hooks-runtime",
+        "instincts-engine",
+        "statusline",
+        "mcp-templates"
+      ]
+    },
+    "sales-manager": {
+      "description": "Sales-manager bundle: foundational + cross-cutting + meta skills, the manager skill set (pipeline/forecast/coaching/QBR/territory), all agents/commands, and the hook + instinct runtime.",
+      "modules": [
+        "rules-core",
+        "skills-foundation",
+        "skills-cross",
+        "skills-meta",
+        "skills-manager",
+        "agents-core",
+        "commands-core",
+        "hooks-runtime",
+        "instincts-engine",
+        "statusline",
+        "mcp-templates"
+      ]
+    },
+    "revops": {
+      "description": "RevOps bundle: foundational + cross-cutting + meta skills, the RevOps skill set (deal desk/reporting/routing/dedupe/capacity/methodology), all agents/commands, and the hook + instinct runtime.",
+      "modules": [
+        "rules-core",
+        "skills-foundation",
+        "skills-cross",
+        "skills-meta",
+        "skills-revops",
+        "agents-core",
+        "commands-core",
+        "hooks-runtime",
+        "instincts-engine",
+        "statusline",
+        "mcp-templates"
+      ]
+    },
+    "full": {
+      "description": "Everything: all skill groups (SDR, AE, manager, RevOps, foundational, cross-cutting, meta), all agents/commands/rules, the full hook + instinct runtime, statusline, MCP templates, and docs.",
+      "modules": [
+        "rules-core",
+        "skills-foundation",
+        "skills-cross",
+        "skills-meta",
+        "skills-sdr",
+        "skills-ae",
+        "skills-manager",
+        "skills-revops",
+        "agents-core",
+        "commands-core",
+        "hooks-runtime",
+        "instincts-engine",
+        "statusline",
+        "mcp-templates",
+        "docs"
+      ]
+    }
+  }
+}

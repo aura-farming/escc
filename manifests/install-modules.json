@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "modules": [
+    {
+      "id": "rules-core",
+      "kind": "rules",
+      "description": "Layered rule set: common base + MEDDPICC and segment overlays + the A.5 operational rules (routing, approval-matrix, lifecycle-stages, jurisdiction routing, lawful-basis, targets) and jurisdiction overlays (au/us/eu-uk).",
+      "paths": ["rules"],
+      "targets": ["claude", "claude-project"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "light",
+      "stability": "stable"
+    },
+    {
+      "id": "agents-core",
+      "kind": "agents",
+      "description": "All 18 least-privilege agents. Read-only by default; crm-operator is the sole write-capable agent. Every agent body opens with the prompt-defense preamble.",
+      "paths": ["agents"],
+      "targets": ["claude", "claude-project"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "commands-core",
+      "kind": "commands",
+      "description": "All 66 thin command shims (<=20 lines each), each delegating to an installed skill.",
+      "paths": ["commands"],
+      "targets": ["claude", "claude-project"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "hooks-runtime",
+      "kind": "hooks",
+      "description": "Hook dispatch runtime (hooks.json + run-with-flags) plus the hook scripts and shared scripts/lib support. Send-gate fails closed; all other hooks fail open.",
+      "paths": ["hooks", "scripts/hooks", "scripts/lib"],
+      "targets": ["claude", "claude-project"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "instincts-engine",
+      "kind": "instincts",
+      "description": "Node instinct engine (observe/distill/lifecycle/promote + instinct-cli) operationalized over the hook runtime. Memory-hygiene I3 + manager-gated promotion I5 + review gate I7 enforced in code.",
+      "paths": ["scripts/instincts"],
+      "targets": ["claude", "claude-project"],
+      "dependencies": ["hooks-runtime"],
+      "defaultInstall": true,
+      "cost": "light",
+      "stability": "stable"
+    },
+    {
+      "id": "statusline",
+      "kind": "statusline",
+      "description": "ESCC statusline renderer plus its example configuration. Reads the escc-metrics session bridge; persona/workspace segment.",
+      "paths": ["scripts/hooks/escc-statusline.js", "examples/statusline.json"],
+      "targets": ["claude", "claude-project"],
+      "dependencies": ["hooks-runtime"],
+      "defaultInstall": false,
+      "cost": "light",
+      "stability": "stable"
+    },
+    {
+      "id": "mcp-templates",
+      "kind": "mcp",
+      "description": "Placeholder-keyed MCP server templates (hubspot/gmail/calendar/fireflies/slack/exa/firecrawl/apollo/clay). Secrets are placeholders only; connectors preferred.",
+      "paths": ["mcp-configs/mcp-servers.json"],
+      "targets": ["claude", "claude-project"],
+      "dependencies": [],
+      "defaultInstall": false,
+      "cost": "light",
+      "stability": "stable"
+    },
+    {
+      "id": "docs",
+      "kind": "docs",
+      "description": "Operator and persona documentation suite. Expands during Phase 6 (GLOSSARY, INCIDENT-RESPONSE, ARCHITECTURE, HOOKS, INSTINCTS, GETTING-STARTED-*, the-compliance-guide).",
+      "paths": ["docs"],
+      "targets": ["claude", "claude-project"],
+      "dependencies": [],
+      "defaultInstall": false,
+      "cost": "light",
+      "stability": "beta"
+    },
+    {
+      "id": "skills-foundation",
+      "kind": "skills",
+      "description": "Foundational skills every persona relies on: product-knowledge (the canonical proof source) and playbook-library.",
+      "paths": [
+        "skills/product-knowledge",
+        "skills/playbook-library"
+      ],
+      "targets": ["claude", "claude-project"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "light",
+      "stability": "stable"
+    },
+    {
+      "id": "skills-sdr",
+      "kind": "skills",
+      "description": "SDR persona skills (11): prospecting, account research, ICP, outbound sequencing, cold outreach/calling, follow-up, objection handling, meeting booking, inbound response, outreach analytics.",
+      "paths": [
+        "skills/prospecting-pipeline",
+        "skills/account-research",
+        "skills/icp-profile",
+        "skills/outbound-sequences",
+        "skills/cold-outreach",
+        "skills/follow-up-ops",
+        "skills/objection-handling",
+        "skills/meeting-booking",
+        "skills/inbound-lead-response",
+        "skills/cold-calling",
+        "skills/outreach-analytics"
+      ],
+      "targets": ["claude", "claude-project"],
+      "dependencies": ["skills-foundation"],
+      "defaultInstall": false,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "skills-ae",
+      "kind": "skills",
+      "description": "AE persona skills (18): call/demo prep, discovery, deal review, stakeholder mapping, mutual action plan, proposal, battlecards, negotiation, RFP, renewal, quote desk, business case, evaluation plan, paper process, multi-threading, close plan, reference coordination.",
+      "paths": [
+        "skills/call-prep",
+        "skills/demo-prep",
+        "skills/discovery-notes",
+        "skills/deal-review",
+        "skills/stakeholder-mapping",
+        "skills/mutual-action-plan",
+        "skills/proposal-builder",
+        "skills/competitor-battlecards",
+        "skills/negotiation-prep",
+        "skills/rfp-response",
+        "skills/renewal-playbook",
+        "skills/quote-desk",
+        "skills/business-case",
+        "skills/evaluation-plan",
+        "skills/paper-process",
+        "skills/multi-threading",
+        "skills/close-plan",
+        "skills/reference-coordination"
+      ],
+      "targets": ["claude", "claude-project"],
+      "dependencies": ["skills-foundation"],
+      "defaultInstall": false,
+      "cost": "heavy",
+      "stability": "stable"
+    },
+    {
+      "id": "skills-manager",
+      "kind": "skills",
+      "description": "Sales-manager skills (9): pipeline hygiene, forecast rollup/accuracy, deal inspection, coaching prep, call review, QBR builder, win-loss analysis, territory planning.",
+      "paths": [
+        "skills/pipeline-hygiene",
+        "skills/forecast-rollup",
+        "skills/forecast-accuracy",
+        "skills/deal-inspection",
+        "skills/coaching-prep",
+        "skills/call-review",
+        "skills/qbr-builder",
+        "skills/win-loss-analysis",
+        "skills/territory-planning"
+      ],
+      "targets": ["claude", "claude-project"],
+      "dependencies": ["skills-foundation"],
+      "defaultInstall": false,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "skills-revops",
+      "kind": "skills",
+      "description": "RevOps skills (9): deal desk, sales reporting, lead routing, dedupe/merge, capacity planning, activity audit, rep onboarding, methodology audit, retention rollup.",
+      "paths": [
+        "skills/deal-desk",
+        "skills/sales-reporting",
+        "skills/lead-routing",
+        "skills/dedupe-merge",
+        "skills/capacity-planning",
+        "skills/activity-audit",
+        "skills/rep-onboarding",
+        "skills/methodology-audit",
+        "skills/retention-rollup"
+      ],
+      "targets": ["claude", "claude-project"],
+      "dependencies": ["skills-foundation"],
+      "defaultInstall": false,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "skills-cross",
+      "kind": "skills",
+      "description": "Cross-cutting skills (11): daily brief, inbox triage, email outbound ops, brand voice, CRM hygiene, sales handoffs, account memory, opt-out handling, meeting followthrough, trigger detection, reply handling.",
+      "paths": [
+        "skills/daily-brief",
+        "skills/inbox-triage",
+        "skills/email-outbound-ops",
+        "skills/brand-voice",
+        "skills/crm-hygiene",
+        "skills/sales-handoffs",
+        "skills/account-memory",
+        "skills/opt-out-handling",
+        "skills/meeting-followthrough",
+        "skills/trigger-detection",
+        "skills/reply-handling"
+      ],
+      "targets": ["claude", "claude-project"],
+      "dependencies": ["skills-foundation"],
+      "defaultInstall": true,
+      "cost": "medium",
+      "stability": "stable"
+    },
+    {
+      "id": "skills-meta",
+      "kind": "skills",
+      "description": "Meta skills (4): instincts (learning surface), team-init, escc-guide (navigation), configure-escc (install wizard).",
+      "paths": [
+        "skills/instincts",
+        "skills/team-init",
+        "skills/escc-guide",
+        "skills/configure-escc"
+      ],
+      "targets": ["claude", "claude-project"],
+      "dependencies": [],
+      "defaultInstall": true,
+      "cost": "light",
+      "stability": "stable"
+    }
+  ]
+}
