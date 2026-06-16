@@ -38,6 +38,8 @@ const {
 const accountMemory = require('../lib/account-memory');
 const { createStateStoreSync } = require('../lib/state-store/index.js');
 const { readCompactionState, clearCompactionState } = require('./pre-compact');
+const instinctStore = require('../instincts/instinct-store');
+const lifecycle = require('../instincts/lifecycle');
 
 const DEFAULT_MAX_CHARS = 8000;
 const DEFAULT_IMMINENT_DAYS = 14;
@@ -288,9 +290,9 @@ function appliesToMatches(appliesTo, segment) {
   return segment ? list.includes(String(segment).toLowerCase()) : false;
 }
 
-function buildInstinctsBlock(segment) {
-  const threshold = getInstinctConfidence();
-  const byId = new Map();
+/** Candidates from the shipped-seed dirs (inherited/personal + an explicit override). */
+function dirInstinctCandidates() {
+  const out = [];
   for (const dir of instinctDirs()) {
     let entries;
     try {
@@ -300,24 +302,96 @@ function buildInstinctsBlock(segment) {
     }
     for (const entry of entries) {
       if (!entry.isFile() || !/\.(ya?ml|md)$/i.test(entry.name)) continue;
-      let parsed;
       try {
-        parsed = parseInstinct(fs.readFileSync(path.join(dir, entry.name), 'utf8'));
+        out.push(parseInstinct(fs.readFileSync(path.join(dir, entry.name), 'utf8')));
       } catch (_err) {
-        continue;
+        /* skip an unreadable file */
       }
-      if (!parsed.id || !parsed.action) continue;
-      if (parsed.confidence < threshold) continue;
-      if (!appliesToMatches(parsed.applies_to, segment)) continue;
-      const existing = byId.get(parsed.id);
-      if (!existing || parsed.confidence > existing.confidence) byId.set(parsed.id, parsed);
     }
+  }
+  return out;
+}
+
+/**
+ * Candidates from the ENGINE workspace store (instinct-store, rep-identity keyed):
+ * the rep's own learned `personal` instincts plus `team` instincts a manager
+ * promoted. That store lives OUTSIDE the agent data home and may not exist yet,
+ * so any read failure must degrade to "no engine instincts", never break start.
+ */
+function engineInstinctCandidates() {
+  const out = [];
+  for (const scope of ['personal', 'team']) {
+    let rows;
+    try {
+      rows = instinctStore.readInstincts(scope);
+    } catch (_err) {
+      continue;
+    }
+    for (const row of rows) {
+      const confidence = Number.parseFloat(row && row.confidence);
+      out.push({
+        id: (row && row.id) || '',
+        confidence: Number.isFinite(confidence) ? confidence : 0,
+        applies_to: (row && row.applies_to) || '',
+        action: (row && row.action) || '',
+      });
+    }
+  }
+  return out;
+}
+
+/** Ids a human rejected (I7) — never injected, even if a stale file lingers. */
+function rejectedInstinctIds() {
+  try {
+    return new Set(instinctStore.readIdRegistry('rejected'));
+  } catch (_err) {
+    return new Set();
+  }
+}
+
+/**
+ * Build the active-instincts block. Shipped-seed dirs AND the live engine store
+ * are reconciled into ONE budget: deduped by id (highest confidence wins) so an
+ * instinct never injects twice, filtered by the confidence floor and the C6
+ * segment filter (team instincts carry `applies_to`; the rep's personal ones are
+ * generic), and excluding any human-rejected id.
+ */
+function buildInstinctsBlock(segment) {
+  const threshold = getInstinctConfidence();
+  const rejected = rejectedInstinctIds();
+  const byId = new Map();
+  for (const parsed of [...dirInstinctCandidates(), ...engineInstinctCandidates()]) {
+    if (!parsed.id || !parsed.action) continue;
+    if (rejected.has(parsed.id)) continue;
+    if (parsed.confidence < threshold) continue;
+    if (!appliesToMatches(parsed.applies_to, segment)) continue;
+    const existing = byId.get(parsed.id);
+    if (!existing || parsed.confidence > existing.confidence) byId.set(parsed.id, parsed);
   }
   const ranked = [...byId.values()]
     .sort((a, b) => b.confidence - a.confidence || a.id.localeCompare(b.id))
     .slice(0, MAX_INSTINCTS);
   if (!ranked.length) return '';
   return ['Active instincts:', ...ranked.map(i => `- [${Math.round(i.confidence * 100)}%] ${i.action}`)].join('\n');
+}
+
+/**
+ * I4 decay sweep: decay / retire stale instincts in the engine store before
+ * injecting, so the next session never surfaces a habit that has gone cold.
+ * Sweeps BOTH scopes that get injected — `personal` and `team` — because team
+ * instincts are injected too (and the shipped team seeds are protected by their
+ * per-instinct decay_exempt flag, which would be meaningless if team were never
+ * swept; spec I8). Fail-open per scope — maintenance must never block a start.
+ */
+function runDecaySweep() {
+  const now = new Date().toISOString();
+  for (const scope of ['personal', 'team']) {
+    try {
+      lifecycle.decaySweep({ now, scope });
+    } catch (_err) {
+      /* fail open — one scope's failure must not skip the other or block start */
+    }
+  }
 }
 
 // ----- payload --------------------------------------------------------------
@@ -334,6 +408,8 @@ function sessionStartPayload(additionalContext) {
 function buildContext(sessionId, source) {
   const maxChars = getMaxChars();
   if (isContextDisabled() || maxChars === 0) return '';
+
+  runDecaySweep(); // I4: prune the engine instinct store before reading it for injection
 
   const today = todayIso();
   const { overdueBlock, restBlock } = buildPromiseBlocks(today);

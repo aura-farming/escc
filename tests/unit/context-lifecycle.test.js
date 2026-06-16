@@ -65,7 +65,7 @@ function contextOf(result) {
 
 test('A. a promise + account context written at session end resurfaces at the next session start', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'company:acme', ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'company:acme', ESCC_INSTINCTS_DIR: undefined }, () => {
     // Session 1 ends: rep promised to send the proposal and worked the Acme deal.
     const tp = writeTranscript(home, 's1', [
       { type: 'user', message: { role: 'user', content: 'Move the Acme deal forward.' } },
@@ -85,7 +85,7 @@ test('A. a promise + account context written at session end resurfaces at the ne
 
 test('B. an open loop from >7 days ago still surfaces, with a welcome-back note', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined }, () => {
     // A promise created long ago, still open and overdue.
     const store = createStateStoreSync();
     try {
@@ -119,7 +119,7 @@ test('B. an open loop from >7 days ago still surfaces, with a welcome-back note'
 
 test('C. working state saved at pre:compact is restored at the next session start', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'company:bigco', ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'company:bigco', ESCC_INSTINCTS_DIR: undefined }, () => {
     const tp = writeTranscript(home, 'c1', [
       { type: 'user', message: { role: 'user', content: 'Negotiate the BigCo renewal.' } },
       { type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: 'Next step: send the redlined MSA. Waiting on procurement.' }] } },
@@ -137,7 +137,7 @@ test('C. working state saved at pre:compact is restored at the next session star
 
 test('D. promises are attributed per account and recalled per account', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'acme', ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'acme', ESCC_INSTINCTS_DIR: undefined }, () => {
     const store = createStateStoreSync();
     try {
       store.upsertPromise({ id: 'pa', account_id: 'acme', text: 'Acme: send the SOW', due_date: '2020-01-01' });
