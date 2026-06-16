@@ -1,0 +1,825 @@
+{
+  "schemaVersion": 1,
+  "totalCommands": 66,
+  "commands": [
+    {
+      "command": "activity",
+      "description": "Audit CRM activity data — call and email volumes, meeting rates, and sequence adherence by rep or team.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "activity-audit"
+      ],
+      "path": "commands/activity.md"
+    },
+    {
+      "command": "battlecard",
+      "description": "Build or update a competitive battlecard, or get live \"how to beat X\" guidance for an active deal.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "competitor-battlecards",
+        "product-knowledge"
+      ],
+      "path": "commands/battlecard.md"
+    },
+    {
+      "command": "book",
+      "description": "Propose times, send an invite, confirm, and run no-show recovery via the Calendar MCP.",
+      "type": "general",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "meeting-booking"
+      ],
+      "path": "commands/book.md"
+    },
+    {
+      "command": "call-prep",
+      "description": "Build a pre-meeting brief — attendees, roles, account and deal history, and MEDDPICC gaps to probe.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "call-prep",
+        "deal-review",
+        "discovery-notes"
+      ],
+      "path": "commands/call-prep.md"
+    },
+    {
+      "command": "call-review",
+      "description": "Score a recorded sales call on talk-ratio, discovery quality, objection handling, and next-step commitment.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "call-review"
+      ],
+      "path": "commands/call-review.md"
+    },
+    {
+      "command": "capacity",
+      "description": "Model sales capacity — headcount, ramp curves, quota coverage, and hiring needs for a target period.",
+      "type": "testing",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "capacity-planning"
+      ],
+      "path": "commands/capacity.md"
+    },
+    {
+      "command": "close-plan",
+      "description": "Build a backward date-plan from target signature through every enterprise gate.",
+      "type": "planning",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "close-plan",
+        "mutual-action-plan",
+        "paper-process"
+      ],
+      "path": "commands/close-plan.md"
+    },
+    {
+      "command": "coach",
+      "description": "Prepare a structured coaching session for a rep — strengths, gaps, and a prioritized development plan.",
+      "type": "planning",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "coaching-prep"
+      ],
+      "path": "commands/coach.md"
+    },
+    {
+      "command": "commit",
+      "description": "Prepare your own commit and best-case forecast call for the current period.",
+      "type": "planning",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "forecast-rollup"
+      ],
+      "path": "commands/commit.md"
+    },
+    {
+      "command": "daily",
+      "description": "Morning rundown — meetings today, overdue follow-ups, deal alerts, and daily focus.",
+      "type": "general",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "daily-brief"
+      ],
+      "path": "commands/daily.md"
+    },
+    {
+      "command": "deal-debrief",
+      "description": "Debrief a single closed deal you owned — what drove the outcome and what to carry forward.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "win-loss-analysis"
+      ],
+      "path": "commands/deal-debrief.md"
+    },
+    {
+      "command": "deal-desk",
+      "description": "Route a deal through deal-desk review — non-standard terms, approval tiers, and exception tracking.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "deal-desk"
+      ],
+      "path": "commands/deal-desk.md"
+    },
+    {
+      "command": "deal-review",
+      "description": "Score a deal red/amber/green across every MEDDPICC dimension and surface gaps, risks, and next actions.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "deal-review"
+      ],
+      "path": "commands/deal-review.md"
+    },
+    {
+      "command": "demo",
+      "description": "Build a demo storyline tied to discovered pain, with stakeholder-specific moments.",
+      "type": "general",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "demo-prep",
+        "product-knowledge",
+        "stakeholder-mapping"
+      ],
+      "path": "commands/demo.md"
+    },
+    {
+      "command": "dial",
+      "description": "Prep a call block, work openers/gatekeeper/voicemail scripts, and log a disposition after every dial.",
+      "type": "general",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "cold-calling",
+        "playbook-library"
+      ],
+      "path": "commands/dial.md"
+    },
+    {
+      "command": "evolve",
+      "description": "Cluster active instincts and draft new skills, commands, or agents from patterns.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "instincts"
+      ],
+      "path": "commands/evolve.md"
+    },
+    {
+      "command": "follow-up",
+      "description": "Compose a thread-aware follow-up, breakup, or recycle-and-refer — reads the thread first, never re-pitches blind.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "follow-up-ops",
+        "reply-handling"
+      ],
+      "path": "commands/follow-up.md"
+    },
+    {
+      "command": "forecast-accuracy",
+      "description": "Measure forecast accuracy — submitted vs closed by rep, segment, and period, with bias and error analysis.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "forecast-accuracy"
+      ],
+      "path": "commands/forecast-accuracy.md"
+    },
+    {
+      "command": "forecast",
+      "description": "Roll up the team forecast — commit, best-case, and pipeline coverage with variance notes.",
+      "type": "testing",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "forecast-rollup"
+      ],
+      "path": "commands/forecast.md"
+    },
+    {
+      "command": "handoff",
+      "description": "Build an SDR-to-AE or AE-to-CS handoff with completeness checks.",
+      "type": "general",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "sales-handoffs"
+      ],
+      "path": "commands/handoff.md"
+    },
+    {
+      "command": "inbound",
+      "description": "Triage and respond to an inbound lead within its speed-to-lead SLA — ICP-score, route, draft the response.",
+      "type": "outreach",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "inbound-lead-response",
+        "lead-routing"
+      ],
+      "path": "commands/inbound.md"
+    },
+    {
+      "command": "inbox",
+      "description": "Triage the email inbox — classify into action tiers and draft replies with account context.",
+      "type": "outreach",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "inbox-triage"
+      ],
+      "path": "commands/inbox.md"
+    },
+    {
+      "command": "inspect",
+      "description": "Deep-dive a single deal — timeline, stakeholder map, MEDDPICC gaps, and recommended next step.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "deal-inspection",
+        "deal-review"
+      ],
+      "path": "commands/inspect.md"
+    },
+    {
+      "command": "instinct-export",
+      "description": "Export approved instincts for team sharing or backup.",
+      "type": "general",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "instincts"
+      ],
+      "path": "commands/instinct-export.md"
+    },
+    {
+      "command": "instinct-import",
+      "description": "Import shared team instincts into the current workspace.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "instincts"
+      ],
+      "path": "commands/instinct-import.md"
+    },
+    {
+      "command": "instinct-promote",
+      "description": "Manager-gated promotion of personal instincts to the shared team workspace.",
+      "type": "general",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "instincts"
+      ],
+      "path": "commands/instinct-promote.md"
+    },
+    {
+      "command": "instinct-status",
+      "description": "Review learned instincts and approve or reject pending entries.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "instincts"
+      ],
+      "path": "commands/instinct-status.md"
+    },
+    {
+      "command": "instinct-workspaces",
+      "description": "List available instinct workspaces and switch the active one.",
+      "type": "general",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "instincts"
+      ],
+      "path": "commands/instinct-workspaces.md"
+    },
+    {
+      "command": "learn",
+      "description": "Capture a one-shot pattern or observation as a pending instinct.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "instincts"
+      ],
+      "path": "commands/learn.md"
+    },
+    {
+      "command": "map",
+      "description": "Build a shared buyer-and-seller milestone plan from today to signature.",
+      "type": "planning",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "close-plan",
+        "mutual-action-plan",
+        "paper-process"
+      ],
+      "path": "commands/map.md"
+    },
+    {
+      "command": "meddpicc-audit",
+      "description": "Audit MEDDPICC methodology adoption across deals, reps, or the team pipeline.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "methodology-audit"
+      ],
+      "path": "commands/meddpicc-audit.md"
+    },
+    {
+      "command": "merge",
+      "description": "Identify and resolve duplicate CRM records — contacts, companies, or deals — with a merge recommendation.",
+      "type": "planning",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "dedupe-merge"
+      ],
+      "path": "commands/merge.md"
+    },
+    {
+      "command": "my-pipeline",
+      "description": "Review your own open pipeline for hygiene issues — stale deals, missing MEDDPICC fields, and stage-age violations.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "pipeline-hygiene"
+      ],
+      "path": "commands/my-pipeline.md"
+    },
+    {
+      "command": "negotiate",
+      "description": "Prepare a negotiation strategy — concessions ladder, BATNA, and procurement counter-tactics.",
+      "type": "planning",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "negotiation-prep",
+        "quote-desk"
+      ],
+      "path": "commands/negotiate.md"
+    },
+    {
+      "command": "notes",
+      "description": "Convert a call transcript or raw notes into a MEDDPICC capture, a CRM update, and a follow-up draft.",
+      "type": "outreach",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "discovery-notes"
+      ],
+      "path": "commands/notes.md"
+    },
+    {
+      "command": "onboard",
+      "description": "Build a new-rep onboarding plan — ramp milestones, enablement resources, and 30/60/90 checkpoints.",
+      "type": "planning",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "rep-onboarding"
+      ],
+      "path": "commands/onboard.md"
+    },
+    {
+      "command": "outreach",
+      "description": "Draft a first-touch cold message that passes the quality gate — real personalization, one ask, concrete proof, zero filler.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "cold-outreach",
+        "product-knowledge"
+      ],
+      "path": "commands/outreach.md"
+    },
+    {
+      "command": "paper",
+      "description": "Track and advance the paper process — MSA, DPA, order form, and security review.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "close-plan",
+        "mutual-action-plan",
+        "paper-process"
+      ],
+      "path": "commands/paper.md"
+    },
+    {
+      "command": "pipeline",
+      "description": "Scan the team pipeline for hygiene issues — stale deals, missing MEDDPICC fields, and stage-age violations.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "pipeline-hygiene"
+      ],
+      "path": "commands/pipeline.md"
+    },
+    {
+      "command": "poc",
+      "description": "Define a POC or pilot with mutual success criteria and a go/no-go decision framework.",
+      "type": "planning",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "evaluation-plan"
+      ],
+      "path": "commands/poc.md"
+    },
+    {
+      "command": "product",
+      "description": "Retrieve or update approved product knowledge — value props, use-cases, proof points, and claims — with provenance.",
+      "type": "outreach",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "account-memory",
+        "product-knowledge"
+      ],
+      "path": "commands/product.md"
+    },
+    {
+      "command": "proposal",
+      "description": "Generate a deal-specific proposal using account context and approved product knowledge.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "product-knowledge",
+        "proposal-builder",
+        "quote-desk"
+      ],
+      "path": "commands/proposal.md"
+    },
+    {
+      "command": "prospect",
+      "description": "Run the SDR prospecting pipeline — research → ICP-score → warm-path → draft first-touch, all draft-only.",
+      "type": "orchestration",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "account-memory",
+        "brand-voice",
+        "product-knowledge",
+        "prospecting-pipeline"
+      ],
+      "path": "commands/prospect.md"
+    },
+    {
+      "command": "qbr",
+      "description": "Build a QBR deck outline — performance vs quota, pipeline health, wins/losses, and next-quarter plan.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "qbr-builder"
+      ],
+      "path": "commands/qbr.md"
+    },
+    {
+      "command": "quota",
+      "description": "Show your personal quota attainment scorecard — bookings vs target, pipeline coverage, and pacing.",
+      "type": "testing",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "sales-reporting"
+      ],
+      "path": "commands/quota.md"
+    },
+    {
+      "command": "quote",
+      "description": "Run CPQ math — discount tiers, packaging, ramp structures, and approval routing.",
+      "type": "outreach",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "quote-desk"
+      ],
+      "path": "commands/quote.md"
+    },
+    {
+      "command": "recap",
+      "description": "Convert a meeting transcript into a MEDDPICC update and recap draft.",
+      "type": "outreach",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "meeting-followthrough"
+      ],
+      "path": "commands/recap.md"
+    },
+    {
+      "command": "reference",
+      "description": "Match and coordinate reference customers for an active deal.",
+      "type": "general",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "product-knowledge",
+        "reference-coordination"
+      ],
+      "path": "commands/reference.md"
+    },
+    {
+      "command": "renewal",
+      "description": "Run a renewal health check — risk triage, retention play, and expansion whitespace analysis.",
+      "type": "research",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "product-knowledge",
+        "renewal-playbook"
+      ],
+      "path": "commands/renewal.md"
+    },
+    {
+      "command": "reply",
+      "description": "Disposition an inbound reply, decide call-vs-email, and execute the next action.",
+      "type": "outreach",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "reply-handling"
+      ],
+      "path": "commands/reply.md"
+    },
+    {
+      "command": "report",
+      "description": "Generate a sales report — attainment, pipeline coverage, activity metrics, or custom CRM query.",
+      "type": "testing",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "sales-reporting"
+      ],
+      "path": "commands/report.md"
+    },
+    {
+      "command": "research",
+      "description": "Deep single-account brief — HubSpot history first, then web, every finding labeled fact/inference/recommendation.",
+      "type": "research",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "account-memory",
+        "account-research"
+      ],
+      "path": "commands/research.md"
+    },
+    {
+      "command": "retention",
+      "description": "Roll up renewal and retention health — churn risk, expansion pipeline, and NRR outlook by segment.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "retention-rollup"
+      ],
+      "path": "commands/retention.md"
+    },
+    {
+      "command": "rfp",
+      "description": "Draft RFP or security-questionnaire responses from the approved answer library.",
+      "type": "outreach",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "product-knowledge",
+        "rfp-response"
+      ],
+      "path": "commands/rfp.md"
+    },
+    {
+      "command": "roi",
+      "description": "Build a business case or ROI model from discovered metrics and approved proof points.",
+      "type": "general",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "business-case",
+        "product-knowledge",
+        "quote-desk"
+      ],
+      "path": "commands/roi.md"
+    },
+    {
+      "command": "route",
+      "description": "Apply lead-routing logic to assign or re-assign inbound leads by territory, segment, and capacity rules.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "lead-routing"
+      ],
+      "path": "commands/route.md"
+    },
+    {
+      "command": "sequence-stats",
+      "description": "Analyze sequence/variant conversion (open → reply → meeting), compare A/B, recommend promote/retire.",
+      "type": "planning",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "outbound-sequences",
+        "outreach-analytics",
+        "playbook-library"
+      ],
+      "path": "commands/sequence-stats.md"
+    },
+    {
+      "command": "sequence",
+      "description": "Build a compliant multi-touch outbound cadence (email/LinkedIn/call/voicemail) — all steps draft-only.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "brand-voice",
+        "outbound-sequences",
+        "playbook-library",
+        "product-knowledge"
+      ],
+      "path": "commands/sequence.md"
+    },
+    {
+      "command": "skill-create",
+      "description": "Mine session history and sent-mail patterns to draft a new ESCC skill file.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "instincts"
+      ],
+      "path": "commands/skill-create.md"
+    },
+    {
+      "command": "stakeholders",
+      "description": "Map the buying committee, score influence and sentiment, and develop a champion plan.",
+      "type": "planning",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "multi-threading",
+        "stakeholder-mapping"
+      ],
+      "path": "commands/stakeholders.md"
+    },
+    {
+      "command": "standup",
+      "description": "EOD standup brief — what moved today, blockers, and tomorrow's top priorities.",
+      "type": "general",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "daily-brief"
+      ],
+      "path": "commands/standup.md"
+    },
+    {
+      "command": "team-init",
+      "description": "Detect the team GTM stack and write a workspace CLAUDE.md for ESCC.",
+      "type": "outreach",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "team-init"
+      ],
+      "path": "commands/team-init.md"
+    },
+    {
+      "command": "territory",
+      "description": "Build or review a territory plan — account segmentation, coverage prioritization, and whitespace analysis.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "territory-planning"
+      ],
+      "path": "commands/territory.md"
+    },
+    {
+      "command": "thread",
+      "description": "Draft warm intra-account outreach to new or under-engaged stakeholders within an active deal.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "multi-threading",
+        "stakeholder-mapping"
+      ],
+      "path": "commands/thread.md"
+    },
+    {
+      "command": "triggers",
+      "description": "Detect buying and timing triggers for an account and map each to an outreach play.",
+      "type": "research",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "cold-outreach",
+        "follow-up-ops",
+        "multi-threading",
+        "trigger-detection"
+      ],
+      "path": "commands/triggers.md"
+    },
+    {
+      "command": "win-loss",
+      "description": "Analyze a set of closed deals for win/loss patterns across segment, persona, and competitive dimension.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "win-loss-analysis"
+      ],
+      "path": "commands/win-loss.md"
+    }
+  ],
+  "statistics": {
+    "byType": {
+      "general": 11,
+      "orchestration": 1,
+      "outreach": 9,
+      "planning": 10,
+      "research": 3,
+      "review": 28,
+      "testing": 4
+    },
+    "topAgents": [],
+    "topSkills": [
+      {
+        "skill": "product-knowledge",
+        "count": 11
+      },
+      {
+        "skill": "instincts",
+        "count": 8
+      },
+      {
+        "skill": "quote-desk",
+        "count": 4
+      },
+      {
+        "skill": "account-memory",
+        "count": 3
+      },
+      {
+        "skill": "close-plan",
+        "count": 3
+      },
+      {
+        "skill": "deal-review",
+        "count": 3
+      },
+      {
+        "skill": "multi-threading",
+        "count": 3
+      },
+      {
+        "skill": "mutual-action-plan",
+        "count": 3
+      },
+      {
+        "skill": "paper-process",
+        "count": 3
+      },
+      {
+        "skill": "playbook-library",
+        "count": 3
+      }
+    ]
+  }
+}
