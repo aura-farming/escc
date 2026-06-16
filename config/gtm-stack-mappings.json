@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "mappings": [
+    {
+      "indicator": "mcp__hubspot__*",
+      "label": "HubSpot CRM (system of record)",
+      "recommends": {
+        "skills": ["crm-hygiene", "account-research", "account-memory", "deal-review", "pipeline-hygiene", "forecast-rollup"],
+        "rules": ["crm-hygiene", "lifecycle-stages", "forecasting-definitions", "routing-rules"],
+        "hooks": ["pre:crm-write-guard", "post:crm-log-reminder"],
+        "profile": "full"
+      }
+    },
+    {
+      "indicator": "mcp__*[Gg]mail*",
+      "label": "Gmail (draft-only by construction)",
+      "recommends": {
+        "skills": ["email-outbound-ops", "inbox-triage", "cold-outreach", "follow-up-ops", "reply-handling", "outbound-sequences"],
+        "rules": ["outbound-compliance", "messaging-style", "data-handling", "jurisdiction-routing"],
+        "hooks": ["pre:outbound-send-gate", "post:outbound-style-check"],
+        "profile": "sdr"
+      }
+    },
+    {
+      "indicator": "mcp__*Google_Calendar*",
+      "label": "Google Calendar",
+      "recommends": {
+        "skills": ["meeting-booking", "meeting-followthrough"],
+        "rules": ["meeting-standards"],
+        "hooks": ["post:crm-log-reminder"]
+      }
+    },
+    {
+      "indicator": "mcp__*[Ff]ireflies*",
+      "label": "Fireflies (call transcripts)",
+      "recommends": {
+        "skills": ["discovery-notes", "call-review", "meeting-followthrough"],
+        "rules": ["meeting-standards"],
+        "profile": "ae"
+      }
+    },
+    {
+      "indicator": "mcp__*[Ss]lack*",
+      "label": "Slack (alert delivery)",
+      "recommends": {
+        "skills": ["daily-brief", "trigger-detection"],
+        "hooks": ["post:metrics-bridge"]
+      }
+    },
+    {
+      "indicator": "mcp__*[Ee]xa*",
+      "label": "Exa (web research)",
+      "recommends": {
+        "skills": ["account-research", "prospecting-pipeline", "trigger-detection", "competitor-battlecards"]
+      }
+    },
+    {
+      "indicator": "mcp__*firecrawl*",
+      "label": "Firecrawl (web crawl/extract)",
+      "recommends": {
+        "skills": ["account-research", "trigger-detection"],
+        "rules": ["data-handling"]
+      }
+    },
+    {
+      "indicator": "mcp__*[Aa]pollo*",
+      "label": "Apollo (prospecting data)",
+      "recommends": {
+        "skills": ["prospecting-pipeline", "icp-profile", "inbound-lead-response"],
+        "rules": ["outbound-compliance", "data-handling"]
+      }
+    },
+    {
+      "indicator": "mcp__*[Cc]lay*",
+      "label": "Clay (enrichment)",
+      "recommends": {
+        "skills": ["prospecting-pipeline", "account-research", "icp-profile"],
+        "rules": ["data-handling"]
+      }
+    },
+    {
+      "indicator": "mcp__*[Zz]apier*",
+      "label": "Zapier (multi-app automation; write actions are gated)",
+      "recommends": {
+        "rules": ["outbound-compliance", "security"],
+        "hooks": ["pre:outbound-send-gate"]
+      }
+    }
+  ]
+}

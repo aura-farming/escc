@@ -1,0 +1,13 @@
+{
+  "_readme": "Example install configuration for `escc install`. Copy + adjust, then: `node scripts/escc.js install --profile sdr --target claude-project`. Profiles resolve through manifests/install-profiles.json; targets are claude-home or claude-project only. Env keys mirror the .env.example ESCC_* surface.",
+  "profile": "sdr",
+  "target": "claude-project",
+  "hookProfile": "standard",
+  "disabledHooks": [],
+  "disabledMcps": [],
+  "env": {
+    "ESCC_BULK_SEND_MAX": "5",
+    "ESCC_SESSION_START_MAX_CHARS": "8000",
+    "ESCC_OUTBOUND_GATE": "on"
+  }
+}
