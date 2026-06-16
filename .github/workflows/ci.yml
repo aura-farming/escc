@@ -26,7 +26,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # `npm test` wires in the scripts/ci/ validators in Phase 6 (quality plane);
-      # until then CI runs the hermetic test suite, which is the canonical green metric.
+      # `npm test` runs the full quality plane: the scripts/ci/ validators,
+      # the catalog + command-registry pins, and the hermetic test suite
+      # (unit + content guards).
       - name: Run tests
-        run: node tests/run-all.js
+        run: npm test
