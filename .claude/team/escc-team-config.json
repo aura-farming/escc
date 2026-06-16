@@ -1,0 +1,30 @@
+{
+  "_readme": "Dogfood scaffold for a shared sales-team config. Calibrate to your team; this file is the team-shared source of truth that per-seat workspace CLAUDE.md files reference. No secrets here — placeholders only.",
+  "team": "Acme Co Sales",
+  "systemOfRecord": "hubspot",
+  "defaultProfile": "full",
+  "personas": ["sdr", "ae", "sales-manager", "revops"],
+  "compliance": {
+    "defaultJurisdiction": "au",
+    "jurisdictions": ["au", "us", "eu-uk"],
+    "suppressionListSource": "<pointer-to-suppression-source>"
+  },
+  "segments": ["enterprise", "mid-market", "smb"],
+  "approvalMatrix": {
+    "calibrationNote": "Override the rules/approval-matrix.md template bands here.",
+    "discountTiers": [
+      { "maxDiscountPct": 10, "approver": "rep" },
+      { "maxDiscountPct": 20, "approver": "sales-manager" },
+      { "maxDiscountPct": 35, "approver": "vp-sales" },
+      { "maxDiscountPct": 100, "approver": "cro+finance" }
+    ]
+  },
+  "targets": {
+    "calibrationNote": "Quota / ramp / coverage numbers live here; rules/targets.md defines the model.",
+    "pipelineCoverageMultiple": 3.5
+  },
+  "instincts": {
+    "seedDir": ".claude/escc/instincts/inherited",
+    "promotion": "manager-gated"
+  }
+}
