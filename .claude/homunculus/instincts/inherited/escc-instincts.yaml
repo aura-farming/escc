@@ -1,0 +1,452 @@
+# Instincts generated from https://github.com/aura-farming/escc
+# Generated: 2026-06-16T00:19:28.647Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: escc-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat
+
+## Evidence
+
+- 3 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat: instinct engine (A.3) — schema + workspace-keyed store, feat: instinct engine (A.3) — observe/distill/lifecycle/cli + runtime integration
+
+---
+id: escc-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Commit Length
+
+## Action
+
+Write moderate-length commit messages (~69 characters)
+
+## Evidence
+
+- Average commit message length: 69 chars
+- Based on 3 commits
+
+---
+id: escc-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Naming Files
+
+## Action
+
+Use kebab-case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: kebab-case
+
+---
+id: escc-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: escc-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: escc-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: escc-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.js
+
+## Evidence
+
+- File pattern: *.test.js
+- Consistent across test files
+
+---
+id: escc-workflow-feature-development-with-schema-and-tests
+trigger: "when doing feature development with schema and tests"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Workflow Feature Development With Schema And Tests
+
+## Action
+
+Follow the feature-development-with-schema-and-tests workflow:
+1. Define or update a JSON schema in schemas/*.schema.json
+2. Implement or update the data store/engine logic in scripts/instincts/*.js
+3. Write or update unit tests in tests/unit/*.test.js
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: schemas/*.schema.json, scripts/instincts/*.js, tests/unit/*.test.js
+
+---
+id: escc-workflow-cli-surface-and-subcommand-extension
+trigger: "when doing cli surface and subcommand extension"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Workflow Cli Surface And Subcommand Extension
+
+## Action
+
+Follow the cli-surface-and-subcommand-extension workflow:
+1. Implement or update CLI entrypoint in scripts/escc.js or similar
+2. Add supporting logic in scripts/lib/*.js or scripts/*.js
+3. Update or add relevant JSON schemas in schemas/*.schema.json if needed
+4. Write or update unit tests in tests/unit/*.test.js
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: scripts/escc.js, scripts/lib/*.js, scripts/*.js
+
+---
+id: escc-instinct-file-naming
+trigger: "When creating a new file in the repository"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct File Naming
+
+## Action
+
+Name the file using kebab-case (e.g., my-feature.js)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.files
+- Observed in scripts/instincts/*.js and scripts/lib/*.js
+
+---
+id: escc-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Function Naming
+
+## Action
+
+Name the function using camelCase (e.g., doSomething)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.functions
+
+---
+id: escc-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Class Naming
+
+## Action
+
+Name the class using PascalCase (e.g., MyClass)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.classes
+
+---
+id: escc-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Constant Naming
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE (e.g., MAX_SIZE)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.constants
+
+---
+id: escc-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Import Style
+
+## Action
+
+Use relative import paths (e.g., ./my-module.js)
+
+## Evidence
+
+- Pattern in codeStyle.importStyle
+
+---
+id: escc-instinct-export-style
+trigger: "When exporting from a module"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Export Style
+
+## Action
+
+Use named exports (e.g., export function foo() {})
+
+## Evidence
+
+- Pattern in codeStyle.exportStyle
+
+---
+id: escc-instinct-test-file-pattern
+trigger: "When adding a new test file"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Test File Pattern
+
+## Action
+
+Name the test file with the pattern *.test.js and place it in the tests/unit/ directory
+
+## Evidence
+
+- Pattern in testing.filePattern
+- Pattern in workflows.filesInvolved
+
+---
+id: escc-instinct-test-type
+trigger: "When writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Test Type
+
+## Action
+
+Write unit tests for new or updated features
+
+## Evidence
+
+- Pattern in testing.testTypes
+- Pattern in workflows.filesInvolved
+
+---
+id: escc-instinct-test-location
+trigger: "When organizing test files"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Test Location
+
+## Action
+
+Place test files in the separate tests/ directory, specifically tests/unit/ for unit tests
+
+## Evidence
+
+- Pattern in architecture.folderStructure.testLocation
+- Pattern in workflows.filesInvolved
+
+---
+id: escc-instinct-commit-format
+trigger: "When writing a commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Commit Format
+
+## Action
+
+Use the conventional commit format with a 'feat' prefix for new features (e.g., feat: add new engine)
+
+## Evidence
+
+- Pattern in commits.type and commits.prefixes
+- Examples in commits.examples
+
+---
+id: escc-instinct-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Commit Length
+
+## Action
+
+Write descriptive commit messages averaging around 69 characters
+
+## Evidence
+
+- Pattern in commits.averageLength
+
+---
+id: escc-instinct-feature-schema-workflow
+trigger: "When adding a new engine or major feature that requires schema, data storage, and validation"
+confidence: 0.92
+domain: workflow
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Feature Schema Workflow
+
+## Action
+
+Define or update a JSON schema in schemas/*.schema.json, implement or update logic in scripts/instincts/*.js, and write or update unit tests in tests/unit/*.test.js
+
+## Evidence
+
+- Workflow: feature-development-with-schema-and-tests
+- Pattern in workflows.filesInvolved
+- Commit examples in workflows.example.commits
+
+---
+id: escc-instinct-cli-extension-workflow
+trigger: "When adding a new CLI command or extending the operator interface"
+confidence: 0.88
+domain: workflow
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Cli Extension Workflow
+
+## Action
+
+Implement or update CLI entrypoint in scripts/escc.js, add supporting logic in scripts/lib/*.js or scripts/*.js, update or add JSON schemas in schemas/*.schema.json if needed, and write or update unit tests in tests/unit/*.test.js
+
+## Evidence
+
+- Workflow: cli-surface-and-subcommand-extension
+- Pattern in workflows.filesInvolved
+- Commit examples in workflows.example.commits
+
