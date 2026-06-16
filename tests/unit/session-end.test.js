@@ -82,7 +82,7 @@ function endInput(sessionId, transcriptPath) {
 
 test('writes a markdown session summary with paired markers', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined }, () => {
     const tp = writeTranscript(home, 'sess-end-1', TRANSCRIPT_LINES);
     seedActivity(home, 'sess-end-1', ['company:acme', 'deal:deal-1', 'domain:acme.io']);
     hook.run(endInput('sess-end-1', tp));
@@ -98,7 +98,7 @@ test('writes a markdown session summary with paired markers', () => {
 
 test('appends tagged events to the active account memory (C1)', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined }, () => {
     const tp = writeTranscript(home, 'sess-end-2', TRANSCRIPT_LINES);
     seedActivity(home, 'sess-end-2', ['company:acme', 'deal:deal-1']);
     hook.run(endInput('sess-end-2', tp));
@@ -111,7 +111,7 @@ test('appends tagged events to the active account memory (C1)', () => {
 
 test('persists detected promises to the state-store promises table (C3)', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined }, () => {
     const tp = writeTranscript(home, 'sess-end-3', TRANSCRIPT_LINES);
     seedActivity(home, 'sess-end-3', ['company:acme', 'deal:deal-1']);
     hook.run(endInput('sess-end-3', tp));
@@ -132,7 +132,7 @@ test('persists detected promises to the state-store promises table (C3)', () => 
 
 test('repeated SessionEnd runs are idempotent for promises (stable id upsert)', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined }, () => {
     const tp = writeTranscript(home, 'sess-end-4', TRANSCRIPT_LINES);
     seedActivity(home, 'sess-end-4', ['company:acme']);
     hook.run(endInput('sess-end-4', tp));
@@ -150,7 +150,7 @@ test('repeated SessionEnd runs are idempotent for promises (stable id upsert)', 
 
 test('never blocks — fails open on a missing transcript', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home }, () => {
     const result = hook.run(endInput('sess-none', '/no/such/transcript.jsonl'));
     assert.ok(result === undefined || (result && result.exitCode === 0));
     assert.ok(!result || result.exitCode !== 2, 'session-end must never block');
