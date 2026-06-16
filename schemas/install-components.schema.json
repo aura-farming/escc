@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ESCC install-components manifest",
+  "description": "manifests/install-components.json — finer-grained install units grouped by family (ESCC families: persona:*, capability:*, methodology:*), each expanding to one or more modules. version may be null/absent (the loader defaults it).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["components"],
+  "properties": {
+    "version": {
+      "type": ["integer", "null"],
+      "minimum": 1
+    },
+    "components": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/component" }
+    }
+  },
+  "definitions": {
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "family", "modules"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "family": {
+          "type": "string",
+          "minLength": 1,
+          "description": "component family, e.g. persona | capability | methodology | skill | agent"
+        },
+        "description": { "type": "string" },
+        "modules": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "synthetic": {
+          "type": "boolean",
+          "description": "true for components generated at load time (e.g. per-skill surfaces)"
+        }
+      }
+    }
+  }
+}
