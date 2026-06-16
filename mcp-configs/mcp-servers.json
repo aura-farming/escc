@@ -1,0 +1,79 @@
+{
+  "_readme": [
+    "Placeholder MCP server templates for ESCC. THESE ARE TEMPLATES — copy the entries you need into your own Claude Code config (.mcp.json at the project root, or ~/.claude.json) and replace every ${PLACEHOLDER}. Never commit real credentials; ESCC keeps only placeholders here.",
+    "PREFERRED PATH: Gmail, Google Calendar, and HubSpot are best connected via claude.ai Connectors (Settings -> Connectors), which need no entry in this file. The 'gmail' / 'google-calendar' / 'hubspot' stdio templates below are only for teams that self-host those MCP servers instead.",
+    "Package names below (e.g. @your-org/*-mcp-server) are illustrative placeholders — substitute the real server package or remote URL for your stack.",
+    "MCP BUDGET (see rules/common/security.md): keep <= 10 enabled servers and < 80 active tools. Enable only what a persona needs; disable the rest with ESCC_DISABLED_MCPS.",
+    "LinkedIn: there is NO official LinkedIn API or supported MCP server. ESCC documents manual / browser-driven research patterns instead — do not wire an unofficial scraper here (see rules/common/data-handling.md: no ToS-violating scraping)."
+  ],
+  "mcpServers": {
+    "hubspot": {
+      "type": "http",
+      "url": "${HUBSPOT_MCP_URL}",
+      "headers": {
+        "Authorization": "Bearer ${HUBSPOT_ACCESS_TOKEN}"
+      }
+    },
+    "gmail": {
+      "command": "npx",
+      "args": ["-y", "@your-org/gmail-mcp-server"],
+      "env": {
+        "GMAIL_OAUTH_CLIENT_ID": "${GMAIL_OAUTH_CLIENT_ID}",
+        "GMAIL_OAUTH_CLIENT_SECRET": "${GMAIL_OAUTH_CLIENT_SECRET}",
+        "GMAIL_OAUTH_REFRESH_TOKEN": "${GMAIL_OAUTH_REFRESH_TOKEN}"
+      }
+    },
+    "google-calendar": {
+      "command": "npx",
+      "args": ["-y", "@your-org/google-calendar-mcp-server"],
+      "env": {
+        "GOOGLE_OAUTH_CLIENT_ID": "${GOOGLE_OAUTH_CLIENT_ID}",
+        "GOOGLE_OAUTH_CLIENT_SECRET": "${GOOGLE_OAUTH_CLIENT_SECRET}",
+        "GOOGLE_OAUTH_REFRESH_TOKEN": "${GOOGLE_OAUTH_REFRESH_TOKEN}"
+      }
+    },
+    "fireflies": {
+      "type": "http",
+      "url": "${FIREFLIES_MCP_URL}",
+      "headers": {
+        "Authorization": "Bearer ${FIREFLIES_API_KEY}"
+      }
+    },
+    "slack": {
+      "command": "npx",
+      "args": ["-y", "@your-org/slack-mcp-server"],
+      "env": {
+        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+        "SLACK_TEAM_ID": "${SLACK_TEAM_ID}"
+      }
+    },
+    "exa": {
+      "type": "http",
+      "url": "${EXA_MCP_URL}",
+      "headers": {
+        "x-api-key": "${EXA_API_KEY}"
+      }
+    },
+    "firecrawl": {
+      "command": "npx",
+      "args": ["-y", "@your-org/firecrawl-mcp-server"],
+      "env": {
+        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+      }
+    },
+    "apollo": {
+      "command": "npx",
+      "args": ["-y", "@your-org/apollo-mcp-server"],
+      "env": {
+        "APOLLO_API_KEY": "${APOLLO_API_KEY}"
+      }
+    },
+    "clay": {
+      "command": "npx",
+      "args": ["-y", "@your-org/clay-mcp-server"],
+      "env": {
+        "CLAY_API_KEY": "${CLAY_API_KEY}"
+      }
+    }
+  }
+}
