@@ -81,8 +81,20 @@
     {
       "id": "docs",
       "kind": "docs",
-      "description": "Operator and persona documentation suite. Expands during Phase 6 (GLOSSARY, INCIDENT-RESPONSE, ARCHITECTURE, HOOKS, INSTINCTS, GETTING-STARTED-*, the-compliance-guide).",
-      "paths": ["docs"],
+      "description": "User-facing operator and persona documentation: architecture, hooks, instincts, glossary, incident response, the per-persona getting-started guides, and skill-authoring/placement policy. Excludes the internal docs/superpowers/ build specs.",
+      "paths": [
+        "docs/ARCHITECTURE.md",
+        "docs/HOOKS.md",
+        "docs/INSTINCTS.md",
+        "docs/GLOSSARY.md",
+        "docs/INCIDENT-RESPONSE.md",
+        "docs/GETTING-STARTED-SDR.md",
+        "docs/GETTING-STARTED-AE.md",
+        "docs/GETTING-STARTED-MANAGER.md",
+        "docs/SKILL-DEVELOPMENT-GUIDE.md",
+        "docs/SKILL-PLACEMENT-POLICY.md",
+        "docs/DECISIONS.md"
+      ],
       "targets": ["claude", "claude-project"],
       "dependencies": [],
       "defaultInstall": false,
