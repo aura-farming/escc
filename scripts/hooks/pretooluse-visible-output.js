@@ -2,7 +2,9 @@
 /*
  * Adapted from Everything Claude Code (ECC) scripts/hooks/pretooluse-visible-output.js
  * (MIT, (c) Affaan Mustafa) https://github.com/affaan-m/ECC.
- * Unchanged in behavior; ported verbatim into the ESCC namespace.
+ * Ported into the ESCC namespace, then generalized: the additionalContext
+ * builder stamps the actual firing event (PreToolUse/PostToolUse/
+ * UserPromptSubmit/SessionStart), not a hardcoded PreToolUse.
  */
 /**
  * Helpers for emitting PreToolUse `additionalContext` — the only hook output
@@ -33,19 +35,25 @@ function combineAdditionalContext(current, next) {
   return `${currentText}\n${nextText}`;
 }
 
-function buildPreToolUseAdditionalContext(value) {
+function buildAdditionalContext(value, eventName) {
   const additionalContext = normalizeAdditionalContext(value);
   if (!additionalContext) return '';
 
   return JSON.stringify({
     hookSpecificOutput: {
-      hookEventName: 'PreToolUse',
+      hookEventName: eventName || 'PreToolUse',
       additionalContext,
     },
   });
 }
 
+// Back-compat alias for the PreToolUse call site.
+function buildPreToolUseAdditionalContext(value) {
+  return buildAdditionalContext(value, 'PreToolUse');
+}
+
 module.exports = {
+  buildAdditionalContext,
   buildPreToolUseAdditionalContext,
   combineAdditionalContext,
   normalizeAdditionalContext,

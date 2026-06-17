@@ -26,7 +26,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { isHookEnabled } = require('../lib/hook-flags');
-const { buildPreToolUseAdditionalContext } = require('./pretooluse-visible-output');
+const { buildAdditionalContext, normalizeAdditionalContext } = require('./pretooluse-visible-output');
 
 const DEFAULT_MAX_STDIN = 1024 * 1024;
 
@@ -86,7 +86,50 @@ function exitWithStdout(text, exitCode) {
   process.stdout.write(text, () => process.exit(exitCode));
 }
 
-function resolveHookResult(raw, output) {
+// Events whose hook response may carry hookSpecificOutput.additionalContext
+// (text injected back into the model). For any other event (Stop, SubagentStop,
+// PreCompact, SessionEnd, Notification), Claude Code rejects an additionalContext
+// response because its hookEventName cannot match the firing event.
+const ADDITIONAL_CONTEXT_EVENTS = new Set([
+  'PreToolUse',
+  'PostToolUse',
+  'UserPromptSubmit',
+  'SessionStart',
+]);
+
+// Fallback event-name derivation from the hookId prefix, used only when the
+// stdin payload omits hook_event_name. Order matters: pre:compact before pre:.
+const HOOK_ID_EVENT_PREFIXES = [
+  [/^post:/, 'PostToolUse'],
+  [/^pre:compact/, 'PreCompact'],
+  [/^pre:/, 'PreToolUse'],
+  [/^stop:/, 'Stop'],
+  [/^session:start/, 'SessionStart'],
+  [/^session:end/, 'SessionEnd'],
+];
+
+/**
+ * Resolve the firing hook event. Authoritative source: hook_event_name in the
+ * stdin payload (what Claude Code declares and validates the response against);
+ * falls back to the hookId prefix, then to PreToolUse (the legacy default).
+ */
+function resolveHookEventName(raw, hookId) {
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.hook_event_name === 'string' && parsed.hook_event_name.trim()) {
+      return parsed.hook_event_name.trim();
+    }
+  } catch (_err) {
+    /* not JSON — fall back to the hookId prefix */
+  }
+  const id = String(hookId || '');
+  for (const [re, evt] of HOOK_ID_EVENT_PREFIXES) {
+    if (re.test(id)) return evt;
+  }
+  return 'PreToolUse';
+}
+
+function resolveHookResult(raw, output, eventName) {
   if (typeof output === 'string' || Buffer.isBuffer(output)) {
     return { stdout: String(output), exitCode: 0 };
   }
@@ -96,7 +139,15 @@ function resolveHookResult(raw, output) {
     const exitCode = Number.isInteger(output.exitCode) ? output.exitCode : 0;
 
     if (Object.prototype.hasOwnProperty.call(output, 'additionalContext')) {
-      return { stdout: buildPreToolUseAdditionalContext(output.additionalContext), exitCode };
+      // additionalContext is injected back into the model's context, which only
+      // ADDITIONAL_CONTEXT_EVENTS support. For Stop/SubagentStop/etc., emitting it
+      // as hookSpecificOutput makes Claude Code reject the response (hookEventName
+      // mismatch) — instead surface the text as a non-blocking stderr note.
+      if (ADDITIONAL_CONTEXT_EVENTS.has(eventName)) {
+        return { stdout: buildAdditionalContext(output.additionalContext, eventName), exitCode };
+      }
+      writeStderr(normalizeAdditionalContext(output.additionalContext));
+      return { stdout: '', exitCode };
     }
     if (Object.prototype.hasOwnProperty.call(output, 'stdout')) {
       return { stdout: String(output.stdout ?? ''), exitCode };
@@ -198,7 +249,7 @@ async function main() {
         truncated,
         maxStdin
       });
-      const result = resolveHookResult(raw, output);
+      const result = resolveHookResult(raw, output, resolveHookEventName(raw, hookId));
       exitWithStdout(sanitizeEcho(result.stdout), result.exitCode);
     } catch (runErr) {
       process.stderr.write(`[Hook] run() error for ${hookId}: ${runErr.message}\n`);
