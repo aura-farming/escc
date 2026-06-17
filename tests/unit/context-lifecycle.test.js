@@ -165,3 +165,55 @@ test('D. promises are attributed per account and recalled per account', () => {
     assert.ok(/send the SOW/i.test(ctx) && /book the exec sync/i.test(ctx), 'overdue list spans all accounts');
   });
 });
+
+// --- E. long-horizon (A.9): a deal-scoped promise + account context created in an
+//        EARLIER session (>7 days prior) resurface for the ACTIVE DEAL at a later
+//        session start. Composes the proven pieces — A (end->start round-trip),
+//        B (>7-day decoupling), D (per-deal attribution) — into the exact §A.9
+//        long-horizon success criterion: context held across months, not one chat.
+
+test('E. a deal-scoped promise + account context from a session >7 days ago resurface for the active deal', () => {
+  const home = freshHome();
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'company:initech', ESCC_INSTINCTS_DIR: undefined }, () => {
+    const longAgoIso = '2026-01-01T00:00:00.000Z'; // well over 7 days before "now"
+
+    // Session 1 ends: the rep worked the Initech renewal and recorded the champion.
+    const tp = writeTranscript(home, 's1-old', [
+      { type: 'user', message: { role: 'user', content: 'Work the Initech renewal — procurement is reviewing the order form.' } },
+      { type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: 'Logged discovery on the Initech renewal; next step is the signed order form.' }] } },
+    ]);
+    seedActivity(home, 's1-old', ['company:initech', 'deal:initech-renewal']);
+    sessionEnd.run(JSON.stringify({ hook_event_name: 'SessionEnd', session_id: 's1-old', transcript_path: tp }));
+    accountMemory.appendEvent('company:initech', { type: 'note', text: 'Initech champion: VP Ops' });
+
+    // Back-date everything session 1 produced so the gap to "now" is > 7 days.
+    const sdir = path.join(home, 'session-data');
+    if (fs.existsSync(sdir)) {
+      const oldMs = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      for (const f of fs.readdirSync(sdir)) fs.utimesSync(path.join(sdir, f), new Date(oldMs), new Date(oldMs));
+    }
+
+    // The deal-scoped promise made back then — still open, now long overdue.
+    const store = createStateStoreSync();
+    try {
+      store.upsertPromise({
+        id: 'p-initech-of',
+        account_id: 'company:initech',
+        deal_id: 'initech-renewal',
+        text: 'Send the signed order form',
+        due_date: '2026-01-05',
+        created_at: longAgoIso,
+        updated_at: longAgoIso,
+      });
+    } finally {
+      store.close();
+    }
+
+    // Session N (a fresh session, much later) must STILL surface both the
+    // deal-scoped open loop and the active-deal account context.
+    const ctx = contextOf(sessionStart.run(JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', session_id: 'sN-initech' })));
+    assert.ok(/order form/i.test(ctx), 'the deal-scoped promise from the earlier session resurfaces (decoupled from the 7-day gate)');
+    assert.ok(/overdue/i.test(ctx), 'the months-old promise is flagged overdue');
+    assert.ok(/VP Ops/i.test(ctx), 'the active-deal (Initech) account context is hydrated alongside the open loop');
+  });
+});
