@@ -40,6 +40,13 @@ fs.writeFileSync(
   "'use strict';\nfunction run() { return { exitCode: 2, stdout: '' }; }\nmodule.exports = { run };\n"
 );
 
+// A context hook: returns { additionalContext }. The dispatcher must stamp the
+// ACTUAL firing event onto the hookSpecificOutput, not a hardcoded PreToolUse.
+fs.writeFileSync(
+  path.join(fixtureRoot, 'ctx-hook.js'),
+  "'use strict';\nfunction run() { return { additionalContext: 'NUDGE: confirm the drafts are sent' }; }\nmodule.exports = { run };\n"
+);
+
 process.on('exit', () => {
   try {
     fs.rmSync(fixtureRoot, { recursive: true, force: true });
@@ -156,4 +163,37 @@ test('path traversal outside the plugin root is rejected (fail-open echo)', () =
   assert.strictEqual(result.status, 0, 'traversal rejection must fail open');
   assert.strictEqual(result.stdout, payload, 'rejected hook still echoes the original payload');
   assert.match(result.stderr, /traversal/i);
+});
+
+// --- additionalContext is stamped with the ACTUAL firing event --------------
+// Regression: the dispatcher hardcoded hookEventName:'PreToolUse' for every hook
+// returning { additionalContext }, so a Stop (or PostToolUse) hook tripped Claude
+// Code's "expected 'Stop' but got 'PreToolUse'" rejection.
+
+function ctxInput(eventName) {
+  return JSON.stringify({ hook_event_name: eventName, session_id: 's', transcript_path: '/no/tx.jsonl' });
+}
+
+test('Stop-hook additionalContext is NOT emitted as a PreToolUse hookSpecificOutput', () => {
+  const result = runRunner(['stop:test:ctx', 'ctx-hook.js', 'standard,strict'], ctxInput('Stop'));
+  assert.strictEqual(result.status, 0, `expected exit 0, got ${result.status}: ${result.stderr}`);
+  assert.ok(!/hookSpecificOutput/.test(result.stdout), `Stop stdout must not carry hookSpecificOutput, got: ${result.stdout.slice(0, 120)}`);
+  assert.ok(!/PreToolUse/.test(result.stdout), 'Stop output must not be stamped PreToolUse');
+  assert.match(result.stderr, /confirm the drafts are sent/, 'the reminder still surfaces (via stderr)');
+});
+
+test('PostToolUse-hook additionalContext is stamped PostToolUse (not PreToolUse)', () => {
+  const result = runRunner(['post:test:ctx', 'ctx-hook.js', 'standard,strict'], ctxInput('PostToolUse'));
+  assert.strictEqual(result.status, 0, `expected exit 0, got ${result.status}: ${result.stderr}`);
+  const out = JSON.parse(result.stdout);
+  assert.strictEqual(out.hookSpecificOutput.hookEventName, 'PostToolUse');
+  assert.match(out.hookSpecificOutput.additionalContext, /confirm the drafts are sent/);
+});
+
+test('PreToolUse-hook additionalContext still stamps PreToolUse (no regression)', () => {
+  const result = runRunner(['pre:test:ctx', 'ctx-hook.js', 'standard,strict'], ctxInput('PreToolUse'));
+  assert.strictEqual(result.status, 0, `expected exit 0, got ${result.status}: ${result.stderr}`);
+  const out = JSON.parse(result.stdout);
+  assert.strictEqual(out.hookSpecificOutput.hookEventName, 'PreToolUse');
+  assert.match(out.hookSpecificOutput.additionalContext, /confirm the drafts are sent/);
 });
