@@ -25,3 +25,13 @@ coverage/
 # Claude Code local overrides (never commit — machine-local settings/locks)
 .claude/settings.local.json
 .claude/*.lock
+
+# ESCC runtime user-data — never commit to this public source repo (test data only).
+# A private team workspace may instead choose to track battlecards/ and product/
+# as shared knowledge, but should always keep accounts/ (prospect PII), state/, and
+# sessions/ out of git — git history cannot be reached by `escc privacy-purge`.
+.claude/escc/battlecards/
+.claude/escc/product/
+.claude/escc/accounts/
+.claude/escc/state/
+.claude/escc/sessions/
