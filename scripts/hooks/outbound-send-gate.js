@@ -1,17 +1,31 @@
 #!/usr/bin/env node
 /*
- * pre:outbound-send-gate — the ONE fail-CLOSED hook in ESCC (NEW for ESCC).
+ * pre:outbound-send-gate — the ONE fail-CLOSED hook in ESCC.
  *
- * Trust boundary, not a prompt: a live outbound send is blocked unless a
- * review-evidence marker is recorded in the state store, and bulk sends are
- * capped by ESCC_BULK_SEND_MAX. On ANY doubt — truncated input, unparseable
- * payload, missing config, internal error — this hook BLOCKS (exit 2). Gmail is
- * draft-only by construction; this gate covers every other send-capable tool.
+ * Trust boundary, not a prompt: it enforces outbound safety at the TOOL boundary,
+ * so a rogue/drifted agent that calls the external tools directly cannot bypass
+ * escc's review (the gap that let unreviewed drafts + HubSpot writes
+ * through before v1.1.0). It gates four kinds of outbound:
+ *   - 'send'      live send tools  → bulk cap + an approval token OR legacy review;
+ *   - 'draft'     a Gmail/MCP draft (the artifact a human then sends) → approval token;
+ *   - 'crm-email' a HubSpot OUTBOUND email engagement → approval token;
+ * and for every gated kind it also (a) blocks a recipient on the do-not-contact
+ * list and (b) runs a cheap, no-network payload scan (egregious overclaim → hard
+ * fail; advisory notes surfaced non-blocking). HubSpot tasks/notes/deals/reads are
+ * NOT outbound and pass straight through (crm-write-guard handles those).
  *
+ * The per-recipient approval token (recipient + content hash) is written by the
+ * blessed path (email-outbound-ops / /escc-worklist) once the adversarial reviewer
+ * + the four gates pass — so all history-based judgement happens earlier and this
+ * hook stays fast (<~300ms, no network): it only enforces that it happened,
+ * consults the blocklist, and inspects the payload.
+ *
+ * On ANY doubt — truncated input, unidentifiable tool, unreadable recipient/
+ * content, missing approval, internal error — this hook BLOCKS (exit 2).
  * Escape hatch: ESCC_OUTBOUND_GATE=off (documented as dangerous).
  *
- * Return contract (run-with-flags): { exitCode: 2, stderr } blocks; undefined
- * passes through.
+ * Return contract (run-with-flags): { exitCode: 2, stderr } blocks;
+ * { additionalContext } passes with a non-blocking note; undefined passes through.
  */
 
 'use strict';
@@ -23,6 +37,8 @@ const {
   getSessionId,
 } = require('../lib/hook-input');
 const review = require('../lib/outbound-review');
+const dnc = require('../lib/do-not-contact');
+const gates = require('../lib/outbound-gates');
 
 function block(reason) {
   return { exitCode: 2, stderr: `[outbound-send-gate] BLOCKED: ${reason}` };
@@ -56,33 +72,72 @@ function run(raw, ctx = {}) {
     }
 
     const config = review.loadOutboundToolsConfig(ctx.pluginRoot);
-    const klass = review.classifyTool(toolName, config);
+    const sessionId = getSessionId(input);
+    const toolInput = getToolInput(input);
+    const cls = review.classifyOutbound(toolName, toolInput, config);
 
-    // Allow-listed (draft/read) or unrelated tools pass straight through.
-    if (klass !== 'send') {
+    // Non-outbound tools (reads, HubSpot tasks/notes/deals, unrelated) pass through.
+    if (cls.kind === 'allow' || cls.kind === 'other') {
       return undefined;
     }
 
-    // --- it is a LIVE SEND: enforce bulk cap, then require review evidence ---
-    const sessionId = getSessionId(input);
-    const toolInput = getToolInput(input);
-    const fingerprint = review.fingerprintOutbound(toolName, toolInput);
+    // The tool-agnostic content key + recipient shared by every gated kind.
+    const recipient = cls.recipient ? String(cls.recipient) : '';
+    const contentKey = review.outboundContentKey({ recipient, subject: cls.subject, body: cls.body });
 
-    const max = review.bulkMax();
-    const alreadySent = review.countSends({ sessionId });
-    if (alreadySent >= max) {
-      review.recordSendDecision({ sessionId, fingerprint, decision: 'bulk' });
-      return block(`bulk send cap reached (${alreadySent}/${max} sends this session via ESCC_BULK_SEND_MAX). Split the work across sessions or raise the cap deliberately.`);
+    // --- do-not-contact blocklist (contact-level; account-level is enforced at
+    // approval time — a blocked account never gets a token, so the approval
+    // check below blocks it here too). ---
+    if (recipient) {
+      const blocked = dnc.findActiveBlock({ key: recipient });
+      if (blocked) {
+        const until = blocked.not_before ? ` (not before ${String(blocked.not_before).slice(0, 10)})` : ' (indefinite)';
+        review.recordSendDecision({ sessionId, fingerprint: contentKey, decision: 'unapproved' });
+        return block(`recipient is on the do-not-contact list — ${blocked.reason}${until}. Clear the block or wait until the not-before date before contacting them.`);
+      }
     }
 
-    const marker = review.findValidReview({ fingerprint, minConfidence: review.reviewMinConfidence() });
-    if (!marker) {
-      review.recordSendDecision({ sessionId, fingerprint, decision: 'unapproved' });
-      return block(`no review-evidence marker for this outbound (tool=${toolName}). Run the outbound-review flow first so the draft is reviewed and approved, then retry the send.`);
+    // --- legacy live-send tools: bulk cap, then an approval token OR a legacy review ---
+    if (cls.kind === 'send') {
+      const fingerprint = review.fingerprintOutbound(toolName, toolInput);
+      const max = review.bulkMax();
+      const alreadySent = review.countSends({ sessionId });
+      if (alreadySent >= max) {
+        review.recordSendDecision({ sessionId, fingerprint, decision: 'bulk' });
+        return block(`bulk send cap reached (${alreadySent}/${max} sends this session via ESCC_BULK_SEND_MAX). Split the work across sessions or raise the cap deliberately.`);
+      }
+      const approved = review.findValidApproval({ key: contentKey })
+        || review.findValidReview({ fingerprint, minConfidence: review.reviewMinConfidence() });
+      if (!approved) {
+        review.recordSendDecision({ sessionId, fingerprint, decision: 'unapproved' });
+        return block(`no review-evidence marker for this outbound (tool=${toolName}). Run the blessed path (email-outbound-ops, or /escc-worklist for a batch) so it is reviewed and approved, then retry.`);
+      }
+      review.recordSendDecision({ sessionId, fingerprint, decision: 'allow' });
+      return undefined;
     }
 
-    // Approved + under the cap: record the send (advances the bulk counter) and allow.
-    review.recordSendDecision({ sessionId, fingerprint, decision: 'allow' });
+    // --- NEW gated kinds: 'draft' + 'crm-email' — require a per-recipient approval token ---
+    if (!recipient || (!cls.subject && !cls.body)) {
+      return block(`could not read the recipient/content of this ${cls.kind} to verify an escc review (fail-closed). Produce it through email-outbound-ops or /escc-worklist.`);
+    }
+
+    const approval = review.findValidApproval({ key: contentKey });
+    if (!approval) {
+      review.recordSendDecision({ sessionId, fingerprint: contentKey, decision: 'unapproved' });
+      const what = cls.kind === 'crm-email' ? 'this outbound email' : 'this draft';
+      return block(`${what} has not passed escc review. Run the blessed path first — email-outbound-ops for one message, or /escc-worklist for a batch — so the adversarial reviewer + the four gates approve it; then retry.`);
+    }
+
+    // Cheap, no-network payload backstop: hard-fail an egregious overclaim even
+    // when approved; surface lesser notes without blocking.
+    const inspection = gates.inspectPayload({ recipient, subject: cls.subject, body: cls.body });
+    if (inspection.block) {
+      review.recordSendDecision({ sessionId, fingerprint: contentKey, decision: 'unapproved' });
+      return block(inspection.block);
+    }
+    if (inspection.warnings && inspection.warnings.length) {
+      return { additionalContext: `[outbound-send-gate] approved, with notes:\n  - ${inspection.warnings.join('\n  - ')}` };
+    }
     return undefined;
   } catch (err) {
     // FAIL CLOSED on any unexpected error.

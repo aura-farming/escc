@@ -22,9 +22,10 @@ landed in Sent. It does not own message strategy or personalization — those
 belong to `cold-outreach`, `reply-handling`, and `follow-up-ops`.
 
 **Gmail is draft-only by construction.** This skill never instructs a live send.
-The `pre:outbound-send-gate` hook (fail-closed) controls all live delivery.
-The skill produces a draft; the send gate, with recorded review evidence, allows
-delivery.
+The `pre:outbound-send-gate` hook (fail-closed) controls all live delivery — and,
+since v1.1.0, the **draft itself is gated**: creating a draft requires a
+per-recipient approval token, written only after the four outbound gates pass (see
+Step 4b). The skill produces a draft; the gate, with a recorded approval, allows it.
 
 > **Governing rules:** `rules/common/outbound-compliance.md` (sender identity,
 > suppression, unsubscribe), `rules/common/messaging-style.md` (length, CTA,
@@ -150,6 +151,28 @@ NEXT STEP
 The compliance block — sender identity + physical address + unsubscribe link —
 is required on every commercial message per `rules/common/outbound-compliance.md`.
 Do not omit it. Do not embed it in a PS that is easy to miss.
+
+### Step 4b — Gate, review, and approve (the blessed path)
+
+A draft is the artifact a human then sends, so it is **gated**: the
+`pre:outbound-send-gate` hook blocks `create_draft` (and any send) until a
+per-recipient **approval token** exists. The token is written only after the four
+outbound gates pass:
+
+1. Gather the contact's records — recent notes/calls, `lead_status`, open deals,
+   lifecycle, prior engagement (`crm-operator` / `account-memory`, read-only).
+2. Run the gates (+ the adversarial reviewer for the qualitative layer):
+
+   ```bash
+   node "$CLAUDE_PLUGIN_ROOT/scripts/escc.js" outbound approve --input draft.json
+   ```
+
+   `draft.json` = `{ "draft": {to,subject,body}, "records": {...} }`. On a clean
+   pass the token is recorded and the draft will clear the send-gate.
+3. On a BLOCK, the gates say why (timing/do-not-contact, claim-vs-record, WIIFM,
+   contactability). Fix the draft and re-run — or, for an explicit, logged
+   exception, add `--override "<reason>"`. Default is block; never silently send
+   around a gate. See `rules/common/outbound-gates.md`.
 
 ### Step 5 — Verify sent (proof-of-send)
 

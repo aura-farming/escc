@@ -30,6 +30,9 @@ const autoUpdateLib = require('./lib/auto-update');
 const sessionMgr = require('./lib/session-manager');
 const instinctCli = require('./instincts/instinct-cli');
 const instinctStore = require('./instincts/instinct-store');
+const outboundApprove = require('./lib/outbound-approve');
+const outboundGates = require('./lib/outbound-gates');
+const worklist = require('./lib/worklist');
 
 const HELP = `escc — EverythingSales Claude Code operator CLI
 
@@ -51,6 +54,11 @@ Workspace / data:
   privacy-purge <identifier>  erase a subject across local stores (DRY-RUN unless --confirm / --yes)
   watch                       one read-only signal sweep (overdue promises + closing deals) -> notify
 
+Outbound enforcement (v1.1.0):
+  outbound approve       run the four gates + record a per-recipient approval token (--input <json> [--override "<reason>"])
+  outbound check         run the four gates read-only, no writes (--input <json>)
+  outbound review-pack   split a worklist into sendable vs excluded-with-reasons (--input <json>)
+
 Instinct engine (mounted from instinct-cli):
   instinct-status         list instincts + the review gate (--approve <id> / --reject <id>)
   instinct-promote <id>   manager-gated personal -> team promotion (--role <role>)
@@ -61,6 +69,7 @@ Instinct engine (mounted from instinct-cli):
 const VALUE_FLAGS = new Set([
   '--target', '--profile', '--home', '--repo-root', '--write',
   '--limit', '--days', '--within-days', '--role', '--scope', '--approve', '--reject',
+  '--input', '--override',
 ]);
 
 /** `--repo-root` -> `repoRoot`, `--within-days` -> `withinDays`. */
@@ -240,6 +249,53 @@ function handleStatus(flags) {
   return { code, text: out, data };
 }
 
+/** Read the outbound JSON payload from --input <file> or stdin. */
+function readOutboundInput(flags) {
+  const raw = flags.input ? fs.readFileSync(flags.input, 'utf8') : fs.readFileSync(0, 'utf8');
+  return JSON.parse(raw);
+}
+
+/** Outbound enforcement helpers: approve / check / review-pack (v1.1.0). */
+function handleOutbound(positional, flags) {
+  const action = positional[0] || 'check';
+  let payload;
+  try {
+    payload = readOutboundInput(flags);
+  } catch (err) {
+    return { code: 1, text: `outbound ${action}: could not read JSON input (--input <file> or stdin): ${err.message}`, data: null };
+  }
+  try {
+    if (action === 'approve') {
+      const r = outboundApprove.approveOutbound({
+        draft: payload.draft, records: payload.records, sessionId: payload.sessionId,
+        now: payload.now, override: flags.override || payload.override,
+      });
+      const notes = r.warnings && r.warnings.length ? `\nnotes:\n${r.warnings.map(w => `  - ${w.reason}`).join('\n')}` : '';
+      const text = r.approved
+        ? `APPROVED${r.override ? ` (override: ${r.overrideReason})` : ''} — token recorded for ${r.recipient || '(recipient)'} [key ${r.key.slice(0, 12)}…]${notes}`
+        : `BLOCKED — not approved:\n${r.blocks.map(b => `  - ${b.gate}: ${b.reason}`).join('\n')}\nProvide --override "<reason>" to proceed anyway (logged).`;
+      return { code: r.approved ? 0 : 1, text, data: r };
+    }
+    if (action === 'check') {
+      const res = outboundGates.evaluateGates({ draft: payload.draft || {}, records: payload.records || {}, now: payload.now });
+      const text = res.pass
+        ? 'PASS — all four gates clear.'
+        : `BLOCKED:\n${res.blocks.map(b => `  - ${b.gate}: ${b.reason}`).join('\n')}`;
+      return { code: res.pass ? 0 : 1, text, data: res };
+    }
+    if (action === 'review-pack') {
+      const pack = worklist.buildReviewPack(payload.items || [], { now: payload.now });
+      const excl = pack.excluded.length
+        ? `\nExcluded:\n${pack.excluded.map(e => `  - ${e.id} (${e.recipient || '?'}): ${e.reasons.join('; ')}`).join('\n')}`
+        : '';
+      return { code: 0, text: `Review pack: ${pack.sendableCount}/${pack.total} sendable, ${pack.excludedCount} excluded.${excl}`, data: pack };
+    }
+    return { code: 1, text: `outbound: unknown action '${action}' (approve | check | review-pack)`, data: null };
+  } catch (err) {
+    return { code: 1, text: `outbound ${action} failed: ${err.message}`, data: null };
+  }
+}
+
 // --- dispatch ---------------------------------------------------------------
 
 /** Route an argv vector to a handler. @returns {{code:number, text:string, data:*}} */
@@ -267,6 +323,7 @@ function run(argv = []) {
     case 'auto-update': return autoUpdateLib.runAutoUpdate({ repoRoot: flags.repoRoot, homeDir: flags.home, targets: flags.target ? [flags.target] : undefined, dryRun: flags.dryRun });
     case 'privacy-purge': return purgeLib.runPurge({ identifier: positional[0], confirm: flags.confirm });
     case 'watch': return watchLib.runWatch({ withinDays: flags.withinDays ? Number(flags.withinDays) : undefined });
+    case 'outbound': return handleOutbound(positional, flags);
     default: return { code: 1, text: `Unknown command: ${command}. Run 'escc help' for usage.`, data: null };
   }
 }

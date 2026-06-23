@@ -37,7 +37,7 @@ These decisions are baked into the manifests. Keep them consistent if you edit.
   directory. Each subfolder with a `SKILL.md` becomes one skill.
 - **`commands`: `["./commands/"]`** — commands are loaded from the
   `./commands/` directory (thin shims over skills).
-- `name`: `escc`, `version`: `0.1.0`, `license`: `MIT`. `mcpServers` is left as
+- `name`: `escc`, `version`: `1.1.0`, `license`: `MIT`. `mcpServers` is left as
   an empty object — MCP servers (HubSpot, Gmail, Google Calendar, Fireflies) are
   configured by the operator's environment, not bundled here.
 

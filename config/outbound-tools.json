@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "description": "Send-capable tool classification read by pre:outbound-send-gate. A tool whose name matches any `deny` pattern AND no `allow` pattern is a LIVE SEND and is gated (requires a review-evidence marker + obeys ESCC_BULK_SEND_MAX). Patterns are JavaScript regular expressions, anchored with ^...$ at match time. Built-in defaults in scripts/lib/outbound-review.js apply when this file is missing or unreadable (fail-closed).",
+  "version": 2,
+  "description": "Send-capable tool classification read by pre:outbound-send-gate. `deny` (and no `allow` match) = a live SEND. `draft` = a draft tool whose output a human then sends — GATED for a per-recipient approval token (v1.1.0). A HubSpot manage_crm_objects call is gated ONLY when its payload is an OUTBOUND email engagement (detected in code); tasks/notes/deals/reads pass. Patterns are JavaScript regular expressions, anchored ^...$ at match time. Built-in defaults in scripts/lib/outbound-review.js apply when this file is missing or unreadable (fail-closed).",
   "deny": [
     "mcp__.*__execute_zapier_write_action",
     "mcp__.*[Ss]end.*",
@@ -10,14 +10,16 @@
     "mcp__.*__send_message",
     "mcp__.*__reply.*"
   ],
-  "allow": [
+  "draft": [
     "mcp__claude_ai_Gmail__create_draft",
-    "mcp__.*__create_draft",
+    "mcp__.*__create_draft"
+  ],
+  "allow": [
     "mcp__.*__list_drafts",
     "mcp__hubspot__.*",
     "mcp__.*__search.*",
     "mcp__.*__get_.*",
     "mcp__.*__list_.*"
   ],
-  "notes": "Gmail is draft-only by construction (create_draft is allow-listed). Zapier write actions and any *send*/*reply* mail tool are gated. HubSpot writes go through pre:crm-write-guard, not this gate, so hubspot tools are allow-listed here."
+  "notes": "v1.1.0: create_draft moved from `allow` to `draft` — a draft now requires an escc review/approval before it can be created, closing the gap where unreviewed drafts bypassed the gate. HubSpot tools remain allow-listed here; an OUTBOUND email engagement written via manage_crm_objects is detected and gated in code (isHubspotOutboundEmail), while tasks/notes/deals/reads are never blocked. Gmail has no live-send tool (draft-only by construction)."
 }

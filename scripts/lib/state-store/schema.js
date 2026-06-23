@@ -29,6 +29,7 @@ const ENTITY_DEFINITIONS = {
   promise: 'promise',
   forecastSnapshot: 'forecastSnapshot',
   outcome: 'outcome',
+  doNotContact: 'doNotContact',
 };
 
 let cachedSchema = null;
