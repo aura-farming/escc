@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "totalCommands": 66,
+  "totalCommands": 67,
   "commands": [
     {
       "command": "activity",
@@ -174,6 +174,19 @@
         "playbook-library"
       ],
       "path": "commands/dial.md"
+    },
+    {
+      "command": "escc-worklist",
+      "description": "Work a whole list (HubSpot overdue tasks, a territory, or explicit ids) end-to-end — triage → research → draft → four-gate review → one consolidated review-pack → approved, gated send.",
+      "type": "orchestration",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "cold-outreach",
+        "email-outbound-ops",
+        "worklist"
+      ],
+      "path": "commands/escc-worklist.md"
     },
     {
       "command": "evolve",
@@ -771,7 +784,7 @@
   "statistics": {
     "byType": {
       "general": 11,
-      "orchestration": 1,
+      "orchestration": 2,
       "outreach": 9,
       "planning": 10,
       "research": 3,
@@ -801,6 +814,10 @@
         "count": 3
       },
       {
+        "skill": "cold-outreach",
+        "count": 3
+      },
+      {
         "skill": "deal-review",
         "count": 3
       },
@@ -814,10 +831,6 @@
       },
       {
         "skill": "paper-process",
-        "count": 3
-      },
-      {
-        "skill": "playbook-library",
         "count": 3
       }
     ]
