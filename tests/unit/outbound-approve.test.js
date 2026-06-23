@@ -1,0 +1,75 @@
+'use strict';
+
+/**
+ * Tests for the blessed-path approval engine (scripts/lib/outbound-approve.js):
+ * a clean draft is approved (token recorded → the send-gate then ALLOWS it); a
+ * blocked draft records NO token and remembers the block; a logged override
+ * approves anyway. Hermetic via a fresh ESCC_AGENT_DATA_HOME.
+ */
+
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+const approve = require('../../scripts/lib/outbound-approve');
+const dnc = require('../../scripts/lib/do-not-contact');
+const gate = require('../../scripts/hooks/outbound-send-gate');
+
+const DRAFT_TOOL = 'mcp__claude_ai_Gmail__create_draft';
+
+function freshHome() { return fs.mkdtempSync(path.join(os.tmpdir(), 'escc-approve-')); }
+function withEnv(overrides, fn) {
+  const keys = Object.keys(overrides);
+  const prev = {};
+  for (const k of keys) prev[k] = process.env[k];
+  for (const k of keys) {
+    if (overrides[k] === undefined) delete process.env[k];
+    else process.env[k] = overrides[k];
+  }
+  try { return fn(); } finally {
+    for (const k of keys) {
+      if (prev[k] === undefined) delete process.env[k];
+      else process.env[k] = prev[k];
+    }
+  }
+}
+function draftCall(toolInput) {
+  return JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: DRAFT_TOOL, tool_input: toolInput, session_id: 's1' });
+}
+
+test('approveOutbound approves a clean draft and the send-gate then allows it', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
+    const draft = { to: 'a@b.com', subject: 'Thursday', body: 'You could save your team hours on rostering — worth a quick look?' };
+    const records = { notes: [], lead_status: 'new', open_deals: [], priorEngagement: false };
+    const r = approve.approveOutbound({ draft, records, now: '2026-06-23' });
+    assert.equal(r.approved, true);
+    // the matching draft now passes the fail-closed gate
+    assert.equal(gate.run(draftCall(draft)), undefined, 'approved draft passes the send-gate');
+  });
+});
+
+test('approveOutbound blocks a draft to an open-deal account and remembers the block', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
+    const draft = { to: 'x@y.com', subject: 'Hi', body: 'You could cut overtime — keen for a look?' };
+    const records = { open_deals: [{ id: 'd1' }], account_id: 'acme-1' };
+    const r = approve.approveOutbound({ draft, records });
+    assert.equal(r.approved, false);
+    assert.ok(r.blocks.some(b => b.gate === 'contactability'));
+    assert.ok(dnc.findActiveBlock({ key: 'acme-1' }), 'the account is written to the do-not-contact list');
+    // and with no token, the gate blocks the draft too
+    assert.ok(gate.run(draftCall(draft)).exitCode === 2);
+  });
+});
+
+test('a logged override approves despite a block and does NOT persist the block', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
+    const draft = { to: 'x@y.com', subject: 'Hi', body: 'You could cut overtime — keen?' };
+    const records = { open_deals: [{ id: 'd1' }], account_id: 'acme-2' };
+    const r = approve.approveOutbound({ draft, records, override: 'manager approved — strategic account' });
+    assert.equal(r.approved, true);
+    assert.equal(r.override, true);
+    assert.match(r.overrideReason, /strategic account/);
+    assert.equal(dnc.findActiveBlock({ key: 'acme-2' }), null, 'override does not blocklist the account');
+    assert.equal(gate.run(draftCall(draft)), undefined, 'overridden draft passes the send-gate');
+  });
+});
