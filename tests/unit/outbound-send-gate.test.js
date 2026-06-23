@@ -11,11 +11,13 @@ const os = require('os');
 const path = require('path');
 
 const review = require('../../scripts/lib/outbound-review');
+const dnc = require('../../scripts/lib/do-not-contact');
 const gate = require('../../scripts/hooks/outbound-send-gate');
 
 const SEND_TOOL = 'mcp__test__send_email';
 const DRAFT_TOOL = 'mcp__claude_ai_Gmail__create_draft';
 const SEARCH_TOOL = 'mcp__hubspot__search_crm_objects';
+const HUBSPOT_TOOL = 'mcp__hubspot__manage_crm_objects';
 
 function freshStateHome() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'escc-sendgate-'));
@@ -51,14 +53,14 @@ function gateInput(toolName, toolInput, sessionId) {
 
 // --- engine: classification + fingerprint ---
 
-test('classifyTool: send tools gated, draft/search allow-listed, unknown is other', () => {
+test('classification: sends gated, drafts now gated (v1.1.0), reads allow-listed', () => {
   const config = review.loadOutboundToolsConfig();
   assert.equal(review.classifyTool(SEND_TOOL, config), 'send');
   assert.equal(review.classifyTool('mcp__claude_ai_Zapier__execute_zapier_write_action', config), 'send');
-  assert.equal(review.classifyTool(DRAFT_TOOL, config), 'allow');
   assert.equal(review.classifyTool(SEARCH_TOOL, config), 'allow');
   assert.equal(review.classifyTool('Read', config), 'other');
-  assert.equal(review.classifyTool('', config), 'other');
+  // v1.1.0: a draft is no longer plain-allow — classifyOutbound gates it.
+  assert.equal(review.classifyOutbound(DRAFT_TOOL, { to: 'a@b.com', subject: 'S', body: 'B' }, config).kind, 'draft');
 });
 
 test('fingerprintOutbound is stable for same content and differs for different content', () => {
@@ -71,10 +73,65 @@ test('fingerprintOutbound is stable for same content and differs for different c
 
 // --- gate behavior ---
 
-test('gate passes through an allow-listed draft tool', () => {
+// --- v1.1.0: drafts + HubSpot outbound email are gated at the tool boundary ---
+
+test('ROGUE AGENT: an unreviewed Gmail draft is BLOCKED (the v1.1.0 fix)', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
-    const result = gate.run(gateInput(DRAFT_TOOL, { to: 'a@b.com', body: 'hi' }));
-    assert.equal(result, undefined, 'draft tool should pass through');
+    const result = gate.run(gateInput(DRAFT_TOOL, { to: 'a@b.com', subject: 'Hi', body: 'Hello Sam' }));
+    assert.ok(result && result.exitCode === 2, 'a direct, unreviewed draft must block');
+    assert.match(result.stderr, /has not passed escc review/i);
+  });
+});
+
+test('BLESSED PATH: a Gmail draft passes once an approval token is recorded', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
+    const toolInput = { to: 'a@b.com', subject: 'Thursday', body: 'Hi Sam, looking forward to Thursday.' };
+    const key = review.outboundContentKey(review.extractOutboundPayload(DRAFT_TOOL, toolInput));
+    review.recordApproval({ sessionId: 'sess-1', key, recipient: 'a@b.com', confidence: 0.95 });
+    const result = gate.run(gateInput(DRAFT_TOOL, toolInput));
+    assert.equal(result, undefined, 'an approved draft should pass through');
+  });
+});
+
+test('a benign HubSpot TASK create is NOT blocked (hard constraint)', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
+    const result = gate.run(gateInput(HUBSPOT_TOOL, { objectType: 'tasks', properties: { hs_task_subject: 'Call Sam back next week' } }));
+    assert.equal(result, undefined, 'creating a normal follow-up task must never be blocked');
+  });
+});
+
+test('HubSpot reads / notes / deals also pass through untouched', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
+    assert.equal(gate.run(gateInput(SEARCH_TOOL, { objectType: 'contacts' })), undefined);
+    assert.equal(gate.run(gateInput(HUBSPOT_TOOL, { objectType: 'notes', properties: { hs_note_body: 'Spoke to Sam' } })), undefined);
+    assert.equal(gate.run(gateInput(HUBSPOT_TOOL, { objectType: 'deals', properties: { dealstage: 'qualifiedtobuy' } })), undefined);
+  });
+});
+
+test('a HubSpot OUTBOUND email engagement is gated, and passes once approved', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
+    const toolInput = {
+      objectType: 'emails',
+      properties: { hs_email_direction: 'EMAIL', hs_email_to_email: 'a@b.com', hs_email_subject: 'Hi', hs_email_html: 'Hi Sam, a quick note on rostering.' },
+    };
+    const blocked = gate.run(gateInput(HUBSPOT_TOOL, toolInput));
+    assert.ok(blocked && blocked.exitCode === 2, 'an unreviewed outbound email must block');
+
+    const key = review.outboundContentKey(review.extractOutboundPayload(HUBSPOT_TOOL, toolInput));
+    review.recordApproval({ key, recipient: 'a@b.com', confidence: 0.95 });
+    assert.equal(gate.run(gateInput(HUBSPOT_TOOL, toolInput)), undefined, 'an approved outbound email should pass');
+  });
+});
+
+test('an approved draft to a do-not-contact recipient is STILL blocked', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
+    const toolInput = { to: 'sam@acme.com', subject: 'Hi', body: 'Hi Sam' };
+    const key = review.outboundContentKey(review.extractOutboundPayload(DRAFT_TOOL, toolInput));
+    review.recordApproval({ key, recipient: 'sam@acme.com', confidence: 0.95 });
+    dnc.recordDoNotContact({ key: 'sam@acme.com', scope: 'contact', reason: 'asked us to stop' });
+    const result = gate.run(gateInput(DRAFT_TOOL, toolInput));
+    assert.ok(result && result.exitCode === 2, 'blocklist beats an approval token');
+    assert.match(result.stderr, /do-not-contact/i);
   });
 });
 

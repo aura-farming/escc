@@ -36,10 +36,10 @@ System of record is **HubSpot** (via MCP). Email and calendar run on **Gmail + G
 <!-- ESCC:CATALOG:START -->
 | Surface | Count |
 | --- | --- |
-| Skills | 64 |
+| Skills | 65 |
 | Agents | 18 |
-| Commands | 66 |
-| Rules | 23 |
+| Commands | 67 |
+| Rules | 24 |
 | Hook matchers | 26 |
 
 _Counts are generated and CI-pinned by `npm run catalog:write`. Do not edit by hand._
@@ -52,7 +52,7 @@ All runtime configuration is exposed through `ESCC_*` environment variables. See
 Two settings matter most:
 
 - **`ESCC_HOOK_PROFILE`** — selects the active hook profile: `minimal`, `standard` (default), or `strict`. Combine with `ESCC_DISABLED_HOOKS=<id,id>` to drop individual hooks.
-- **The outbound send-gate** — `pre:outbound-send-gate` **fails closed**: it blocks any live send by a send-capable tool until an `outbound-reviewer` run is recorded as review evidence. Bulk sends are capped by `ESCC_BULK_SEND_MAX` (default 5/session). Every other hook fails open. `ESCC_OUTBOUND_GATE=off` exists only as a documented, dangerous escape hatch.
+- **The outbound send-gate** — `pre:outbound-send-gate` **fails closed**, and (since v1.1.0) enforces at the **tool boundary**: it blocks a Gmail draft, any live send, and a HubSpot OUTBOUND email engagement until a per-recipient **approval token** (`recipient + content hash`) is recorded — so a drifted agent calling the MCP tools directly is still gated. The token is written by the blessed path (`email-outbound-ops` for one message, `/escc-worklist` for a batch) only after the four outbound gates pass: timing/do-not-contact, claim-vs-record (fabrication firewall), WIIFM, and contactability. HubSpot tasks/notes/deals/reads are never blocked. Bulk sends are capped by `ESCC_BULK_SEND_MAX` (default 5/session); default is block, with a logged `override: <reason>`. Every other hook fails open. `ESCC_OUTBOUND_GATE=off` exists only as a documented, dangerous escape hatch. See [`rules/common/outbound-gates.md`](rules/common/outbound-gates.md).
 
 ## Persona aliases
 
@@ -72,4 +72,4 @@ The harness machinery (hook runtime, session persistence, instinct engine, insta
 
 ## Status
 
-**v0.1.0 — in active build.** Surfaces and the catalog above are still being populated; expect rapid iteration.
+**v1.1.0.** Outbound is now enforced at the tool boundary (drafts, sends, and HubSpot outbound-email require a per-recipient approval token) — see the [changelog](CHANGELOG.md). Surfaces continue to expand.

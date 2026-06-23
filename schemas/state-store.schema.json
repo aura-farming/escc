@@ -64,6 +64,12 @@
       "items": {
         "$ref": "#/$defs/outcome"
       }
+    },
+    "doNotContact": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/doNotContact"
+      }
     }
   },
   "$defs": {
@@ -526,6 +532,27 @@
         "created_at": {
           "$ref": "#/$defs/nonEmptyString"
         }
+      }
+    },
+    "doNotContact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "scope",
+        "reason",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "key": { "$ref": "#/$defs/nonEmptyString" },
+        "scope": { "type": "string", "enum": ["contact", "account"] },
+        "reason": { "$ref": "#/$defs/nonEmptyString" },
+        "not_before": { "$ref": "#/$defs/nullableString" },
+        "source_session": { "$ref": "#/$defs/nullableString" },
+        "cleared": { "type": "boolean" },
+        "created_at": { "$ref": "#/$defs/nonEmptyString" },
+        "updated_at": { "$ref": "#/$defs/nonEmptyString" }
       }
     }
   }
