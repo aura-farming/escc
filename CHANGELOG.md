@@ -10,6 +10,56 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.1.0] - 2026-06-23
+
+Outbound enforcement at the tool boundary, plus a batch worklist on-ramp. Closes
+the gap where an agent told to "use escc" could call the Gmail/HubSpot MCP tools
+directly and bypass every safeguard — because the gates only ran when an ESCC
+skill was deliberately invoked.
+
+### Added
+
+- **Four deterministic outbound gates** (`scripts/lib/outbound-gates.js`):
+  timing / do-not-contact-until, claim-vs-record (the fabrication firewall),
+  WIIFM, and contactability (open-deal / demo-booked / handed-to-AE / customer /
+  previously-declined). Each emits pass/block + reason; blocks can write the
+  do-not-contact list.
+- **Per-recipient approval tokens** keyed by `recipient + sha256(subject+body)`,
+  tool-agnostic so one approval covers a draft and its later send, with a
+  configurable TTL (`ESCC_OUTBOUND_APPROVAL_TTL_MINUTES`, default 7 days).
+- **Do-not-contact blocklist** (`do_not_contact` state-store table) the gates
+  write and the send-gate reads; a blocklist hit beats an approval token.
+- **Blessed path + CLI** — `escc outbound approve | check | review-pack`
+  (`scripts/lib/outbound-approve.js`), wired into the `email-outbound-ops` skill.
+- **Batch worklist orchestrator** — the `worklist` skill, the `/escc-worklist`
+  command, and `scripts/lib/worklist.js`: triage → per-account research → draft →
+  gates + reviewer → one consolidated review-pack → approved, gated send → log.
+- **`rules/common/outbound-gates.md`** documenting the protocol and the override.
+
+### Changed
+
+- `pre:outbound-send-gate` now enforces at the **tool boundary**: it gates a
+  Gmail draft and a HubSpot OUTBOUND email engagement (not only live-send tools),
+  requiring an approval token written by the blessed path after the gates pass.
+  `config/outbound-tools.json` moves `create_draft` from `allow` to a gated
+  `draft` class. Default is block, with a logged `override: <reason>`.
+- `privacy-purge` now also erases a subject's do-not-contact rows and outbound
+  approval/decision governance rows (the approval tokens carry recipient PII).
+
+### Fixed
+
+- Outbound safeguards now enforce at the tool boundary, not just advise at the
+  skill boundary — closing the gap where direct MCP calls (e.g. ~40 unreviewed
+  Gmail drafts + HubSpot writes) bypassed the reviewer and the send-gate.
+
+### Notes
+
+- Behavioural change: a draft now fails closed (blocked until it passes the gates
+  and a token is recorded). HubSpot tasks/notes/deals/reads are unaffected — only
+  outbound email is gated. Override with a logged reason.
+- Versioning: a deliberate `0.1.0 → 1.1.0` jump (Lucas's call). Under strict
+  semver this feature release (new capability, no breaking API) would be `0.2.0`.
+
 ## [0.1.0] - 2026-06-17
 
 Initial release — the first complete build of the ESCC plugin harness. ESCC
@@ -110,4 +160,5 @@ installs, and a CI-enforced quality pipeline.
 - Status: v0.1.0, in active build. Surfaces and counts are CI-pinned; expect
   rapid iteration.
 
+[1.1.0]: https://github.com/aura-farming/escc/releases/tag/v1.1.0
 [0.1.0]: https://github.com/aura-farming/escc/releases/tag/v0.1.0
