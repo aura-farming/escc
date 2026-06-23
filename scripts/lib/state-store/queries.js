@@ -509,6 +509,7 @@ function createQueryApi(store) {
   const readPromises = () => store.readTable('promises');
   const readForecastSnapshots = () => store.readTable('forecast_snapshots');
   const readOutcomes = () => store.readTable('outcomes');
+  const readDoNotContact = () => store.readTable('do_not_contact');
 
   function getSessionById(id) {
     const row = readSessions().find(session => session.id === id);
@@ -804,6 +805,16 @@ function createQueryApi(store) {
         .filter(row => (accountId == null ? true : row.account_id === accountId))
         .slice()
         .sort(compareCreatedAtDesc);
+    },
+    // do-not-contact blocklist (v1.1.0). Rows are pre-shaped by
+    // scripts/lib/do-not-contact.js (the single writer); this validates + appends.
+    upsertDoNotContact(row) {
+      assertValidEntity('doNotContact', row);
+      store.appendRecord('do_not_contact', row);
+      return readDoNotContact().find(r => r.key === row.key) || row;
+    },
+    listDoNotContact() {
+      return readDoNotContact();
     },
   };
 }

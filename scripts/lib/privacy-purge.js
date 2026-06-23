@@ -10,6 +10,9 @@
  *   - instinct evidence: evidence lines that reference the subject (scrub); an
  *     instinct that references the subject in its trigger/action, or whose only
  *     remaining evidence was the subject's, is removed wholesale.
+ *   - outbound state  : do-not-contact rows keyed to the subject + outbound
+ *     governance rows whose payload references the subject (v1.1.0 approval
+ *     tokens carry the recipient email — PII).
  *
  * NOT auto-erased — reported for manual handling, because shredding them would
  * over-erase unrelated subjects and ESCC cannot delete CRM rows:
@@ -77,6 +80,26 @@ function atomicRewrite(file, contents) {
   fs.renameSync(tmp, file);
 }
 
+/** Read a JSONL table file into rows; tolerant of a missing file / torn lines. */
+function readJsonl(file) {
+  const rows = [];
+  for (const line of safeRead(file).split('\n')) {
+    const t = line.trim();
+    if (!t) continue;
+    try { rows.push(JSON.parse(t)); } catch (_err) { /* skip torn line */ }
+  }
+  return rows;
+}
+
+/** Resolve the JSONL state directory (where do_not_contact / governance live). */
+function stateDir() {
+  try {
+    return require('./state-store').resolveStateStorePath();
+  } catch (_err) {
+    return null;
+  }
+}
+
 /**
  * Scan + (optionally) erase a subject across the entity-scoped stores.
  * @param {{identifier:string, confirm?:boolean, options?:object}} args
@@ -140,6 +163,29 @@ function purge(args = {}) {
     }
   }
 
+  // --- outbound state: do-not-contact + outbound governance rows (PII) ---------
+  const sdir = stateDir();
+  const dncFile = sdir ? path.join(sdir, 'do_not_contact.jsonl') : null;
+  const govFile = sdir ? path.join(sdir, 'governance_events.jsonl') : null;
+  const dncKept = [];
+  const govKept = [];
+  let doNotContactRemoved = 0;
+  let governanceRemoved = 0;
+  if (idLower && dncFile) {
+    for (const r of readJsonl(dncFile)) {
+      if (matches(r && r.key, idLower) || matches(JSON.stringify(r), idLower)) doNotContactRemoved += 1;
+      else dncKept.push(r);
+    }
+  }
+  if (idLower && govFile) {
+    // v1.1.0 approval/decision rows carry the recipient email — scrub any
+    // governance row that references the subject.
+    for (const r of readJsonl(govFile)) {
+      if (matches(JSON.stringify(r), idLower)) governanceRemoved += 1;
+      else govKept.push(r);
+    }
+  }
+
   // --- session-data: summaries referencing the subject (manual review) --------
   // Scan the active session-data dir AND the legacy sessions/ dir (older installs).
   const sessionFiles = [];
@@ -174,12 +220,14 @@ function purge(args = {}) {
     }
     for (const { id: rid, scope } of toRemove) store.removeInstinct(rid, scope);
     for (const { inst, scope, evidKept } of toScrub) store.writeInstinct({ ...inst, evidence: evidKept }, scope);
+    if (doNotContactRemoved > 0) atomicRewrite(dncFile, dncKept.map(r => JSON.stringify(r)).join('\n') + (dncKept.length ? '\n' : ''));
+    if (governanceRemoved > 0) atomicRewrite(govFile, govKept.map(r => JSON.stringify(r)).join('\n') + (govKept.length ? '\n' : ''));
   }
 
   return {
     identifier: id,
     confirmed: confirm,
-    erased: { accountFiles, observationsRemoved, instinctsRemoved, instinctsScrubbed },
+    erased: { accountFiles, observationsRemoved, instinctsRemoved, instinctsScrubbed, doNotContactRemoved, governanceRemoved },
     manualReview: {
       hubspot: `Erase the HubSpot record(s) for "${id}" via crm-operator — ESCC cannot delete CRM rows directly.`,
       sessionFiles,
@@ -199,6 +247,8 @@ function formatManifest(m) {
     `  observations:         ${e.observationsRemoved}`,
     `  instincts removed:    ${e.instinctsRemoved.length}${e.instinctsRemoved.length ? ` (${e.instinctsRemoved.join(', ')})` : ''}`,
     `  instincts scrubbed:   ${e.instinctsScrubbed.length}${e.instinctsScrubbed.length ? ` (${e.instinctsScrubbed.join(', ')})` : ''}`,
+    `  do-not-contact rows:  ${e.doNotContactRemoved || 0}`,
+    `  outbound gov rows:    ${e.governanceRemoved || 0}`,
     'Manual follow-up required (NOT auto-erased):',
     `  - ${m.manualReview.hubspot}`,
     `  - session-data references: ${m.manualReview.sessionFiles.length}`,
