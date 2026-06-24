@@ -25,10 +25,34 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
-const { isHookEnabled } = require('../lib/hook-flags');
+const { isHookEnabled, FAIL_CLOSED_HOOKS } = require('../lib/hook-flags');
 const { buildAdditionalContext, normalizeAdditionalContext } = require('./pretooluse-visible-output');
 
 const DEFAULT_MAX_STDIN = 1024 * 1024;
+
+// FAIL_CLOSED_HOOKS is the canonical set from hook-flags.js (pre:outbound-send-gate).
+// CLAUDE.md §4: every hook fails open EXCEPT the send-gate, which fails CLOSED. The
+// gate's own run() already blocks on any internal error, but if the hook cannot run
+// to a verdict at all — its module fails to load (e.g. a missing dependency such as
+// an absent ajv in a marketplace install), run() throws, the legacy child crashes,
+// or the runner cannot even locate/admit the script (missing file, path traversal) —
+// the runner itself blocks (exit 2) rather than let the tool call through. A
+// fail-closed hook is also non-disableable (enforced in hook-flags.isHookEnabled),
+// so the disabled-hook branch below is never reached for it.
+
+/**
+ * Emit a blocking PreToolUse verdict (exit 2) for a fail-closed hook that could
+ * not produce one itself. The reason goes to stderr (what exit 2 feeds back to
+ * the model); stdout stays empty. Terminal — calls process.exit(2).
+ */
+function failClosedBlock(hookId, detail) {
+  process.stderr.write(
+    `[Hook] BLOCKED (fail-closed): ${hookId} could not produce a verdict — ${detail}. `
+    + 'Refusing the tool call to stay safe. '
+    + '(Set ESCC_OUTBOUND_GATE=off to override the outbound gate if you understand the risk.)\n'
+  );
+  process.exit(2);
+}
 
 /**
  * Resolve the stdin cap. ESCC_HOOK_INPUT_MAX_BYTES overrides the 1MB default;
@@ -211,12 +235,18 @@ async function main() {
   // Prevent path traversal outside the plugin root
   if (!scriptPath.startsWith(resolvedRoot + path.sep)) {
     process.stderr.write(`[Hook] Path traversal rejected for ${hookId}: ${scriptPath}\n`);
+    if (FAIL_CLOSED_HOOKS.has(hookId)) {
+      failClosedBlock(hookId, 'its hook script path was rejected (traversal)');
+    }
     exitWithStdout(sanitizeEcho(raw), 0);
     return;
   }
 
   if (!fs.existsSync(scriptPath)) {
     process.stderr.write(`[Hook] Script not found for ${hookId}: ${scriptPath}\n`);
+    if (FAIL_CLOSED_HOOKS.has(hookId)) {
+      failClosedBlock(hookId, 'its hook script was not found');
+    }
     exitWithStdout(sanitizeEcho(raw), 0);
     return;
   }
@@ -236,6 +266,9 @@ async function main() {
       hookModule = require(scriptPath);
     } catch (requireErr) {
       process.stderr.write(`[Hook] require() failed for ${hookId}: ${requireErr.message}\n`);
+      if (FAIL_CLOSED_HOOKS.has(hookId)) {
+        failClosedBlock(hookId, `its module failed to load (${requireErr.message})`);
+      }
       // Fall through to legacy spawnSync path
     }
   }
@@ -253,6 +286,9 @@ async function main() {
       exitWithStdout(sanitizeEcho(result.stdout), result.exitCode);
     } catch (runErr) {
       process.stderr.write(`[Hook] run() error for ${hookId}: ${runErr.message}\n`);
+      if (FAIL_CLOSED_HOOKS.has(hookId)) {
+        failClosedBlock(hookId, `run() threw (${runErr.message})`);
+      }
       exitWithStdout(sanitizeEcho(raw), 0);
     }
     return;
@@ -280,11 +316,20 @@ async function main() {
   if (result.error || result.signal || result.status === null) {
     const failureDetail = result.error ? result.error.message : result.signal ? `terminated by signal ${result.signal}` : 'missing exit status';
     writeStderr(`[Hook] legacy hook execution failed for ${hookId}: ${failureDetail}`);
+    if (FAIL_CLOSED_HOOKS.has(hookId)) {
+      failClosedBlock(hookId, `its legacy child failed (${failureDetail})`);
+    }
     exitWithStdout(legacyStdout, 1);
     return;
   }
 
-  exitWithStdout(legacyStdout, Number.isInteger(result.status) ? result.status : 0);
+  const status = Number.isInteger(result.status) ? result.status : 0;
+  // A fail-closed hook's legacy child may legitimately exit 0 (allow) or 2 (block);
+  // any other status is a crash, not a verdict → block instead of failing open.
+  if (FAIL_CLOSED_HOOKS.has(hookId) && status !== 0 && status !== 2) {
+    failClosedBlock(hookId, `its legacy child exited ${status} without a verdict`);
+  }
+  exitWithStdout(legacyStdout, status);
 }
 
 main().catch(err => {

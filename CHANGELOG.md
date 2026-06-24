@@ -10,6 +10,44 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.1.1] - 2026-06-24
+
+Runtime-hardening patch. A Claude Code plugin/marketplace install does not run
+`npm install`, so ESCC's sole dependency (`ajv`) was absent at runtime — which
+crashed the entire state-backed machinery and, critically, made the fail-closed
+`pre:outbound-send-gate` fail OPEN. This release makes the runtime work without
+`ajv` and closes every path by which the send-gate could silently fail open.
+
+### Fixed
+
+- **`ajv` is now optional at runtime.** `scripts/lib/state-store/schema.js` and
+  `scripts/instincts/instinct-store.js` load `ajv` in a guarded `try/catch` and
+  degrade gracefully (skip schema validation, never crash) when it is absent — so
+  every hook, the `escc` CLI, session/context persistence, governance, and the
+  instinct engine work in a bare plugin install. With `ajv` present (dev/CI and
+  any npm-installed checkout) the schema is still fully enforced. The CI-only
+  validators keep their hard requirement, as they always run with dependencies.
+
+### Security
+
+- **The fail-closed `pre:outbound-send-gate` can no longer silently fail open.**
+  `scripts/hooks/run-with-flags.js` now blocks (exit 2) whenever the gate cannot
+  run to a verdict — a module-load failure (e.g. a missing dependency), a `run()`
+  throw, a legacy-child crash, a missing script, or a rejected (path-traversal)
+  script path — instead of letting the tool call through (previously exit 0/1).
+- **The send-gate is non-disableable.** `ESCC_DISABLED_HOOKS` and hook profiles
+  can no longer switch it off (`scripts/lib/hook-flags.js` `FAIL_CLOSED_HOOKS`),
+  removing a second, undocumented, unaudited off-switch. The only supported
+  relaxation remains the documented, gate-logged `ESCC_OUTBOUND_GATE=off`.
+
+### Changed
+
+- `docs/HOOKS.md` documents the non-disableable invariant and corrects the
+  failure-policy exit-code description (a non-fail-closed crash resolves to a
+  non-blocking 0 or 1; only exit 2 blocks the tool call).
+- `commands/thread.md` fixes a stale rule path
+  (`rules/outbound-compliance.md` → `rules/common/outbound-compliance.md`).
+
 ## [1.1.0] - 2026-06-23
 
 Outbound enforcement at the tool boundary, plus a batch worklist on-ramp. Closes
