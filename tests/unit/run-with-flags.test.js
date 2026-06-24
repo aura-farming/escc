@@ -281,3 +281,38 @@ test('a NON-fail-closed hook still fails OPEN on the same crash (does not block)
   const result = runRunner(['pre:test:noop', 'legacy-crash-hook.js', 'minimal,standard,strict'], gatePayload);
   assert.notStrictEqual(result.status, 2, 'a non-fail-closed crash must not block (fail-open)');
 });
+
+// The fail-closed gate is non-disableable and never let through without a verdict:
+// it must run (and block) even when listed in ESCC_DISABLED_HOOKS, when its script
+// is missing, or when its path is rejected — closing the silent fail-open holes the
+// crash-path backstop alone did not cover.
+
+test('fail-closed hook cannot be disabled via ESCC_DISABLED_HOOKS (still runs + blocks)', () => {
+  // block-hook returns exit 2 if it runs. A non-fail-closed hook listed disabled
+  // would be skipped (exit 0, payload echoed); the gate must still run and block.
+  const result = runRunner([GATE, 'block-hook.js', 'minimal,standard,strict'], gatePayload, { ESCC_DISABLED_HOOKS: GATE });
+  assert.strictEqual(result.status, 2, `gate must run despite ESCC_DISABLED_HOOKS, got ${result.status}: ${result.stderr}`);
+});
+
+test('a NON-fail-closed hook IS skipped (fails open) when listed in ESCC_DISABLED_HOOKS', () => {
+  const result = runRunner(['pre:test:block', 'block-hook.js', 'minimal,standard,strict'], gatePayload, { ESCC_DISABLED_HOOKS: 'pre:test:block' });
+  assert.strictEqual(result.status, 0, 'a disabled non-fail-closed hook is skipped (fail-open)');
+  assert.strictEqual(result.stdout, gatePayload);
+});
+
+test('fail-closed hook BLOCKS (exit 2) when its script is missing', () => {
+  const result = runRunner([GATE, 'does-not-exist-hook.js', 'minimal,standard,strict'], gatePayload);
+  assert.strictEqual(result.status, 2, `missing-script must block for the gate, got ${result.status}: ${result.stderr}`);
+  assert.match(result.stderr, /BLOCKED \(fail-closed\)/);
+});
+
+test('a NON-fail-closed hook fails OPEN (does not block) when its script is missing', () => {
+  const result = runRunner(['pre:test:noop', 'does-not-exist-hook.js', 'minimal,standard,strict'], gatePayload);
+  assert.notStrictEqual(result.status, 2, 'missing-script for a normal hook must not block');
+});
+
+test('fail-closed hook BLOCKS (exit 2) on a rejected path-traversal script path', () => {
+  const result = runRunner([GATE, '../../../../etc/passwd', 'minimal,standard,strict'], gatePayload);
+  assert.strictEqual(result.status, 2, `traversal must block for the gate, got ${result.status}: ${result.stderr}`);
+  assert.match(result.stderr, /BLOCKED \(fail-closed\)/);
+});

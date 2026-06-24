@@ -44,11 +44,19 @@ send it cannot fully see.
 The policy is asymmetric and must never be inverted:
 
 - **Every hook fails OPEN.** A hook error, a disabled hook, a missing script, a
-  path-traversal attempt, or oversized stdin all resolve to exit 0 and leave the
-  tool call unblocked. `run-with-flags.js` enforces this at the dispatcher level
-  so a bug in observability or a quality nudge can never block legitimate work.
+  path-traversal attempt, or oversized stdin all resolve to a non-blocking exit
+  (0, or 1 when a legacy child crashes — only exit 2 blocks the tool call) and
+  leave the work unblocked. `run-with-flags.js` enforces this at the dispatcher
+  level so a bug in observability or a quality nudge can never block legitimate
+  work.
 - **`pre:outbound-send-gate` fails CLOSED** -- the single exception. On any doubt
-  it blocks (exit 2). Details below.
+  it blocks (exit 2). This is enforced end-to-end: the gate is **non-disableable**
+  (`ESCC_DISABLED_HOOKS` and profiles cannot switch it off — see
+  `hook-flags.js` `FAIL_CLOSED_HOOKS`), and if it cannot run to a verdict for any
+  reason — module load failure (e.g. a missing dependency), a `run()` throw, a
+  legacy-child crash, a missing script, or a rejected path — the dispatcher itself
+  blocks (exit 2) rather than failing open. The ONLY supported way to relax it is
+  the documented, gate-logged `ESCC_OUTBOUND_GATE=off`. Details below.
 
 ---
 
