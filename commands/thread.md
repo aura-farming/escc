@@ -8,4 +8,4 @@ Apply the `multi-threading` skill to: $ARGUMENTS
 Scope notes:
 - Stakeholder context is sourced from `stakeholder-mapping`; do not reach out to contacts not yet mapped.
 - All outreach is draft-only — no message is sent without rep review and explicit approval.
-- Outreach tone and channel follow `rules/outbound-compliance.md`; bulk sending is blocked by the send-gate hook.
+- Outreach tone and channel follow `rules/common/outbound-compliance.md`; bulk sending is blocked by the send-gate hook.

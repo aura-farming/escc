@@ -25,19 +25,20 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
-const { isHookEnabled } = require('../lib/hook-flags');
+const { isHookEnabled, FAIL_CLOSED_HOOKS } = require('../lib/hook-flags');
 const { buildAdditionalContext, normalizeAdditionalContext } = require('./pretooluse-visible-output');
 
 const DEFAULT_MAX_STDIN = 1024 * 1024;
 
-// Hooks that must NEVER fail open. CLAUDE.md §4: every hook fails open EXCEPT
-// pre:outbound-send-gate, which fails CLOSED. The gate's own run() already blocks
-// on any internal error, but if the hook cannot even run to a verdict — its module
-// fails to load (e.g. a missing dependency such as an absent ajv in a marketplace
-// install), run() throws before returning, or its legacy child process crashes —
-// the runner itself must block (exit 2) rather than let the tool call through.
-// Belt-and-suspenders behind the optional-ajv runtime fix.
-const FAIL_CLOSED_HOOKS = new Set(['pre:outbound-send-gate']);
+// FAIL_CLOSED_HOOKS is the canonical set from hook-flags.js (pre:outbound-send-gate).
+// CLAUDE.md §4: every hook fails open EXCEPT the send-gate, which fails CLOSED. The
+// gate's own run() already blocks on any internal error, but if the hook cannot run
+// to a verdict at all — its module fails to load (e.g. a missing dependency such as
+// an absent ajv in a marketplace install), run() throws, the legacy child crashes,
+// or the runner cannot even locate/admit the script (missing file, path traversal) —
+// the runner itself blocks (exit 2) rather than let the tool call through. A
+// fail-closed hook is also non-disableable (enforced in hook-flags.isHookEnabled),
+// so the disabled-hook branch below is never reached for it.
 
 /**
  * Emit a blocking PreToolUse verdict (exit 2) for a fail-closed hook that could
@@ -234,12 +235,18 @@ async function main() {
   // Prevent path traversal outside the plugin root
   if (!scriptPath.startsWith(resolvedRoot + path.sep)) {
     process.stderr.write(`[Hook] Path traversal rejected for ${hookId}: ${scriptPath}\n`);
+    if (FAIL_CLOSED_HOOKS.has(hookId)) {
+      failClosedBlock(hookId, 'its hook script path was rejected (traversal)');
+    }
     exitWithStdout(sanitizeEcho(raw), 0);
     return;
   }
 
   if (!fs.existsSync(scriptPath)) {
     process.stderr.write(`[Hook] Script not found for ${hookId}: ${scriptPath}\n`);
+    if (FAIL_CLOSED_HOOKS.has(hookId)) {
+      failClosedBlock(hookId, 'its hook script was not found');
+    }
     exitWithStdout(sanitizeEcho(raw), 0);
     return;
   }
