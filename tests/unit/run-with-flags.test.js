@@ -47,6 +47,37 @@ fs.writeFileSync(
   "'use strict';\nfunction run() { return { additionalContext: 'NUDGE: confirm the drafts are sent' }; }\nmodule.exports = { run };\n"
 );
 
+// A hook that throws at module load (has a run export, so require() is attempted
+// first) — simulates a missing dependency crashing the module, e.g. an absent ajv.
+fs.writeFileSync(
+  path.join(fixtureRoot, 'crash-on-require-hook.js'),
+  "'use strict';\nthrow new Error('simulated missing dependency at load');\nfunction run() { return undefined; }\nmodule.exports = { run };\n"
+);
+
+// A hook whose run() throws when called (require succeeds, run() does not).
+fs.writeFileSync(
+  path.join(fixtureRoot, 'run-throw-hook.js'),
+  "'use strict';\nfunction run() { throw new Error('simulated run failure'); }\nmodule.exports = { run };\n"
+);
+
+// A LEGACY hook (no run export → spawned as a child) that crashes at load.
+fs.writeFileSync(
+  path.join(fixtureRoot, 'legacy-crash-hook.js'),
+  "'use strict';\nthrow new Error('legacy module load crash');\n"
+);
+
+// A LEGACY hook that cleanly BLOCKS (exit 2) — a legitimate verdict, not a crash.
+fs.writeFileSync(
+  path.join(fixtureRoot, 'legacy-block-hook.js'),
+  "'use strict';\nprocess.stderr.write('legacy block reason\\n');\nprocess.exit(2);\n"
+);
+
+// A LEGACY hook that cleanly ALLOWS (echoes stdin, exit 0).
+fs.writeFileSync(
+  path.join(fixtureRoot, 'legacy-allow-hook.js'),
+  "'use strict';\nconst fs=require('fs');\nlet raw='';try{raw=fs.readFileSync(0,'utf8');}catch(_){}\nprocess.stdout.write(raw);\nprocess.exit(0);\n"
+);
+
 process.on('exit', () => {
   try {
     fs.rmSync(fixtureRoot, { recursive: true, force: true });
@@ -196,4 +227,57 @@ test('PreToolUse-hook additionalContext still stamps PreToolUse (no regression)'
   const out = JSON.parse(result.stdout);
   assert.strictEqual(out.hookSpecificOutput.hookEventName, 'PreToolUse');
   assert.match(out.hookSpecificOutput.additionalContext, /confirm the drafts are sent/);
+});
+
+// --- Fail-closed-on-crash: the send-gate must NEVER fail open ---------------
+// CLAUDE.md §4: every hook fails open EXCEPT pre:outbound-send-gate, which fails
+// CLOSED. If that hook cannot run to a verdict (module won't load, run() throws,
+// or the legacy child crashes), the runner itself blocks (exit 2). These use the
+// REAL fail-closed hookId with fixture scripts; the matching is on hookId, not the
+// script. Belt-and-suspenders behind the optional-ajv runtime fix.
+
+const GATE = 'pre:outbound-send-gate';
+const gatePayload = JSON.stringify({ tool_name: 'mcp__claude_ai_Gmail__create_draft', tool_input: { to: 'x@y.com', body: 'hi' } });
+
+test('fail-closed hook BLOCKS (exit 2) when its module fails to require', () => {
+  const result = runRunner([GATE, 'crash-on-require-hook.js', 'minimal,standard,strict'], gatePayload);
+  assert.strictEqual(result.status, 2, `expected block exit 2, got ${result.status}: ${result.stderr}`);
+  assert.match(result.stderr, /BLOCKED \(fail-closed\)/);
+  assert.strictEqual(result.stdout, '', 'a block must not echo the payload through');
+});
+
+test('fail-closed hook BLOCKS (exit 2) when run() throws', () => {
+  const result = runRunner([GATE, 'run-throw-hook.js', 'minimal,standard,strict'], gatePayload);
+  assert.strictEqual(result.status, 2, `expected block exit 2, got ${result.status}: ${result.stderr}`);
+  assert.match(result.stderr, /BLOCKED \(fail-closed\)/);
+});
+
+test('fail-closed hook BLOCKS (exit 2) when the legacy child crashes', () => {
+  const result = runRunner([GATE, 'legacy-crash-hook.js', 'minimal,standard,strict'], gatePayload);
+  assert.strictEqual(result.status, 2, `expected block exit 2, got ${result.status}: ${result.stderr}`);
+  assert.match(result.stderr, /BLOCKED \(fail-closed\)/);
+});
+
+test('fail-closed hook still PASSES a clean allow through (exit 0, payload echoed)', () => {
+  const result = runRunner([GATE, 'noop-hook.js', 'minimal,standard,strict'], gatePayload);
+  assert.strictEqual(result.status, 0, `expected allow exit 0, got ${result.status}: ${result.stderr}`);
+  assert.strictEqual(result.stdout, gatePayload, 'a clean allow must pass the payload through');
+});
+
+test('fail-closed hook forwards a legacy clean allow (exit 0) without over-blocking', () => {
+  const result = runRunner([GATE, 'legacy-allow-hook.js', 'minimal,standard,strict'], gatePayload);
+  assert.strictEqual(result.status, 0, `expected allow exit 0, got ${result.status}: ${result.stderr}`);
+  assert.strictEqual(result.stdout, gatePayload);
+});
+
+test('fail-closed hook forwards a legitimate legacy block (exit 2) unchanged', () => {
+  const result = runRunner([GATE, 'legacy-block-hook.js', 'minimal,standard,strict'], gatePayload);
+  assert.strictEqual(result.status, 2, `expected block exit 2, got ${result.status}: ${result.stderr}`);
+  // It blocked because the hook decided to, not because the runner forced it.
+  assert.match(result.stderr, /legacy block reason/);
+});
+
+test('a NON-fail-closed hook still fails OPEN on the same crash (does not block)', () => {
+  const result = runRunner(['pre:test:noop', 'legacy-crash-hook.js', 'minimal,standard,strict'], gatePayload);
+  assert.notStrictEqual(result.status, 2, 'a non-fail-closed crash must not block (fail-open)');
 });

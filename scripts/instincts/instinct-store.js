@@ -21,8 +21,18 @@ const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 
-const ajv2020 = require('ajv/dist/2020');
-const Ajv = ajv2020.default || ajv2020;
+// ajv is optional at runtime: a plugin/marketplace install ships no node_modules,
+// and the observe hook, session-start injection, and instinct CLI all load this
+// module. With ajv present (dev/CI, npm-installed checkouts) instincts are
+// schema-validated; without it the store still works, skipping validation rather
+// than crashing. Mirrors the optional-load in scripts/lib/state-store/schema.js.
+let Ajv = null;
+try {
+  const ajv2020 = require('ajv/dist/2020');
+  Ajv = ajv2020.default || ajv2020;
+} catch (_err) {
+  Ajv = null;
+}
 
 const SCHEMA_PATH = path.join(__dirname, '..', '..', 'schemas', 'instinct.schema.json');
 const OBSERVATIONS_FILE = 'observations.jsonl';
@@ -146,6 +156,11 @@ function readObservations() {
 // --- instinct validation ----------------------------------------------------
 
 function validateInstinct(instinct) {
+  // Degraded mode: ajv unavailable → skip validation (never crash). Instincts
+  // still require human review via /instinct-status before they take effect, so
+  // the structural check is defense-in-depth, not the only gate. See the
+  // optional-load note above.
+  if (!Ajv) return { valid: true, errors: [] };
   const validate = getValidator();
   const valid = validate(instinct);
   return { valid, errors: validate.errors || [] };
