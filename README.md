@@ -72,4 +72,4 @@ The harness machinery (hook runtime, session persistence, instinct engine, insta
 
 ## Status
 
-**v1.1.0.** Outbound is now enforced at the tool boundary (drafts, sends, and HubSpot outbound-email require a per-recipient approval token) — see the [changelog](CHANGELOG.md). Surfaces continue to expand.
+**v1.1.1.** Outbound is enforced at the tool boundary (drafts, sends, and HubSpot outbound-email require a per-recipient approval token). v1.1.1 hardens the runtime so the state-backed machinery and the fail-closed send-gate work even in a plugin install with no `node_modules` (its sole dependency, `ajv`, is now optional), and makes the send-gate non-disableable so it can never silently fail open — see the [changelog](CHANGELOG.md). Surfaces continue to expand.

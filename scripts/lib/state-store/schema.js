@@ -13,8 +13,22 @@ const fs = require('fs');
 const path = require('path');
 // The state-store schema is JSON Schema draft 2020-12, so use ajv's bundled
 // 2020 build (ships inside the ajv package — no additional dependency).
-const ajv2020 = require('ajv/dist/2020');
-const Ajv = ajv2020.default || ajv2020;
+//
+// ajv is the SOLE external dependency, and a Claude Code plugin/marketplace
+// install does NOT run `npm install` — so node_modules (hence ajv) can be absent
+// at runtime. Load it OPTIONALLY: with ajv present (dev/CI, and any npm-installed
+// checkout) the schema is fully enforced; without it the state store still LOADS
+// and works in a degraded mode that skips structural validation rather than
+// crashing. This matters because nearly every hook and the escc CLI transitively
+// require this module — a hard `require('ajv')` here would take the whole
+// state-backed machinery down, including the fail-closed outbound send-gate.
+let Ajv = null;
+try {
+  const ajv2020 = require('ajv/dist/2020');
+  Ajv = ajv2020.default || ajv2020;
+} catch (_err) {
+  Ajv = null;
+}
 
 const SCHEMA_PATH = path.join(__dirname, '..', '..', '..', 'schemas', 'state-store.schema.json');
 
@@ -86,6 +100,13 @@ function formatValidationErrors(errors = []) {
 }
 
 function validateEntity(entityName, payload) {
+  // Degraded mode: ajv unavailable → skip validation (never crash). See the
+  // optional-load note above. Entities reaching this layer are constructed
+  // internally (not from untrusted input), so skipping the structural check in a
+  // bare runtime is safe; a normal install with ajv still enforces the schema.
+  if (!Ajv) {
+    return { valid: true, errors: [] };
+  }
   const validator = getEntityValidator(entityName);
   const valid = validator(payload);
   return {
