@@ -36,9 +36,9 @@ System of record is **HubSpot** (via MCP). Email and calendar run on **Gmail + G
 <!-- ESCC:CATALOG:START -->
 | Surface | Count |
 | --- | --- |
-| Skills | 65 |
+| Skills | 66 |
 | Agents | 18 |
-| Commands | 67 |
+| Commands | 68 |
 | Rules | 24 |
 | Hook matchers | 26 |
 
@@ -72,4 +72,4 @@ The harness machinery (hook runtime, session persistence, instinct engine, insta
 
 ## Status
 
-**v1.3.0.** ESCC is now **company-neutral by construction** — the controlled vocabulary ships as a generic cross-industry template with a per-workspace override (`escc product vocab init`), and two CI guards block any brand name or credential from being committed, so any sales team can install it and keep their own data in their gitignored workspace (see [ADR-0013](docs/DECISIONS.md)). **v1.2.0.** Product knowledge is now keyed by buyer **role** (and competitor/stack), not just industry — an objections library, a persona-to-pain map, and committed battlecard data, all behind a **structural candidate/approved firewall**: field-mined material enters as an operator-reviewed candidate that prose-only drafters cannot read, never auto-quoted (see [ADR-0012](docs/DECISIONS.md)). **v1.1.1.** Outbound is enforced at the tool boundary (drafts, sends, and HubSpot outbound-email require a per-recipient approval token). v1.1.1 hardens the runtime so the state-backed machinery and the fail-closed send-gate work even in a plugin install with no `node_modules` (its sole dependency, `ajv`, is now optional), and makes the send-gate non-disableable so it can never silently fail open — see the [changelog](CHANGELOG.md). Surfaces continue to expand.
+**v1.4.0.** A new **`/ingest`** wizard drag-and-drops existing knowledge into the right layer — sent emails into the brand-voice profile, a call transcript into `discovery-notes` plus objection/pain candidates, a case study or pricing doc into product-knowledge candidates, a competitor doc into a battlecard candidate, and an ICP list into segment suggestions — reusing existing surfaces, with untrusted content read only by a read-only quarantine subagent and every product claim held as an operator-reviewed candidate until a human approves it (see [ADR-0014](docs/DECISIONS.md)). **v1.3.0.** ESCC is now **company-neutral by construction** — the controlled vocabulary ships as a generic cross-industry template with a per-workspace override (`escc product vocab init`), and two CI guards block any brand name or credential from being committed, so any sales team can install it and keep their own data in their gitignored workspace (see [ADR-0013](docs/DECISIONS.md)). **v1.2.0.** Product knowledge is now keyed by buyer **role** (and competitor/stack), not just industry — an objections library, a persona-to-pain map, and committed battlecard data, all behind a **structural candidate/approved firewall**: field-mined material enters as an operator-reviewed candidate that prose-only drafters cannot read, never auto-quoted (see [ADR-0012](docs/DECISIONS.md)). **v1.1.1.** Outbound is enforced at the tool boundary (drafts, sends, and HubSpot outbound-email require a per-recipient approval token). v1.1.1 hardens the runtime so the state-backed machinery and the fail-closed send-gate work even in a plugin install with no `node_modules` (its sole dependency, `ajv`, is now optional), and makes the send-gate non-disableable so it can never silently fail open — see the [changelog](CHANGELOG.md). Surfaces continue to expand.
