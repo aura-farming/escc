@@ -12,7 +12,7 @@ test('buildReviewPack splits a worklist into sendable vs excluded with reasons',
   const items = [
     { id: 'good', draft: { to: 'a@b.com', subject: 'Hi', body: 'You could cut overtime across your venues — worth a quick look?' }, records: { notes: [], open_deals: [], priorEngagement: false } },
     { id: 'open-deal', draft: { to: 'c@d.com', subject: 'Hi', body: 'You could save hours — keen?' }, records: { open_deals: [{ id: '1' }] } },
-    { id: 'wiifm', draft: { to: 'e@f.com', subject: 'Hi', body: "Here's a exampleco vs competitor-x comparison." }, records: { priorEngagement: false } },
+    { id: 'wiifm', draft: { to: 'e@f.com', subject: 'Hi', body: "Here's a Acme vs competitor-x comparison." }, records: { priorEngagement: false } },
   ];
   const pack = buildReviewPack(items, { now: '2026-06-23' });
   assert.equal(pack.total, 3);

@@ -36,6 +36,7 @@ const APPROVED_FILE = 'product-knowledge.json';
 const CANDIDATE_SUBDIR = 'candidate';
 const CANDIDATE_FILE = 'candidates.jsonl';
 const GAP_FILE = 'gaps.jsonl';
+const VOCAB_FILE = 'knowledge-vocab.json';
 
 const DEFAULT_RETENTION_DAYS = 180;   // capability claims decay slowly
 const DEFAULT_VOLATILE_DAYS = 60;     // battlecard + pain decay fast (ADR-0012)
@@ -59,9 +60,34 @@ function gapFile(options = {}) {
   return path.join(resolveProductDir(options), GAP_FILE);
 }
 
-/** Committed controlled-vocabulary path (ships with the plugin). */
+/** Committed controlled-vocabulary path (the generic template shipped with the plugin). */
 function defaultVocabPath() {
-  return path.join(__dirname, '..', '..', 'config', 'knowledge-vocab.json');
+  return path.join(__dirname, '..', '..', 'config', VOCAB_FILE);
+}
+
+/**
+ * Per-workspace vocab override: <data-home>/escc/product/knowledge-vocab.json.
+ * Sits beside the approved store, is gitignored, and survives `plugin update` —
+ * so a rep customizes roles/segments/competitors here, never in the committed file.
+ */
+function workspaceVocabPath(options = {}) {
+  return path.join(resolveProductDir(options), VOCAB_FILE);
+}
+
+/** The hardcoded, always-safe general-only vocabulary (last-resort fallback). */
+function fallbackVocab() {
+  return { version: 0, roles: ['general'], segments: ['general'], competitors: [], title_to_role: [], fallback_role: 'general' };
+}
+
+/** Tolerantly read + parse a vocab file. Returns the object, or null on missing/corrupt/non-object. */
+function readVocabFile(filePath) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+  } catch (_err) {
+    /* missing or corrupt -> null */
+  }
+  return null;
 }
 
 // --- small helpers ----------------------------------------------------------
@@ -98,20 +124,31 @@ function pickDays(optionValue, envName, fallback) {
 // --- vocabulary -------------------------------------------------------------
 
 /**
- * Load the controlled vocabulary. options.vocab (inline) > options.vocabPath >
- * committed config. Never throws — a missing/corrupt file degrades to a
- * general-only vocab so retrieval and role-resolution still work.
+ * Load the controlled vocabulary, most-specific source first:
+ *   options.vocab (inline) > options.vocabPath > workspace override
+ *   (<data-home>/escc/product/knowledge-vocab.json) > shipped generic template
+ *   (config/knowledge-vocab.json) > hardcoded general-only fallback.
+ * Never throws — a missing/corrupt source degrades to the next one, so retrieval
+ * and role-resolution always work.
  */
 function loadVocab(options = {}) {
   if (options.vocab && typeof options.vocab === 'object') return options.vocab;
-  const p = options.vocabPath || defaultVocabPath();
-  try {
-    const parsed = JSON.parse(fs.readFileSync(p, 'utf8'));
-    if (parsed && typeof parsed === 'object') return parsed;
-  } catch (_err) {
-    /* fall through to the safe default */
+  if (options.vocabPath) {
+    const v = readVocabFile(options.vocabPath);
+    if (v) return v;
   }
-  return { version: 0, roles: ['general'], segments: ['general'], competitors: [], title_to_role: [], fallback_role: 'general' };
+  return readVocabFile(workspaceVocabPath(options))
+    || readVocabFile(defaultVocabPath())
+    || fallbackVocab();
+}
+
+/** Which source loadVocab() resolves to: inline | vocabPath | workspace | shipped | fallback. */
+function vocabSource(options = {}) {
+  if (options.vocab && typeof options.vocab === 'object') return 'inline';
+  if (options.vocabPath && readVocabFile(options.vocabPath)) return 'vocabPath';
+  if (readVocabFile(workspaceVocabPath(options))) return 'workspace';
+  if (readVocabFile(defaultVocabPath())) return 'shipped';
+  return 'fallback';
 }
 
 /**
@@ -157,6 +194,82 @@ function validateVocabTags(entry, options = {}) {
     }
   }
   return { ok: errors.length === 0, errors };
+}
+
+// --- workspace vocab customization (operator-gated, MCP-free) ----------------
+
+/** Deterministic segment slug: lowercase, trim, runs of non-alphanumerics -> single '-', no leading/trailing '-'. */
+function slugifySegment(value) {
+  if (value === undefined || value === null) return '';
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Suggest controlled segment slugs from a list of CRM industry values (an array,
+ * or a comma-separated string). Pure: slugifies, de-dupes, drops empties and the
+ * built-in 'general'. The HubSpot read happens in agent context — this stays
+ * MCP-free. @returns {{suggested: string[]}}
+ */
+function suggestSegments(industries) {
+  const list = Array.isArray(industries)
+    ? industries
+    : (typeof industries === 'string' ? industries.split(',') : []);
+  const seen = new Set();
+  const suggested = [];
+  for (const item of list) {
+    const slug = slugifySegment(item);
+    if (!slug || slug === 'general' || seen.has(slug)) continue;
+    seen.add(slug);
+    suggested.push(slug);
+  }
+  return { suggested };
+}
+
+/**
+ * Copy the shipped generic template into the per-workspace override so a rep can
+ * customize the vocabulary without editing the committed file (and survive
+ * `plugin update`). Refuses to clobber an existing override unless force.
+ * @returns {{ok: boolean, created: boolean, path: string, reason?: string}}
+ */
+function initWorkspaceVocab(force = false, options = {}) {
+  const dest = workspaceVocabPath(options);
+  if (fs.existsSync(dest) && !force) {
+    return { ok: false, created: false, path: dest, reason: 'exists' };
+  }
+  const template = readVocabFile(defaultVocabPath()) || fallbackVocab();
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  atomicWriteFile(dest, `${JSON.stringify(template, null, 2)}\n`);
+  return { ok: true, created: true, path: dest };
+}
+
+/**
+ * Union new segment slugs into the workspace vocab override (creating it from the
+ * shipped template if absent). @returns {{ok: boolean, added: string[], path: string}}
+ */
+function addSegmentsToWorkspace(segments, options = {}) {
+  const dest = workspaceVocabPath(options);
+  if (!fs.existsSync(dest)) initWorkspaceVocab(false, options);
+  const vocab = readVocabFile(dest) || readVocabFile(defaultVocabPath()) || fallbackVocab();
+  vocab.segments = Array.isArray(vocab.segments) ? vocab.segments : [];
+  const existing = new Set(vocab.segments.map(s => String(s).toLowerCase()));
+  const list = Array.isArray(segments) ? segments : (typeof segments === 'string' ? segments.split(',') : []);
+  const added = [];
+  for (const item of list) {
+    const slug = slugifySegment(item);
+    if (!slug || existing.has(slug)) continue;
+    existing.add(slug);
+    vocab.segments.push(slug);
+    added.push(slug);
+  }
+  if (added.length) {
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    atomicWriteFile(dest, `${JSON.stringify(vocab, null, 2)}\n`);
+  }
+  return { ok: true, added, path: dest };
 }
 
 // --- store reads ------------------------------------------------------------
@@ -485,10 +598,17 @@ module.exports = {
   candidateFile,
   gapFile,
   defaultVocabPath,
+  workspaceVocabPath,
+  readVocabFile,
   // vocabulary
   loadVocab,
+  vocabSource,
   resolveRole,
   validateVocabTags,
+  slugifySegment,
+  suggestSegments,
+  initWorkspaceVocab,
+  addSegmentsToWorkspace,
   // reads / ingest
   readApproved,
   readApprovedFile,

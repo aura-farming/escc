@@ -105,7 +105,8 @@ rules are hook-protected -- do not weaken them to make an agent's life easier.
 ```text
 check-unicode-safety -> validate-agents -> validate-commands -> validate-rules
 -> validate-skills -> validate-hooks -> validate-manifests
--> validate-no-personal-paths -> catalog:check -> registry:check
+-> validate-no-personal-paths -> validate-no-secrets -> validate-no-company-tokens
+-> catalog:check -> registry:check
 -> tests/run-all.js (unit + content-guard tests)
 ```
 
@@ -166,6 +167,17 @@ stale.
   `~/.claude/...` are fine.
 - **No secrets.** `mcp-configs/` and `.env.example` hold placeholders only.
   Never hardcode credentials or sender-identity configuration.
+  `validate-no-secrets.js` scans committed (git-tracked) files for credential
+  signatures (AWS, GitHub/Slack/Google/Stripe tokens, private-key blocks, and
+  placeholder-filtered secret assignments).
+- **No company data in committed source.** ESCC ships company-neutral so any
+  sales team can use it. `validate-no-company-tokens.js` fails the build if a
+  banned brand token (`config/banned-company-tokens.json`, word-boundary matched)
+  appears in any committed file. Your real competitors, segments, customers, and
+  product names live ONLY in your gitignored workspace (`~/.claude/escc/...`) --
+  run `escc product vocab init` to seed a workspace vocabulary override.
+  Author/owner names (the MIT `LICENSE` / `plugin.json` author) are not company
+  tokens and are kept.
 
 ## Salvage ideas, never merge vendor-branded surfaces wholesale
 

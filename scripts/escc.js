@@ -69,6 +69,9 @@ Product knowledge (ADR-0012):
   product candidates   list candidates awaiting operator review
   product gaps         list logged knowledge gaps (clean misses)
   product mine         ingest candidates (--input <json>) or mine a transcript (--from-transcript <file> [--source-ref <ref>])
+  product vocab show     show the active controlled vocabulary + its source (inline|workspace|shipped|fallback)
+  product vocab init     copy the generic template into your gitignored workspace override (--force to overwrite)
+  product vocab suggest  suggest segment slugs from CRM industries (--input '{"industries":[...]}')
 
 Instinct engine (mounted from instinct-cli):
   instinct-status         list instincts + the review gate (--approve <id> / --reject <id>)
@@ -333,6 +336,40 @@ function handleProduct(positional, flags) {
       const role = productKnowledge.resolveRole(title);
       return { code: 0, text: `role: ${role}`, data: { title, role } };
     }
+    if (action === 'vocab') {
+      const sub = positional[1] || 'show';
+      if (sub === 'show') {
+        const source = productKnowledge.vocabSource();
+        const v = productKnowledge.loadVocab();
+        const text = [
+          `Controlled vocabulary (source: ${source}).`,
+          `  roles (${(v.roles || []).length}): ${(v.roles || []).join(', ') || '(none)'}`,
+          `  segments (${(v.segments || []).length}): ${(v.segments || []).join(', ') || '(none)'}`,
+          `  competitors (${(v.competitors || []).length}): ${(v.competitors || []).join(', ') || '(none)'}`,
+          `  title_to_role rules: ${(v.title_to_role || []).length}, fallback_role: ${v.fallback_role || 'general'}`,
+        ].join('\n');
+        return { code: 0, text, data: { source, vocab: v } };
+      }
+      if (sub === 'init') {
+        const res = productKnowledge.initWorkspaceVocab(Boolean(flags.force));
+        return res.created
+          ? { code: 0, text: `Created workspace vocab override at ${res.path}. Edit it to add your competitors/segments/titles — it survives plugin updates and is gitignored.`, data: res }
+          : { code: 1, text: `Workspace vocab already exists at ${res.path}. Re-run with --force to overwrite it from the shipped template.`, data: res };
+      }
+      if (sub === 'suggest') {
+        let input;
+        try { input = readProductInput(flags); } catch (err) {
+          return { code: 1, text: `product vocab suggest: could not read JSON input (--input <file> or stdin): ${err.message}`, data: null };
+        }
+        const industries = Array.isArray(input) ? input : (input.industries || input.segments || []);
+        const { suggested } = productKnowledge.suggestSegments(industries);
+        const text = suggested.length
+          ? `Suggested segment slug(s) (${suggested.length}): ${suggested.join(', ')}\nReview, then add the ones you want to your workspace vocab (escc product vocab init, then edit segments).`
+          : 'No new segment suggestions (input empty, all duplicates, or all resolved to "general").';
+        return { code: 0, text, data: { suggested } };
+      }
+      return { code: 1, text: `product vocab: unknown action '${sub}' (show | init | suggest)`, data: null };
+    }
     if (action === 'candidates') {
       const c = productKnowledge.readCandidates();
       const text = c.length
@@ -380,7 +417,7 @@ function handleProduct(positional, flags) {
       const stored = productMine.ingestCandidates(items, { sourceType: flags.sourceType, sourceRef: flags.sourceRef });
       return { code: 0, text: `Ingested ${stored.length} candidate(s) -> operator-only review.`, data: { candidates: stored } };
     }
-    return { code: 1, text: `product: unknown action '${action}' (retrieve | resolve-role | add | approve | candidates | gaps | mine)`, data: null };
+    return { code: 1, text: `product: unknown action '${action}' (retrieve | resolve-role | vocab | add | approve | candidates | gaps | mine)`, data: null };
   } catch (err) {
     return { code: 1, text: `product ${action} failed: ${err.message}`, data: null };
   }

@@ -10,6 +10,44 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.3.0] - 2026-06-25
+
+Open-source readiness: ESCC is now **company-neutral by construction**, so any
+sales team can install it and keep their own data in their gitignored workspace.
+The controlled vocabulary ships as a generic cross-industry template with a new
+per-workspace override, and two CI guards make a brand name or a credential
+impossible to commit. See [ADR-0013](docs/DECISIONS.md).
+
+### Added
+
+- **Per-workspace vocabulary override.** `loadVocab` gains a workspace tier
+  (`<data-home>/escc/product/knowledge-vocab.json`) between an explicit path and
+  the shipped template, plus `escc product vocab show | init | suggest` to inspect,
+  seed, and grow it from CRM industry values. New `product-knowledge` functions
+  `vocabSource`, `workspaceVocabPath`, `readVocabFile`, `slugifySegment`,
+  `suggestSegments`, `initWorkspaceVocab`, `addSegmentsToWorkspace`; optional
+  `note` field on `schemas/knowledge-vocab.schema.json`.
+- **CI guards.** `validate-no-company-tokens.js` (banned-brand list in
+  `config/banned-company-tokens.json`, word-boundary matched, git-tracked-only)
+  and `validate-no-secrets.js` (high-confidence credential signatures) join the
+  `npm test` pipeline.
+
+### Changed
+
+- **Company-neutral defaults.** `config/knowledge-vocab.json` ships as a generic
+  cross-industry template (`competitors: []`, `segments: ["general"]`,
+  cross-industry roles + title map); all committed example / seed / test data is
+  genericized (`Acme` / `competitor-x` / `Example Operator`). Legitimate
+  authorship (the MIT `LICENSE` / `plugin.json` author) is unchanged.
+- `.gitignore` now also excludes runtime `voice/`, `patterns/`, and
+  learned/pending instinct stores.
+
+### Security
+
+- No credential was ever committed (working tree or git history); history is left
+  intact and scrubbed going forward (ADR-0013). The new validators prevent any
+  brand-name or credential regression.
+
 ## [1.2.0] - 2026-06-25
 
 Persona/role-keyed product-knowledge layer. Drafting can now write to a contact's

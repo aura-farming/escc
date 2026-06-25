@@ -69,7 +69,7 @@ personalize every skill downstream:
 
 1. **Sender identity** (name, title, company, email address) -- this is the
    VOICE PROFILE header that outreach skills use. Example:
-   `Alex Kim, SDR, exampleco -- alex@exampleco.com`
+   `Alex Kim, SDR, Acme -- alex@acme.example`
 
 2. **Persona** -- select one:
    - `sdr` -- prospecting, cold outreach, inbound triage, meeting booking
@@ -103,7 +103,7 @@ Detected GTM stack:
   - Gmail draft-only [mcp__claude_ai_Gmail__*]
   - Fireflies transcripts [mcp__claude_ai_Fireflies__*]
 
-Sender identity: Alex Kim, SDR, exampleco <alex@exampleco.com>
+Sender identity: Alex Kim, SDR, Acme <alex@acme.example>
 Persona: sdr
 
 Recommended skills: cold-outreach, email-outbound-ops, follow-up-ops,
@@ -139,8 +139,8 @@ On approval, write (or append-merge into) `./CLAUDE.md` with this structure:
 ## Sender Identity
 Name: Alex Kim
 Title: SDR
-Company: exampleco
-Email: alex@exampleco.com
+Company: Acme
+Email: alex@acme.example
 
 ## Persona
 sdr
