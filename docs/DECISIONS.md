@@ -379,3 +379,59 @@ own via `escc product vocab init` or the forthcoming `/ingest` intake), and the
 two new validators add to the CI surface. Phases B (drag-and-drop `/ingest`) and C
 (per-account tone-match) build on this clean base and ship after it as v1.4.0 and
 v1.5.0. This is an amendment to ADR-0012, which remains in force.
+
+---
+
+## ADR-0014: `/ingest` knowledge intake routes to existing surfaces; no new trust boundary
+
+**Status:** Accepted
+
+**Context.** ADR-0013 ships the knowledge layer deliberately empty — a generic
+vocabulary, no competitors or segments, no proof. A rep seeds it today only
+through discrete CLI verbs (`escc product add`, `escc product vocab init`). The
+common real-world starting point — "here are our case studies, our pricing, a
+few call transcripts, a competitor one-pager, and the industries we sell to" —
+had no on-ramp. The risk in building one is exactly where it bites: an intake
+path is where untrusted content (a call transcript carries the prospect's words;
+a competitor doc is the competitor's own marketing) and unvetted claims try to
+enter the system, so it must not become a hole in the candidate/approved
+firewall (ADR-0012), the style/content split (ADR-0013), or the
+attachment-quarantine discipline (CLAUDE.md §3).
+
+**Decision.** `/ingest` (the `knowledge-intake` skill) is an intake **router**,
+not new machinery. (1) It classifies a dropped file from its name and the user's
+description, shows a dry-run routing plan, and on approval routes each part to a
+surface that already exists: STYLE (sent emails / brand doc) → the brand-voice
+VOICE PROFILE; account CONTEXT (a call transcript) → the `discovery-notes`
+workflow (MEDDPICC capture + a CRM proposal `crm-operator` executes); product
+CLAIMS (case study / pricing / security / a stated claim) → `escc product add`
+as a candidate; a competitor doc → a `battlecard` candidate plus a
+competitor-vocab suggestion; an ICP / industries list → `escc product vocab
+suggest`. (2) **Only STYLE and account CONTEXT auto-apply.** Every product CLAIM
+enters as an operator-reviewed candidate (`approved:false` + `untrusted:true`,
+forced by `appendCandidate`) and becomes quotable only when a human runs `escc
+product approve` — the firewall is unchanged. (3) **Untrusted content is read
+only by a read-only quarantine subagent** (`transcript-analyzer` for
+transcripts, `competitor-analyst` for competitor docs); the privileged
+orchestrator works only from the cleaned structured summary, exactly as
+`discovery-notes` does. (4) The skill **never uses `escc product mine
+--from-transcript`** — that flag reads raw bytes via the CLI's `fs`, which
+bypasses the Read-tool quarantine hook; instead the orchestrator transforms the
+subagent's structured summary into candidate structs and ingests them with `escc
+product mine --input`. It is placed with the cross-cutting skills, whose
+`skills-foundation` dependency guarantees `product-knowledge` is present to route
+into (the meta group has no such dependency).
+
+**Consequence.** A team can seed the whole knowledge layer in one guided pass
+without weakening any guarantee: nothing is approved or sent, claims wait behind
+the human gate, account context flows through the existing CRM path, and raw
+untrusted bytes never reach a privileged context. Two limitations are accepted
+and documented in the skill itself: account-memory has no append CLI
+(`appendEvent` is Node-only and durable narrative is hook-populated, so `/ingest`
+routes account context through `discovery-notes` rather than writing memory
+directly), and a file at a quarantine path or an `.eml`/`.msg`/`.mbox` cannot be
+read by the read-only subagent either (nothing sets `ESCC_QUARANTINE_CONTEXT`),
+so the skill asks the user to paste or re-save such content as plain text —
+hardening that gap (a per-subagent quarantine context) is deferred. ADR-0012 and
+ADR-0013 remain in force. Ships as v1.4.0; the per-account tone-match (Phase C)
+follows as v1.5.0.
