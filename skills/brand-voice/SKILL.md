@@ -196,12 +196,58 @@ and the rep explicitly confirms them.
 - If a rep requests a durable artifact, save the profile to
   `.claude/escc/voice/<rep-slug>.md` (workspace-local; never committed
   with personal data unless the rep explicitly requests repo tracking).
+- For a durable *per-account* style overlay (how a specific account writes, to
+  layer on top of the rep base profile), see "Per-Account Voice Overlay" below —
+  stored at `.claude/escc/voice/account/<account>.md`.
 - If the drafting skill is `cold-outreach`, `outbound-sequences`,
   `follow-up-ops`, `reply-handling`, `email-outbound-ops`,
   `meeting-followthrough`, or `inbox-triage`, check whether a session-local
   `[VOICE PROFILE]` already exists before starting a new collection.
 - Do not store voice profiles in HubSpot records. They are a local
   style artifact, not a CRM field.
+
+## Per-Account Voice Overlay
+
+A `[VOICE PROFILE]` captures how the *rep* writes. A **per-account voice
+overlay** captures how a specific *account* writes, so a draft to that account
+mirrors their register and vocabulary on top of the rep's base profile.
+
+**Contract for consumers.** Every voice-consuming skill (`cold-outreach`,
+`outbound-sequences`, `follow-up-ops`, `reply-handling`, `email-outbound-ops`,
+`meeting-followthrough`, `inbox-triage`) layers this overlay on the rep base
+profile whenever it drafts to a *known account with prior correspondence*: load
+it with `escc voice show "<account>"`. The overlay only adjusts register and
+word choice — the rep base profile still wins on Banned/Preferred Moves, and
+facts still come only from approved `product-knowledge`.
+
+- **Storage:** `.claude/escc/voice/account/<account>.md` (gitignored — it is
+  mined from real correspondence and never belongs in the source repo). It
+  *layers on* the rep base profile at `.claude/escc/voice/<rep-slug>.md`; it
+  never replaces it.
+- **A draft is:** rep base voice × buyer-role register × this-account register ×
+  the account's mirrored lexicon. The base profile still wins on the rep's own
+  Banned Moves and Preferred Moves; the overlay only nudges register (formality,
+  sentence length, question rate, greeting/sign-off) and word choice toward this
+  account.
+- **Build or refresh it deterministically** with
+  `escc voice account "<account>" --input '{"texts":[...]}'`, then read it back
+  with `escc voice show "<account>"`. The extractor is no-ML and deterministic —
+  it does not "interpret" the account, it tallies observable style.
+- **Buyer side only, via quarantine.** The `texts` are the *buyer's* words — the
+  emails they sent you and their turns in a call transcript — gathered through
+  the read-only quarantine/thread path (`transcript-analyzer`,
+  `email-outbound-ops`), never the rep's own sent copy. Raw bytes never reach a
+  privileged context.
+
+> **The style/content split is enforced here, not just stated.** The overlay
+> mirrors the buyer's **words**, never their **claims or numbers**. The lexicon
+> is pure-alphabetic terms only — a metric, a percentage, or a currency figure
+> can never become a term, and a source sentence is never echoed into the
+> overlay. You may sound like the account; you may **never** repeat their figure
+> back as if it were our proof. Facts and metrics come only from approved
+> `product-knowledge`. (Enforced by `scripts/lib/account-register.js` +
+> `scripts/lib/voice-overlay.js`, pinned by
+> `tests/unit/content-guard-lexicon-leak.test.js`.)
 
 ## Examples
 

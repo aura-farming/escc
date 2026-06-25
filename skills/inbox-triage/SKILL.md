@@ -124,7 +124,10 @@ Output a one-line summary: sender, subject, key point. No draft reply.
    not redefine it.)
 3. Read the full thread before composing. Never reply from memory.
 4. Draft a reply using account context + `[VOICE PROFILE]` (brand-voice owns
-   the voice profile; consume it here).
+   the voice profile; consume it here). When an account is in scope, also layer
+   its per-account voice overlay (`escc voice show "<account>"`) on the rep base
+   profile — see `brand-voice` §Per-Account Voice Overlay (STYLE only; never the
+   buyer's claims or numbers).
 5. Include any required compliance block (unsubscribe, sender identity) per
    `rules/common/outbound-compliance.md`.
 6. Output: Gmail draft (labeled "draft", not "sent") + proposed CRM activity

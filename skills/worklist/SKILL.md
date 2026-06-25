@@ -77,8 +77,10 @@ do not re-research what is already on record. Fan out across accounts in paralle
 ### Step 3 — Draft per contact (draft-only)
 
 For each contact, draft the first touch via `cold-outreach` / `outreach-drafter`,
-consuming the `[VOICE PROFILE]` from `brand-voice` and sourcing every claim from
-`product-knowledge`. No drafting tool sends. Capture, per draft, the records the
+consuming the `[VOICE PROFILE]` from `brand-voice` (layering the per-account
+voice overlay via `escc voice show "<account>"` when the account has prior
+correspondence — STYLE only, never the buyer's claims or numbers) and sourcing
+every claim from `product-knowledge`. No drafting tool sends. Capture, per draft, the records the
 gates need: recent notes/calls, `lead_status`, open deals, lifecycle, and whether
 there is any prior engagement.
 

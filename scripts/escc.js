@@ -35,6 +35,8 @@ const outboundGates = require('./lib/outbound-gates');
 const worklist = require('./lib/worklist');
 const productKnowledge = require('./lib/product-knowledge');
 const productMine = require('./lib/product-mine');
+const accountRegister = require('./lib/account-register');
+const voiceOverlay = require('./lib/voice-overlay');
 
 const HELP = `escc — EverythingSales Claude Code operator CLI
 
@@ -72,6 +74,10 @@ Product knowledge (ADR-0012):
   product vocab show     show the active controlled vocabulary + its source (inline|workspace|shipped|fallback)
   product vocab init     copy the generic template into your gitignored workspace override (--force to overwrite)
   product vocab suggest  suggest segment slugs from CRM industries (--input '{"industries":[...]}')
+
+Per-account voice overlay (ADR-0015):
+  voice account <id>   build/refresh the per-account STYLE overlay from BUYER texts (--input '{"texts":[...]}')
+  voice show <id>      print the per-account voice overlay
 
 Instinct engine (mounted from instinct-cli):
   instinct-status         list instincts + the review gate (--approve <id> / --reject <id>)
@@ -423,6 +429,49 @@ function handleProduct(positional, flags) {
   }
 }
 
+/**
+ * Per-account voice overlay verbs (ADR-0015): build/refresh the per-account
+ * STYLE register from BUYER text, or print the stored overlay.
+ *
+ * MCP-free by design (like `product vocab suggest`): the orchestrator gathers
+ * the buyer side via the read-only quarantine/thread path and passes it as
+ * `--input '{"texts":[...]}'`. Extraction is STYLE-only — the lexicon mirrors
+ * the buyer's words, never their claims or numbers (the style/content split,
+ * ADR-0013). Facts still come only from approved product-knowledge.
+ */
+function handleVoice(positional, flags) {
+  const action = positional[0] || 'help';
+  try {
+    if (action === 'account') {
+      const account = positional[1];
+      if (!account) {
+        return { code: 1, text: 'voice account requires <account-id> and --input <json> of buyer texts (e.g. {"texts":[...]}).', data: null };
+      }
+      let input;
+      try {
+        input = readProductInput(flags);
+      } catch (err) {
+        return { code: 1, text: `voice account: could not read JSON input (--input <file> or stdin): ${err.message}`, data: null };
+      }
+      const texts = Array.isArray(input) ? input : (input.texts || input.buyerTexts || []);
+      const register = accountRegister.extractRegister(texts, {});
+      const file = voiceOverlay.writeOverlay(account, register, {});
+      const text = `Wrote per-account voice overlay for ${account} — ${register.sampleCount} sample(s), formality ${register.formality}, ${register.lexicon.length} term(s) -> ${file}.\nSTYLE ONLY: register + buyer lexicon; facts still come from approved product-knowledge.`;
+      return { code: 0, text, data: { account, register, file } };
+    }
+    if (action === 'show') {
+      const account = positional[1];
+      if (!account) return { code: 1, text: 'voice show requires <account-id>.', data: null };
+      const md = voiceOverlay.readOverlay(account, {});
+      const text = md || `(no voice overlay for ${account} yet — build one with: escc voice account "${account}" --input <buyer-texts.json>)`;
+      return { code: 0, text, data: { account, overlay: md } };
+    }
+    return { code: 1, text: `voice: unknown action '${action}' (account | show)`, data: null };
+  } catch (err) {
+    return { code: 1, text: `voice ${action} failed: ${err.message}`, data: null };
+  }
+}
+
 // --- dispatch ---------------------------------------------------------------
 
 /** Route an argv vector to a handler. @returns {{code:number, text:string, data:*}} */
@@ -452,6 +501,7 @@ function run(argv = []) {
     case 'watch': return watchLib.runWatch({ withinDays: flags.withinDays ? Number(flags.withinDays) : undefined });
     case 'outbound': return handleOutbound(positional, flags);
     case 'product': return handleProduct(positional, flags);
+    case 'voice': return handleVoice(positional, flags);
     default: return { code: 1, text: `Unknown command: ${command}. Run 'escc help' for usage.`, data: null };
   }
 }

@@ -435,3 +435,58 @@ so the skill asks the user to paste or re-save such content as plain text —
 hardening that gap (a per-subagent quarantine context) is deferred. ADR-0012 and
 ADR-0013 remain in force. Ships as v1.4.0; the per-account tone-match (Phase C)
 follows as v1.5.0.
+
+---
+
+## ADR-0015: Per-account tone-match — a deterministic STYLE overlay, firewalled from claims
+
+**Status:** Accepted
+
+**Context.** ADR-0013 drew the style/content split: STYLE (tone, register, the
+buyer's lexicon, account history) is learned from untrusted history and applied
+freely; CONTENT (claims, metrics, names) comes only from approved
+product-knowledge. The rep-level brand-voice `[VOICE PROFILE]` captures how the
+*rep* writes — but a message that sounds like the rep can still miss how a
+particular *account* writes: a CFO-led enterprise buyer who writes in long,
+formal paragraphs reads nothing like a founder who fires back three-word
+replies. Phase C (v1.5.0) closes that gap with a per-account register, and in
+doing so reopens the exact risk ADR-0013 named — mirroring the buyer's words is
+a channel through which the buyer's *claims and numbers* could ride back out as
+if they were ours, a fabrication-firewall (ADR-0012) breach laundered through
+"voice".
+
+**Decision.** The per-account overlay is **STYLE only, enforced at write time**.
+(1) A new deterministic, no-ML, no-dependency extractor
+(`scripts/lib/account-register.js`) reads the BUYER side of prior correspondence
+and computes an observable register — formality, average sentence length,
+question rate, greeting/sign-off — plus the buyer's top recurring LEXICON. (2)
+The lexicon is **pure-alphabetic terms only**: a token survives only if it
+matches `/^[a-z][a-z'-]*$/` with stopwords removed, so a number, percentage, or
+currency figure can *never* become a mirrored term, and the renderer never
+echoes a source sentence. (3) Storage is a markdown overlay at
+`<data-home>/escc/voice/account/<account>.md` (already gitignored), **layered
+on — never replacing —** the rep base profile at
+`.claude/escc/voice/<rep-slug>.md`; a draft is rep base voice × buyer-role
+register × this-account register × mirrored lexicon, with FACTS still sourced
+only from approved product-knowledge. (4) The production entry point is an
+operator CLI verb (`escc voice account|show`), mirroring `escc product mine`:
+the lib is pure and the CLI does the disk I/O. It is **MCP-free** — buyer text
+is gathered by the read-only quarantine/thread path (`transcript-analyzer`,
+`email-outbound-ops`) and passed via `--input`, so raw bytes never reach a
+privileged context and rep-authored copy is never mistaken for the buyer's.
+Adding the CLI verb is a **deviation** from the original four-file plan, which
+under-specified the entry point; without it the deterministic extractor would
+be reachable only from tests.
+
+**Consequence.** Drafts can match an account's register and vocabulary without
+ever borrowing its claims: the leak is closed by construction (a digit-bearing
+token cannot be a term) and pinned by a content guard
+(`content-guard-lexicon-leak`) that plants a buyer metric and asserts it never
+reaches the overlay. The overlay is per-account runtime data, so it lives only
+in the gitignored workspace. Limits accepted and documented: the register is
+computed from whatever buyer text the orchestrator supplies — there is **no
+auto-mining of account-memory**, whose events are mostly rep notes, because
+feeding the rep's own side would mis-read the register; greeting/sign-off
+detection is best-effort; and auto-inferred resonance plus the outcome-fed
+ingestion loop remain DEFERRED (ADR-0012). ADR-0012 and ADR-0013 remain in
+force. Ships as v1.5.0 — the last of the Phase A→C roadmap set by ADR-0013.
