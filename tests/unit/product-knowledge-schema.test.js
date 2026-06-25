@@ -41,10 +41,10 @@ function entryOk(v, entry) {
 // A legacy entry exactly as the live store shapes them today (no new fields).
 const LEGACY = {
   id: 'PK-99', type: 'value-prop',
-  text: 'Tanda builds a compliant draft roster for a manager to review before publishing.',
-  segment: 'hospitality, retail',
-  source_title: 'Roster Agent', source_url: 'https://help.tanda.co/',
-  source_type: 'public', approved: true, approved_by: 'Lucas', last_verified: '2026-06-24',
+  text: 'Acme builds a compliant draft schedule for a manager to review before publishing.',
+  segment: 'manufacturing, wholesale',
+  source_title: 'Product Overview', source_url: 'https://example.com/',
+  source_type: 'public', approved: true, approved_by: 'Example Operator', last_verified: '2026-06-24',
   guardrail: 'Capability claim, fine for cold email.',
 };
 
@@ -62,18 +62,18 @@ test('product-knowledge schema: accepts a legacy entry unchanged (backward compa
 test('product-knowledge schema: accepts each new type (objection / pain / battlecard)', () => {
   const v = compileStore();
   assert.ok(entryOk(v, {
-    id: 'OBJ-1', type: 'objection', pattern: 'We already have payroll software.',
-    response: 'Tanda feeds payroll, it does not replace it.', role: 'finance',
+    id: 'OBJ-1', type: 'objection', pattern: 'We already have a tool for this.',
+    response: 'It complements your existing tool, it does not replace it.', role: 'finance',
     source_type: 'manual', approved: true,
   }), 'objection: ' + JSON.stringify(v.errors));
   assert.ok(entryOk(v, {
     id: 'PAIN-1', type: 'pain', role: 'operations',
-    text: 'No live labour cost per venue until after the pay run.',
-    segment: 'multi-site', source_type: 'manual', approved: true,
+    text: 'No live cost visibility per site until after month-end.',
+    segment: 'field-services', source_type: 'manual', approved: true,
   }), 'pain: ' + JSON.stringify(v.errors));
   assert.ok(entryOk(v, {
-    id: 'BC-1', type: 'battlecard', competitor: 'deputy',
-    differentiation: 'Built-in award automation rather than a configure-it-yourself rules engine.',
+    id: 'BC-1', type: 'battlecard', competitor: 'competitor-x',
+    differentiation: 'Built-in automation rather than a configure-it-yourself rules engine.',
     guardrail: 'Differentiation only; do not assert what the competitor does.',
     source_type: 'public', approved: true,
   }), 'battlecard: ' + JSON.stringify(v.errors));
@@ -86,7 +86,7 @@ test('product-knowledge schema: rejects malformed entries (missing required per 
   assert.equal(entryOk(v, { id: 'X', type: 'value-prop', source_type: 'public', approved: true }), false, 'capability type missing text');
   assert.equal(entryOk(v, { id: 'X', type: 'objection', pattern: 'p', source_type: 'manual', approved: true }), false, 'objection missing response');
   assert.equal(entryOk(v, { id: 'X', type: 'pain', text: 'p', source_type: 'manual', approved: true }), false, 'pain missing role');
-  assert.equal(entryOk(v, { id: 'X', type: 'battlecard', competitor: 'deputy', differentiation: 'd', source_type: 'public', approved: true }), false, 'battlecard missing guardrail');
+  assert.equal(entryOk(v, { id: 'X', type: 'battlecard', competitor: 'competitor-x', differentiation: 'd', source_type: 'public', approved: true }), false, 'battlecard missing guardrail');
   assert.equal(entryOk(v, { id: 'X', type: 'webinar', text: 'x', source_type: 'public', approved: true }), false, 'unknown type');
 });
 

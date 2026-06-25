@@ -7,7 +7,7 @@
  *   - a contact who said "call back in six weeks" must not get an email now;
  *   - a draft claiming "you asked me to send a comparison" when the note says
  *     "he'll have a look through the website" must block (fabrication firewall);
- *   - an opener that leads with "a Tanda vs Deputy comparison" must block (WIIFM);
+ *   - an opener that leads with "a Acme vs competitor-x comparison" must block (WIIFM);
  *   - demo-booked / handed-to-AE / declined accounts must block (contactability).
  * Pure module — no env, no state store.
  */
@@ -87,7 +87,7 @@ test('gateClaims ignores a draft that makes no prior-interaction claim', () => {
 // --- Gate 3: WIIFM ---
 
 test('gateWiifm BLOCKS a product-first opener for a cold prospect', () => {
-  const draft = { body: "Here's a Tanda vs Deputy comparison I put together for you." };
+  const draft = { body: "Here's a Acme vs competitor-x comparison I put together for you." };
   const v = gates.gateWiifm({ draft, records: { priorEngagement: false } });
   assert.equal(v.status, 'block');
   assert.match(v.reason, /payoff|product\/process/i);
@@ -136,7 +136,7 @@ test('evaluateGates PASSES a clean draft and reports no blocks', () => {
 });
 
 test('evaluateGates fails and collects blocks + blocklist writes when a gate blocks', () => {
-  const draft = { body: "Here's a Tanda vs Deputy comparison." };
+  const draft = { body: "Here's a Acme vs competitor-x comparison." };
   const records = { notes: [], open_deals: [{ id: 'd1' }], priorEngagement: false };
   const r = gates.evaluateGates({ draft, records, now: '2026-06-23' });
   assert.equal(r.pass, false);
