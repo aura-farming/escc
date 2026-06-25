@@ -10,6 +10,51 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.2.0] - 2026-06-25
+
+Persona/role-keyed product-knowledge layer. Drafting can now write to a contact's
+**role** and **stack**, not just industry — with the fabrication firewall made
+structurally stronger. Additive and backward compatible: every new field is
+optional, so existing entries and drafting flows are unchanged. See
+[ADR-0012](docs/DECISIONS.md) and
+[RELEASE_NOTES_v1.2.0.md](RELEASE_NOTES_v1.2.0.md).
+
+### Added
+
+- **Persona/role-keyed knowledge.** New optional `product-knowledge` type values
+  `objection` / `pain` / `battlecard` and tags `role` / `competitor` alongside
+  `segment`, pinned by the first product-store JSON Schema
+  (`schemas/product-knowledge.schema.json`). A reserved `resonance` field is
+  human-write-only and unwired (the auto-inferred resonance signal and the
+  ongoing outcome-fed loop are deferred).
+- **Controlled vocabulary** (`config/knowledge-vocab.json` + its schema): closed
+  role / segment (industry) / competitor sets and a HubSpot `jobtitle`->role map
+  with a `general` fallback, validated by a disk-loading test.
+- **Coded retrieval ladder** (`scripts/lib/product-knowledge.js`):
+  role+segment+competitor -> role+segment -> segment -> general, approved-and-fresh
+  only (battlecard/pain decay faster), with an explicit "no approved proof"
+  sentinel and gap logging; never throws.
+- **Operator CLI**: `escc product retrieve | resolve-role | add | approve |
+  candidates | gaps | mine`.
+- **Quarantine miner** (`scripts/lib/product-mine.js`): emits review-only
+  candidates from untrusted call/email text — never auto-approved.
+
+### Changed
+
+- **Structural candidate/approved firewall (ADR-0012).** Approved entries live in
+  the one store file drafters read; field-mined candidates live in a separate
+  operator-only area that no drafting skill/agent references or can glob.
+  `skills/product-knowledge` is the canonical role-keyed source of truth and the
+  ~31 retrieval consumers delegate to it. No prospect identity enters the layer
+  by construction; `privacy-purge.js` is unchanged.
+
+### Security
+
+- The product-proof fabrication firewall is enforced by file structure, not a
+  prompt instruction: a prose-only drafter cannot reach an unapproved entry, and
+  `readApproved()` defensively drops any not-approved/untrusted row. Proven by a
+  content-guard threat test.
+
 ## [1.1.1] - 2026-06-24
 
 Runtime-hardening patch. A Claude Code plugin/marketplace install does not run
