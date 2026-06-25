@@ -10,6 +10,54 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.5.0] - 2026-06-25
+
+Per-account / per-KDM tone-match: a new deterministic **per-account voice
+overlay** layers on the rep's base `[VOICE PROFILE]` so a draft to an account
+mirrors how *that* account writes — their register and recurring vocabulary —
+while every fact still comes only from approved product-knowledge. It is
+**STYLE only by construction**: the mirrored lexicon borrows the buyer's words,
+never their claims or numbers. See [ADR-0015](docs/DECISIONS.md) and
+[docs/releases/v1.5.0.md](docs/releases/v1.5.0.md).
+
+### Added
+
+- **`escc voice account|show` operator verb** plus two no-dependency libs:
+  `scripts/lib/account-register.js` (deterministic, no-ML register: formality,
+  average sentence length, question rate, greeting/sign-off, and the buyer's
+  top recurring **alphabetic** terms) and `scripts/lib/voice-overlay.js` (the
+  per-account overlay at `.claude/escc/voice/account/<account>.md` — gitignored,
+  atomic write). `voice account` builds/refreshes the overlay from buyer texts
+  passed via `--input` (MCP-free; the orchestrator gathers the buyer side
+  through the read-only quarantine/thread path); `voice show` prints it.
+- **brand-voice "Per-Account Voice Overlay" section.** Documents the layering
+  (rep base voice × buyer-role register × this-account register × mirrored
+  lexicon), the storage path, and the buyer-side-only / quarantine rule. The
+  base profile still wins on the rep's Banned/Preferred Moves.
+- **Content guard `content-guard-lexicon-leak`.** Pins from the threat side that
+  a planted buyer claim/number never reaches the rendered overlay, that no
+  lexicon term ever carries a digit, that a source sentence is never echoed, and
+  that brand-voice still states the split rule + the overlay path in prose.
+
+### Changed
+
+- Version metadata reconciled to **1.5.0** across `package.json`,
+  `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `CLAUDE.md`,
+  `SOUL.md`, `AGENTS.md`, and `agent.yaml` (the last three were stale from
+  earlier releases).
+- Catalog is **unchanged** (66 skills, 18 agents, 68 commands): Phase C adds
+  machinery and one operator CLI verb, no new skill / agent / command.
+
+### Security
+
+- The style/content split (ADR-0013) is **enforced at write time, not by a
+  prompt**. The per-account lexicon mirrors the buyer's **words** only — a
+  metric, percentage, or currency figure can never become a term (a token
+  survives only if it is pure-alphabetic with no digit), and no source sentence
+  is echoed into the overlay. Facts and metrics stay sourced **only** from
+  approved `product-knowledge`. The `escc voice` CLI is MCP-free, and buyer text
+  reaches it only through the read-only quarantine/thread path.
+
 ## [1.4.0] - 2026-06-25
 
 Drag-and-drop knowledge intake: a new **`/ingest`** wizard routes an existing
