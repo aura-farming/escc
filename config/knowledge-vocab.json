@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "roles": ["general", "owner", "operations", "finance", "hr", "payroll"],
+  "segments": ["general", "hospitality", "retail", "multi-site", "aged care", "healthcare"],
+  "competitors": ["deputy", "employment-hero", "humanforce", "planday"],
+  "title_to_role": [
+    { "match": ["payroll"], "role": "payroll" },
+    { "match": ["chro", "chief people", "human resources", "people and culture", "people & culture", "head of people", "hr manager", "hr director", "hr business", "people partner", "talent"], "role": "hr" },
+    { "match": ["cfo", "chief financial", "finance", "financial controller", "accountant", "bookkeeper", "controller"], "role": "finance" },
+    { "match": ["coo", "chief operating", "operations", "operating officer", "ops manager", "store manager", "venue manager", "general manager", "area manager", "duty manager", "restaurant manager", "site manager"], "role": "operations" },
+    { "match": ["ceo", "chief executive", "owner", "founder", "co-founder", "managing director", "proprietor", "publican", "principal", "director of"], "role": "owner" }
+  ],
+  "fallback_role": "general"
+}

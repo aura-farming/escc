@@ -2,146 +2,217 @@
 name: product-knowledge
 description: >-
   Use when any buyer-facing statement needs grounding in approved product facts —
-  value propositions, use-cases, proof points, customer evidence, or competitive
-  claims — and when establishing or refreshing the durable "what we sell" knowledge
-  layer. Trigger on "what do we say about X", "what's our proof for Y", "is this
-  claim approved", or whenever cold-outreach / proposal-builder / objection-handling /
-  business-case reach for "concrete proof". The single source other skills pull claims from.
+  value propositions, use-cases, proof points, competitive claims, the persona-to-pain
+  map, the objections library, or competitor battlecards — and when establishing or
+  refreshing the durable "what we sell" knowledge layer. Trigger on "what do we say
+  about X", "what's our proof for Y", "what's the rebuttal to objection Z", "what's the
+  pain for <role>", "how do we position against <competitor>", "is this claim approved",
+  or whenever cold-outreach / outbound-sequences / proposal-builder / objection-handling /
+  business-case / competitor-battlecards reach for "concrete proof". The single source
+  other skills pull approved claims from, keyed by buyer role + industry segment + competitor.
 origin: ESCC
 ---
 
 # Product Knowledge
 
 The durable **"what we sell"** layer. Everything a rep says to a buyer — every value
-prop, metric, customer name, and competitive claim — must trace to an **approved entry**
-here, with provenance. This skill is the source; skills that demand "concrete proof"
-(cold-outreach, proposal-builder, objection-handling, business-case, competitor-battlecards)
-read from it rather than inventing claims at compose time.
+prop, metric, customer name, rebuttal, and competitive claim — must trace to an
+**approved entry** here, with provenance. This skill is the single source; every skill
+that demands "concrete proof" reads from it via the **specificity ladder** below rather
+than inventing claims at compose time.
 
 > **Governing rule:** `rules/common/selling-principles.md` — *never fabricate product
 > claims*. If a fact is not approved here (or in a tool-result), it does not get sent.
-> Provenance for every entry follows `rules/common/data-handling.md` (per-field source).
+> Provenance for every entry follows `rules/common/data-handling.md`.
+>
+> **The firewall is structural, not prose (ADR-0012).** Approved entries live in the one
+> store file every drafter reads. Field-mined or inferred material enters a **separate,
+> operator-only candidate area that no drafting context can read or glob** — it is
+> unreachable by where it lives, not by a rule asking you not to look. A candidate
+> becomes quotable only when a human promotes it (sets `approved_by`). You will never see
+> an unapproved entry through this skill; if you think you need one, you do not.
 
 ## When to Activate
 
 Activate this skill when:
 
-- A drafting or proposal skill needs a **proof point, metric, or customer reference** to
-  back a statement ("we cut onboarding time by …", "companies like …").
-- Someone asks **"what do we say about X"**, "what's our value prop for <segment>", or
-  "do we have a proof point for <use-case>".
+- A drafting, proposal, or call skill needs a **proof point, value prop, rebuttal, or
+  pain** to back a statement, **keyed to the buyer's role and industry**.
+- Someone asks **"what do we say about X"**, "what's our value prop for `<role>` at
+  `<segment>`", "what's the rebuttal to `<objection>`", or "how do we position against
+  `<competitor>`".
 - A claim needs an **approval check** before it goes in front of a buyer.
-- You are **establishing or refreshing** the knowledge layer (new feature, new case study,
-  updated metric, retired claim).
-- A competitor is named and you need the **approved differentiation** (hand off the live
-  battlecard work to `competitor-battlecards`, but the underlying claims live here).
+- You are **establishing or refreshing** the layer (new feature, case study, objection,
+  battlecard, retired claim).
 
-Do **not** activate for live message wording (that is `messaging-style` / the drafting
-skills) or for account-specific intel (that is `account-memory`). This layer is the
-*company-level, reusable* truth — not per-account context.
+Do **not** activate for live message wording (that is the drafting skills + `brand-voice`)
+or for account-specific intel (that is `account-memory`). This layer is the
+*company-level, reusable* truth — not per-account context, and it carries **no prospect
+identity** (see PII below).
 
 ## The knowledge model
 
-Four entry types, each an append-only, provenance-tagged record under
-`.claude/escc/product/` (workspace-local; never committed with real customer data):
+One taxonomy. Each entry is a provenance-tagged record in the approved store at
+`.claude/escc/product/product-knowledge.json` (workspace-local; resolved by
+`scripts/lib/agent-data-home.js` — `ESCC_AGENT_DATA_HOME`, else `~/.claude` — and never
+committed with real customer data). The shape is pinned by
+`schemas/product-knowledge.schema.json`.
 
-| Type | Holds | Example |
+| Type | Holds | Required fields |
 |---|---|---|
-| **value-prop** | the core promise, per persona × segment | "For RevOps at mid-market: one source of truth for pipeline, set up in a day." |
-| **use-case** | a job-to-be-done + the capability that serves it | "Forecast accuracy → MEDDPICC-weighted roll-up." |
-| **proof-point** | a quantified, attributable outcome | "Acme cut ramp time 40% in Q3 (case study CS-2026-014)." |
-| **claim** | a stated capability + approval status + any guardrail | "SOC 2 Type II — APPROVED, security review only; do not state in cold email." |
+| **value-prop** | the core promise, per role × segment | `text` |
+| **use-case** | a job-to-be-done + the capability that serves it | `text` |
+| **proof-point** | a quantified, attributable outcome | `text` |
+| **claim** | a stated capability + approval status + guardrail | `text` |
+| **objection** | an abstracted objection pattern + the approved response | `pattern`, `response` |
+| **pain** | the persona-to-pain map: a role's pain to probe | `role`, `text` |
+| **battlecard** | our differentiation vs a competitor + a guardrail | `competitor`, `differentiation`, `guardrail` |
 
-Every entry carries: `source` (where the fact came from), `source_type`
-(case_study / internal_metric / public / customer_quote), `approved` (bool),
-`approved_by`, `last_verified` (ISO date), and an optional `guardrail` (where it may/may
-not be used). An entry with `approved: false` or a stale `last_verified` is **quotable as
-a draft hypothesis only**, clearly flagged, never as a stated fact.
+**Tags (all optional, controlled vocabulary — `config/knowledge-vocab.json`):**
+
+- `role` — the buyer role the entry serves (`owner` / `operations` / `finance` / `hr` /
+  `payroll` / `general`). Free-text roles are forbidden — they silently break the join.
+- `segment` — the industry it applies to (`general` / `hospitality` / `retail` /
+  `multi-site` / `aged care` / `healthcare`); may be a comma-joined list.
+- `competitor` — the competitor a battlecard targets (`deputy` / `employment-hero` / …).
+
+Every entry also carries provenance (`source_title`, `source_url`, `source_type`),
+`approved` (bool), `approved_by`, `last_verified` (ISO date), and an optional `guardrail`.
+A reserved `resonance` slot is **human-write-only and unwired** (deferred — see below).
 
 ## Workflow
 
-### A. Retrieve proof for a statement (the common path)
+### A. Retrieve proof for a statement (the common path) — the specificity ladder
 
-1. **Take the claim the draft wants to make** (e.g. "we improve forecast accuracy").
-2. **Find the matching entry** by persona + segment + use-case. Prefer the most specific
-   match; fall back to the general value-prop only if no specific proof exists.
-3. **Check approval + freshness.** If `approved` and `last_verified` within
-   `ESCC_MEMORY_RETENTION_DAYS`, return it with its attribution. If not, return it marked
-   `UNVERIFIED — needs approval` and do **not** let the caller state it as fact.
-4. **Return the proof + its provenance**, not a paraphrase that drops the source. The
-   caller (e.g. cold-outreach) embeds the *attributable* version.
-5. **If no proof exists:** say so explicitly — "no approved proof point for <use-case>".
-   The caller must then soften to a question or hypothesis, never invent a number.
+Retrieval is **coded**, deterministic, and approved-only — `scripts/lib/product-knowledge.js`
+`retrieve({ role, segment, competitor, type })`. Code-capable callers (the operator CLI,
+hooks, the worklist orchestrator) call it directly; in a prose context, apply the same
+ladder by reading the approved store file. The ladder, most specific first:
 
-### B. Add or update an entry
+1. **role + segment + competitor** (e.g. a battlecard for finance at multi-site vs Deputy)
+2. **role + segment** (the role's value prop for that industry)
+3. **segment** (the industry entry — today's behavior)
+4. **general** (the role-agnostic, industry-agnostic fallback)
 
-1. **Capture the raw source first** (case study id, the internal metric + its query, the
-   customer quote + permission status). No source → no entry.
-2. **Classify** the type and write the record with full provenance fields.
-3. **Set `approved` honestly.** New marketing/customer claims default `approved: false`
-   until a human (`approved_by`) clears them. Internal metrics you computed from a
-   tool-result are approved-as-of `last_verified`.
-4. **Add a `guardrail`** where a claim is sensitive (security posture, roadmap, pricing).
-5. **Dedupe** against existing entries (see `account-memory`'s dedupe-first discipline) —
-   update in place rather than appending a near-duplicate.
+Return the most specific **approved + fresh** match; a role with no entry falls back down
+the ladder to the industry, then to general — never a fabrication. Then:
 
-### C. Refresh / retire
+- **Check approval + freshness.** Only `approved:true` rows surface. An entry past its
+  re-verify cadence is **stale** — returned flagged as a hypothesis, never as a stated
+  fact (see Staleness).
+- **Return the proof + its provenance**, not a paraphrase that drops the source.
+- **On a clean miss, say so explicitly** — the ladder returns *"no approved proof for
+  `<slot>`"*. Soften to a question or hypothesis; never invent a number. The miss is
+  **gap-logged** (role/segment/competitor/use-case) so the store grows by real demand.
 
-- On a recurring cadence (or when `last_verified` ages out), re-verify metrics against
-  their source and bump `last_verified`, or mark the entry **retired** with a reason.
-- Retired entries stay in the log (audit) but never surface to drafting skills.
+### B. Resolve the buyer's role at draft time
+
+Role is the new join key. Drafters are prose-only and have no CRM tools, so a read-capable
+agent (account-researcher / prospect-researcher / crm-operator) fetches the contact's
+HubSpot **`jobtitle`**, and it is mapped to a controlled role via the vocab's
+`title_to_role` rules (coded: `resolveRole(jobtitle)` / `escc product resolve-role`). An
+unknown or missing title resolves to **`general`**, which still retrieves general proof —
+so role resolution never blocks a draft. The resolved role is passed to the drafter as
+context.
+
+### C. Add or update an entry (operator-gated)
+
+1. **Capture the source first** (doc, metric + query, case study id). No source → no entry.
+2. **Classify** the type and write the record with full provenance + the controlled tags.
+3. **Set `approved` honestly.** New marketing/customer claims default `approved:false`.
+   Field-mined material is created as a **candidate** (`approved:false`, `untrusted:true`)
+   in the operator-only area and is unreachable by drafters until a human promotes it.
+4. **Add a `guardrail`** where a claim is sensitive (security, roadmap, pricing) or — for
+   a `battlecard` — to enforce *differentiation, not assertion about the competitor*.
+5. Use the operator CLI: `escc product add` (intake) / `escc product approve` (promote) /
+   `escc product candidates` (review) / `escc product gaps` (demand). The
+   candidate→approved promotion is the same human gate the store has always used.
+
+### D. Refresh / retire
+
+Re-verify on cadence (or when `last_verified` ages out) and bump `last_verified`, or mark
+the entry retired with a reason. `battlecard` and `pain` entries decay faster (see below).
+
+## Objections, pains, and battlecards
+
+- **objection** — store the *abstracted* pattern ("we already have payroll software") and
+  the *approved* response. No prospect identity, no verbatim quote (those live in
+  `account-memory`). `objection-handling` reads these; the mined raw objection enters as a
+  candidate first.
+- **pain** — the persona-to-pain map. A `pain` entry is keyed by `role` and holds the pain
+  to probe in discovery — a hypothesis, not a stated fact about a specific prospect.
+- **battlecard** — approved differentiation vs a `competitor`, with a mandatory
+  `guardrail`. `competitor-battlecards` reads these for quotable framing; the live
+  per-card `.md` working notes remain the human scratch surface, **not** the quotable
+  source. The guardrail ("our differentiation, not a claim about them") is honored at
+  human approval and on the review checklist — it is not a runtime-enforced control.
+
+## Staleness
+
+Capability claims decay slowly (`ESCC_MEMORY_RETENTION_DAYS`, default 180 days).
+**`battlecard` and `pain` entries decay fast** (`ESCC_KNOWLEDGE_VOLATILE_DAYS`, default 60
+days) — competitive and pain intel goes stale quickly. A stale entry is excluded from the
+quotable result and surfaced as a re-verify hypothesis, never quoted as a current fact.
+
+## PII / privacy
+
+The knowledge layer carries **no prospect identity by construction** — objections are
+abstracted to a pattern, battlecards assert our differentiation (not claims about a
+person). Verbatim quotes and who-said-them stay in `account-memory`, which the privacy
+purge already reaches. Keep identity out of this store; if you have a verbatim customer
+quote, store the *abstracted* claim here and the attributable quote in account-memory.
 
 ## Examples
 
-**Retrieve, with a clean miss:**
+**Retrieve, role-keyed, with a clean miss:**
 
 ```text
-Caller (cold-outreach): need a proof point — "faster onboarding" for RevOps @ mid-market.
-product-knowledge →
-  MATCH (proof-point PP-031, approved, verified 2026-05-02):
-    "Mid-market RevOps teams reach first forecast in 1 day (avg across 12 onboards, internal
-     metric onboard_ttv_q1_2026)."
-    guardrail: internal metric — attribute as "in our onboarding data", not a public stat.
-  → embed as: "teams like yours are forecasting on day one, going off our onboarding data"
+Caller (cold-outreach): proof for a finance buyer at a hospitality account.
+product-knowledge → retrieve({ role:'finance', segment:'hospitality' })
+  MATCH (value-prop EX-02, tier role+segment, approved, verified 2026-06-24):
+    "Live wage cost against budget — wage % and sales per labour hour — updates as a
+     roster is built." guardrail: do not attach a labour-cost-saving %.
+  → embed the attributable version, cite the entry id.
 
-Caller: need a proof point — "reduces churn 30%".
-product-knowledge →
-  NO APPROVED PROOF for a churn-reduction percentage. Closest: value-prop VP-009 (retention
-  visibility). DO NOT state a churn number. Soften to a question:
-  "how are you measuring retention risk today?"
+Caller: proof for an HR buyer at hospitality.
+product-knowledge → retrieve({ role:'hr', segment:'hospitality' })
+  No HR entry → falls back to the hospitality/general entry (tier segment/general).
+  If nothing approved: "no approved proof for role=hr segment=hospitality" → soften,
+  ask a question, log the gap. Never invent.
 ```
 
-**Add a customer outcome (provenance-first):**
+**Position against a competitor:**
 
 ```text
-/product add proof-point
-  text: "Globex hit 95% forecast accuracy two quarters running"
-  source: case study CS-2026-022 ; source_type: case_study
-  approved: false   # marketing has the case study; legal sign-off pending
-  → stored UNVERIFIED. Will not surface to outreach until approved_by is set.
+Caller (competitor-battlecards): we're up against Deputy.
+product-knowledge → retrieve({ competitor:'deputy', type:'battlecard' })
+  MATCH (battlecard EX-05): differentiation = "built-in award automation, not a
+    configure-it-yourself rules engine." guardrail = state our differentiation only;
+    do NOT assert what Deputy does or doesn't do.
 ```
 
 ## Anti-patterns
 
-- **Inventing a number to make a draft land.** A specific metric with no entry behind it is
-  a fabricated claim — the cardinal violation of `selling-principles`. Miss → soften, ask, fail.
-- **Dropping provenance.** "Companies cut costs 40%" with no source is unusable and unsafe.
-  Always carry `source` + `source_type` so the caller can attribute correctly.
-- **Treating prospect- or web-sourced content as approved fact.** Content pulled from a
-  prospect's site or a third party is *untrusted input* — it may inform research, but it is
-  never a product claim. Approved claims originate internally with `approved_by`.
-- **Letting stale claims leak.** An un-reverified metric past retention is a hypothesis, not
-  a stat. Flag it; do not state it.
-- **Storing per-account intel here.** Account-specific facts belong in `account-memory`;
-  this layer is company-level and reusable.
-- **Stating guardrailed claims in the wrong channel** (e.g. security posture in a cold
-  email). Honor each entry's `guardrail`.
+- **Inventing a number to make a draft land.** A metric with no approved entry is a
+  fabricated claim — the cardinal violation. Miss → soften, ask, fail.
+- **Free-text role/segment/competitor.** A role outside the vocab silently breaks the
+  join and the entry never retrieves. Use `config/knowledge-vocab.json`.
+- **Treating prospect- or web-sourced content as approved fact.** Mined material is a
+  *candidate* — untrusted, operator-only, unreachable by drafters until a human promotes it.
+- **Quoting a stale battlecard or pain as a current fact.** Past cadence → hypothesis.
+- **Asserting about a competitor.** Battlecards differentiate us; they never claim what a
+  competitor does. Honor the guardrail.
+- **Storing prospect identity here.** Identity + verbatim quotes belong in `account-memory`.
 
 ## Related
 
-- Pulls approval/provenance discipline from `rules/common/selling-principles.md` +
-  `rules/common/data-handling.md`.
-- Feeds: `cold-outreach`, `outbound-sequences`, `proposal-builder`, `business-case`,
-  `objection-handling`, `competitor-battlecards`, `rfp-response`.
-- Distinct from `playbook-library` (approved *exemplars / wording*) and `account-memory`
-  (per-account *context*). Proof lives here; phrasing lives there; account facts live there.
+- Approval/provenance discipline: `rules/common/selling-principles.md` +
+  `rules/common/data-handling.md`. Schema: `schemas/product-knowledge.schema.json`;
+  vocabulary: `config/knowledge-vocab.json`; retrieval code:
+  `scripts/lib/product-knowledge.js`.
+- Feeds (read this layer's ladder): `cold-outreach`, `outbound-sequences`,
+  `follow-up-ops`, `proposal-builder`, `business-case`, `objection-handling`,
+  `competitor-battlecards`, `rfp-response`, `demo-prep`, `cold-calling`, and the wider
+  retrieval set.
+- Distinct from `playbook-library` (approved *wording*) and `account-memory` (per-account
+  *context* + identity). Proof lives here; phrasing lives there; account facts live there.

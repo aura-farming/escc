@@ -34,10 +34,16 @@ general knowledge — pull from the files.
    any hard-stop language rules. The VOICE PROFILE governs the draft's character; if it
    conflicts with the rep's instruction, note the conflict and follow the VOICE PROFILE.
 
-2. **Approved proof** (`product-knowledge` layer, typically in `.claude/escc/product/`).
-   Every metric, customer reference, and competitive claim must trace to an approved entry
-   here. If a fact is not in the product-knowledge layer (or in a tool-result returned
-   during this session), it does not go in the draft — not even paraphrased.
+2. **Approved proof** (the `product-knowledge` layer). Every metric, customer reference,
+   and competitive claim must trace to an **approved** entry, retrieved by the specificity
+   ladder — **role + segment + competitor**, falling back to role+segment, then segment,
+   then general. The buyer's role is resolved from their HubSpot `jobtitle` by an upstream
+   read-capable agent and passed to you as context (you have no CRM tools); an unknown role
+   falls back to `general`, which still returns general proof. If a fact is not in the
+   approved layer (or in a tool-result returned during this session), it does not go in the
+   draft — not even paraphrased. You only ever see **approved** proof: mined or unverified
+   material lives in an operator-only candidate area you cannot read, and never reaches a
+   draft until a human promotes it.
 
 3. **Exemplars and structure** (`playbook-library` skill output, typically in
    `.claude/escc/playbooks/`). Approved sequence templates, email structures, and
@@ -89,7 +95,8 @@ drafting errors.
 ## Workflow
 
 1. **Read the VOICE PROFILE.** Note hard-banned phrases and tone direction before writing a word.
-2. **Read the relevant product-knowledge entries** for any claims the draft will use.
+2. **Read the relevant approved product-knowledge entries** for the contact's resolved
+   role + segment for any claims the draft will use.
 3. **Read the playbook exemplar** for this sequence type, if one exists.
 4. **Compose the draft**, substituting approved proof and real personalization signals. Mark any
    placeholders clearly (square brackets with a note).

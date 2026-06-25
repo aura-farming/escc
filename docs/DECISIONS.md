@@ -251,3 +251,79 @@ manager-gated, and `/instinct-status` is the actionable human-review surface.
 adversarial prospect content, and team-level knowledge spreads only under
 explicit human review. The cost is a more elaborate engine with decay,
 applicability filtering, and gated promotion, all of which are tested.
+
+---
+
+## ADR-0012: Persona/role-keyed knowledge layer — a structural candidate/approved wall
+
+**Status:** Accepted
+
+**Context.** ESCC drafts real outbound from one approved product-knowledge store
+(`<agent-data-home>/escc/product/product-knowledge.json`), keyed today only by
+free-text `segment`, with four `type` values, no JSON Schema, no coded retrieval,
+and retrieval performed in prose by **prose-only drafting agents** (tools
+`Read`/`Grep`/`Glob`, no code execution). The fabrication firewall — *"no
+approved proof for this slot, say so"* (`skills/product-knowledge/SKILL.md`) — is
+what makes the store safe to quote. We need to write to a contact's **role** and
+**stack**, not just industry: value-props/proof tagged by role, an objections
+library, a persona-to-pain map, and committed battlecard data. This deliberately
+pipes field data (calls, emails) *toward* the store — exactly where fabrication
+could leak in — so the firewall must come out **stronger**. A retrieval *function
+the drafter calls* cannot be that firewall: a prose-only drafter cannot execute
+code, so any "return approved-only" logic degrades to a prompt instruction — the
+drift this design exists to kill. A `Read`-hook cannot strip rows either: it sees
+only the path, not the bytes; there is no PostToolUse `Read` matcher and no
+in-flight Read-rewriting precedent (`scripts/hooks/attachment-quarantine.js`,
+`hooks/hooks.json`). Only `pre:outbound-send-gate` fails closed
+(`scripts/lib/hook-flags.js`).
+
+**Decision.** The candidate/approved wall is enforced by **physical separation**,
+not by prose. Approved entries stay in the single file every drafter is pointed
+at; field-mined or inferred entries (`approved:false`, `untrusted:true`) are
+**candidates** that live in a sibling `candidate/` path **no drafting skill or
+agent references or can glob** — so a prose-only drafter is *structurally* unable
+to reach an unapproved row. Candidate review and candidate→approved promotion are
+**operator-only** (mirroring the instinct lifecycle's separate registry +
+operator action, `scripts/instincts/lifecycle.js`); promotion is the same human
+gate the store uses today (`approved_by` set by a person). "One store" means one
+*taxonomy*, not one *file*: a first product-store JSON Schema (mirroring
+`schemas/state-store.schema.json`) adds `type` values
+`objection`/`pain`/`battlecard` and **optional** tags `role` + `competitor`
+alongside `segment` — all new fields optional, so existing entries validate
+unchanged — and rejects the contradiction `approved:true` + `untrusted:true`.
+Approved **battlecard facts** become `battlecard`-type entries (`competitor` +
+`differentiation` + `guardrail`); the existing `.md` cards remain the human
+working surface, not the quotable source. A controlled vocabulary
+(`config/`-committed, validated by a disk-loading test) closes the `role` /
+`segment` (the store's *industry* values) / `competitor` sets and maps a HubSpot
+`jobtitle` to a role with an explicit fallback (unknown → `general`, which still
+retrieves general proof); role resolution at draft time uses the existing HubSpot
+read tools through a read-capable agent, since drafters have none. A pure coded
+retrieval ladder (`scripts/lib/product-knowledge.js`, mirroring
+`scripts/lib/account-memory.js`) — role+segment+competitor → role+segment →
+segment → general, approved-and-fresh only, with an explicit "no approved proof"
+sentinel — is a **convenience for code-capable callers** (the operator CLI,
+hooks, worklist), **not** the drafter's enforcement (the physical separation is).
+New types carry **no prospect identity and no verbatim quotes by construction**
+(objections store an abstracted `pattern`; battlecards assert differentiation,
+not claims about a person); identity stays in account-memory, which
+`privacy-purge.js` already reaches, and a test proves the layer holds none — so
+purge is **not** extended. `battlecard`/`pain` entries get a shorter re-verify
+cadence and are treated as hypotheses when stale; clean misses are gap-logged;
+operator CLI verbs (`escc product add` / `approve`) mirror the instinct operator
+path. Auto-inferred **resonance** and the **ongoing outcome-fed ingestion loop**
+are **deferred** — both self-reinforce with multi-causal attribution and are the
+fabrication failure mode automated; a reserved `resonance` field, if present, is
+human-write-only and unwired.
+
+**Consequence.** The firewall becomes structural and stronger: unapproved content
+is unreachable by *where it lives*, not by what a prompt says, and field-mined
+data can enter only as an operator-reviewed candidate. Existing entries and every
+current drafting flow keep working unchanged (new fields optional; absence ⇒
+today's behavior). The costs: the ~31 retrieval consumers must converge onto the
+one coded model (removing divergent prose ladders); role-at-draft is entirely new
+wiring (`jobtitle` is fixture-only today); and a disk-loading schema-validation
+test is net-new (no prior precedent). An optional fail-closed path-block
+`Read`-hook on the candidate path (registered in `FAIL_CLOSED_HOOKS`, mirroring
+the send-gate) can be added later as defense-in-depth, but it presupposes the
+physical separation and is not load-bearing.

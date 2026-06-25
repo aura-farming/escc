@@ -113,9 +113,11 @@ personalization; only `product-knowledge` can anchor proof.
 
 ### Step 3 — Pull approved proof
 
-1. Identify the use case the message will connect to (e.g., "forecast
-   accuracy" for a RevOps persona).
-2. Retrieve the matching approved entry from `product-knowledge`.
+1. Identify the buyer's **role** (resolved from their `jobtitle`; unknown -> general)
+   and the use case the message connects to.
+2. Retrieve the matching approved entry from `product-knowledge` via its specificity
+   ladder — **role + segment + competitor**, falling back to role+segment, then segment,
+   then general. You only ever see approved proof; mined material is operator-only.
 3. Check: `approved: true`, `last_verified` within retention window, no
    `guardrail` blocking this channel.
 4. If no approved proof exists: do not fabricate. Frame as a question
