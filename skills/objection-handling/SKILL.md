@@ -56,7 +56,7 @@ Do **not** activate for:
 
 2. **Map to the MEDDPICC gap and probe.** Each pattern maps to one or two open MEDDPICC fields (e.g., price → Economic Buyer + Metrics; timing → Pain + Decision Process). Name the gap explicitly before drafting a response — this drives both the reframe angle and the probe question to ask next.
 
-3. **Retrieve proof and exemplar wording.** Pull the relevant approved proof point from `product-knowledge` (check `approved` and `last_verified`). Pull the approved reframe wording from `playbook-library`. If no approved proof exists for the use case, soften to a scoping question — never fabricate a stat.
+3. **Retrieve the approved rebuttal + proof.** Pull the approved `objection`-type entry from `product-knowledge` (its abstracted `pattern` + the approved `response`), keyed by the buyer's role + segment (+ competitor), plus any backing `proof-point` (check `approved` and `last_verified`). Pull approved reframe wording from `playbook-library`. A mined raw objection enters as an operator-only candidate first — you only ever see approved rebuttals. If no approved proof or rebuttal exists, soften to a scoping question — never fabricate a stat.
 
 4. **Draft the response.** Use the reframe logic for the pattern (see detail sections below). One CTA, buyer-centric framing per `rules/common/messaging-style.md`. Produce a Gmail draft — do not mark as sent until the `pre:outbound-send-gate` hook records approval.
 

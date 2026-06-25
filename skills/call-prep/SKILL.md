@@ -113,7 +113,10 @@ tracks; SMB prep is a tighter one-page brief.
   or add.
 - Gap probes: work through the priority gap questions from step 3. Sequence
   them from open (Identify pain, Metrics) toward specific (Decision process,
-  Paper process) unless the meeting type dictates otherwise.
+  Paper process) unless the meeting type dictates otherwise. Pre-load the
+  Identify-pain probe with the approved role-keyed `pain` entry from
+  `product-knowledge` (the attendee's role -> its known pain pattern) — a
+  hypothesis to probe, not a stated fact; do not invent claims at prep time.
 - Product moments: if a demo or proof point is appropriate, note where it lands
   in the flow and which claims to draw from `product-knowledge`. Do not invent
   claims at prep time.

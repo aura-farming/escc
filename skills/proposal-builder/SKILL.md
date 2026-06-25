@@ -72,8 +72,9 @@ Before writing a single word:
 ### Step 2 — Pull and match proof points
 
 1. For each decision criterion the buyer has stated, call `product-knowledge` to
-   retrieve the most specific approved proof point that speaks to it:
-   - Match by: persona (the economic buyer's role) + segment + use-case.
+   retrieve approved proof via its specificity ladder — **role + segment + competitor**,
+   falling back to role+segment, then segment, then general (the economic buyer's role
+   resolves from their `jobtitle`; unknown -> general):
    - Prefer a `proof-point` entry over a generic `value-prop`.
    - If `product-knowledge` returns "no approved proof for <use-case>", record
      the gap. **Do not invent a number or customer name.** In the proposal section,

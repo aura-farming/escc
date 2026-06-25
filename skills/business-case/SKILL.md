@@ -91,9 +91,10 @@ A business case has five components:
 
 ### Step 3 -- Build the proposed-state outcome line
 
-1. For each cost bucket identified in Step 2, query `product-knowledge` for the
-   most relevant approved proof point:
-   - Prefer a proof point that matches the buyer's segment and use-case.
+1. For each cost bucket identified in Step 2, query `product-knowledge` for approved
+   proof via its specificity ladder — **role + segment + competitor**, falling back to
+   role+segment, then segment, then general (the buyer's role resolves from `jobtitle`):
+   - Prefer a proof point that matches the buyer's role and segment.
    - Use the specific improvement percentage / time reduction / accuracy gain
      from the approved entry; do not round up or extrapolate beyond what the
      entry states.

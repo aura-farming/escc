@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ESCC knowledge-layer controlled vocabulary",
+  "description": "Closed sets for the role / segment / competitor tags on product-knowledge entries (ADR-0012), plus a HubSpot jobtitle->role map with an explicit fallback. Free-text tags are forbidden — they silently break the retrieval join — so ingest validates an entry's role/segment/competitor against these sets. `segments` formalizes the store's existing INDUSTRY values (not the size-tier overlays in rules/segments/). The disk-loading unit test validates the committed config/knowledge-vocab.json against this schema and asserts cross-field integrity (every mapped role and the fallback are in `roles`; `general` is in both `roles` and `segments`).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "roles", "segments", "competitors", "title_to_role", "fallback_role"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "roles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "competitors": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "title_to_role": {
+      "type": "array",
+      "description": "Ordered, first-match-wins. Each rule maps any matched lowercased job-title substring to a role. More specific roles come first.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["match", "role"],
+        "properties": {
+          "match": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "role": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "fallback_role": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Role used when a title matches no rule (unknown -> general, which still retrieves general proof — never a crash)."
+    }
+  }
+}
