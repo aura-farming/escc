@@ -10,6 +10,48 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.4.0] - 2026-06-25
+
+Drag-and-drop knowledge intake: a new **`/ingest`** wizard routes an existing
+file — sent emails, a call transcript, a case study, a pricing or security
+one-pager, a competitor doc, or an ICP/industries list — into the right ESCC
+layer, on the clean base v1.3.0 established. It adds **no new machinery**: every
+leg reuses an existing surface, the candidate/approved firewall and the
+fail-closed send-gate are untouched, and untrusted content is read only by a
+read-only quarantine subagent. See [ADR-0014](docs/DECISIONS.md).
+
+### Added
+
+- **`/ingest` (knowledge-intake skill).** An AskUserQuestion intake wizard
+  (classify → dry-run → quarantine-extract → route → one review summary)
+  mirroring `configure-escc`. Routing: your sent emails / brand doc → the
+  brand-voice VOICE PROFILE (style, auto-apply); a call transcript →
+  `transcript-analyzer` (quarantine) → `discovery-notes` (CRM proposal +
+  MEDDPICC) plus objection/pain candidates via `escc product mine --input`; a
+  case study / pricing / security doc / stated claim → `escc product add`
+  candidate; a competitor doc → a `battlecard` candidate (via
+  `competitor-analyst`) plus a competitor-vocab suggestion; an ICP / industries
+  list → `escc product vocab suggest`. Installed with the cross-cutting skills.
+- **Content guard `content-guard-knowledge-intake`.** Pins the `/ingest`
+  invariants from the test side: untrusted content is quarantined to a read-only
+  subagent, every product claim enters as a candidate promoted only by `escc
+  product approve`, ingest uses `mine --input` and refuses the
+  quarantine-bypassing `--from-transcript`, and the skill is never pointed at
+  the candidate store.
+
+### Changed
+
+- Catalog: **66 skills, 68 commands** (CI-pinned); command registry regenerated.
+
+### Security
+
+- The candidate/approved firewall (ADR-0012) and the style/content split
+  (ADR-0013) are unchanged: only **STYLE** (voice) and account **CONTEXT**
+  auto-apply; every product **CLAIM** is operator-reviewed before it is quotable.
+  `/ingest` never uses `escc product mine --from-transcript` (which reads raw
+  bytes in the CLI and bypasses the quarantine hook) — it extracts via a
+  read-only subagent and ingests the structured result with `--input`.
+
 ## [1.3.0] - 2026-06-25
 
 Open-source readiness: ESCC is now **company-neutral by construction**, so any

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "totalCommands": 67,
+  "totalCommands": 68,
   "commands": [
     {
       "command": "activity",
@@ -266,6 +266,17 @@
         "inbox-triage"
       ],
       "path": "commands/inbox.md"
+    },
+    {
+      "command": "ingest",
+      "description": "Drag-and-drop intake — route a dropped file (emails, transcript, case study, pricing, competitor doc, ICP list) into the right ESCC layer.",
+      "type": "review",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "knowledge-intake"
+      ],
+      "path": "commands/ingest.md"
     },
     {
       "command": "inspect",
@@ -788,7 +799,7 @@
       "outreach": 9,
       "planning": 10,
       "research": 3,
-      "review": 28,
+      "review": 29,
       "testing": 4
     },
     "topAgents": [],

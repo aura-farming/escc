@@ -26,7 +26,7 @@
     {
       "id": "commands-core",
       "kind": "commands",
-      "description": "All 66 thin command shims (<=20 lines each), each delegating to an installed skill.",
+      "description": "All 68 thin command shims (<=20 lines each), each delegating to an installed skill.",
       "paths": ["commands"],
       "targets": ["claude", "claude-project"],
       "dependencies": [],
@@ -213,7 +213,7 @@
     {
       "id": "skills-cross",
       "kind": "skills",
-      "description": "Cross-cutting skills (11): daily brief, inbox triage, email outbound ops, brand voice, CRM hygiene, sales handoffs, account memory, opt-out handling, meeting followthrough, trigger detection, reply handling.",
+      "description": "Cross-cutting skills (12): daily brief, inbox triage, email outbound ops, brand voice, CRM hygiene, sales handoffs, account memory, opt-out handling, meeting followthrough, trigger detection, reply handling, knowledge intake (/ingest).",
       "paths": [
         "skills/daily-brief",
         "skills/inbox-triage",
@@ -225,7 +225,8 @@
         "skills/opt-out-handling",
         "skills/meeting-followthrough",
         "skills/trigger-detection",
-        "skills/reply-handling"
+        "skills/reply-handling",
+        "skills/knowledge-intake"
       ],
       "targets": ["claude", "claude-project"],
       "dependencies": ["skills-foundation"],
