@@ -9,10 +9,10 @@
  * subcommand returns the uniform { code, text, data } contract, so handlers are
  * directly testable and the instinct slash-command handlers mount unchanged.
  *
- * 12 subcommands: install · plan · catalog · doctor · repair · status ·
- * sessions · list-installed · uninstall · auto-update · privacy-purge · watch
- * plus the mounted instinct handlers (instinct-status / instinct-promote /
- * evolve) from scripts/instincts/instinct-cli.js.
+ * Subcommands: install · plan · catalog · doctor · repair · status ·
+ * sessions · list-installed · uninstall · auto-update · privacy-purge · watch ·
+ * outbound · product, plus the mounted instinct handlers (instinct-status /
+ * instinct-promote / evolve) from scripts/instincts/instinct-cli.js.
  *
  * The dispatcher delegates to already-tested libs; it never re-implements their
  * logic. Heavy/destructive work (install apply, privacy erasure, git pull) is
@@ -33,6 +33,8 @@ const instinctStore = require('./instincts/instinct-store');
 const outboundApprove = require('./lib/outbound-approve');
 const outboundGates = require('./lib/outbound-gates');
 const worklist = require('./lib/worklist');
+const productKnowledge = require('./lib/product-knowledge');
+const productMine = require('./lib/product-mine');
 
 const HELP = `escc — EverythingSales Claude Code operator CLI
 
@@ -59,6 +61,15 @@ Outbound enforcement (v1.1.0):
   outbound check         run the four gates read-only, no writes (--input <json>)
   outbound review-pack   split a worklist into sendable vs excluded-with-reasons (--input <json>)
 
+Product knowledge (ADR-0012):
+  product retrieve     run the role+segment+competitor ladder (--role --segment --competitor --type --use-case)
+  product resolve-role <job title>  map a HubSpot job title to a controlled role
+  product add          add an entry (--input <json>); approved if --approved-by "<name>", else a candidate
+  product approve      promote a candidate to approved (--id <id> --approved-by "<name>")
+  product candidates   list candidates awaiting operator review
+  product gaps         list logged knowledge gaps (clean misses)
+  product mine         ingest candidates (--input <json>) or mine a transcript (--from-transcript <file> [--source-ref <ref>])
+
 Instinct engine (mounted from instinct-cli):
   instinct-status         list instincts + the review gate (--approve <id> / --reject <id>)
   instinct-promote <id>   manager-gated personal -> team promotion (--role <role>)
@@ -70,6 +81,8 @@ const VALUE_FLAGS = new Set([
   '--target', '--profile', '--home', '--repo-root', '--write',
   '--limit', '--days', '--within-days', '--role', '--scope', '--approve', '--reject',
   '--input', '--override',
+  '--id', '--type', '--segment', '--competitor', '--approved-by',
+  '--source-ref', '--source-type', '--use-case', '--from-transcript',
 ]);
 
 /** `--repo-root` -> `repoRoot`, `--within-days` -> `withinDays`. */
@@ -296,6 +309,83 @@ function handleOutbound(positional, flags) {
   }
 }
 
+/** Read a product JSON payload from --input <file> or stdin. */
+function readProductInput(flags) {
+  const raw = flags.input ? fs.readFileSync(flags.input, 'utf8') : fs.readFileSync(0, 'utf8');
+  return JSON.parse(raw);
+}
+
+/** Product-knowledge operator verbs: retrieve / resolve-role / add / approve / candidates / gaps / mine (ADR-0012). */
+function handleProduct(positional, flags) {
+  const action = positional[0] || 'help';
+  try {
+    if (action === 'retrieve') {
+      const r = productKnowledge.retrieve(
+        { role: flags.role, segment: flags.segment, competitor: flags.competitor, type: flags.type, useCase: flags.useCase },
+        { logGap: true });
+      const text = r.found
+        ? `${r.entries.length} approved entr${r.entries.length === 1 ? 'y' : 'ies'} at tier '${r.tier}':\n${r.entries.map(e => `  - ${e.id} [${e.type}] ${String(e.text || e.pattern || e.differentiation || '').slice(0, 80)}`).join('\n')}`
+        : `${r.sentinel}${r.stale.length ? `\n(stale/unverified, not quotable: ${r.stale.map(e => e.id).join(', ')})` : ''}`;
+      return { code: 0, text, data: r };
+    }
+    if (action === 'resolve-role') {
+      const title = positional[1] || '';
+      const role = productKnowledge.resolveRole(title);
+      return { code: 0, text: `role: ${role}`, data: { title, role } };
+    }
+    if (action === 'candidates') {
+      const c = productKnowledge.readCandidates();
+      const text = c.length
+        ? `Candidates awaiting review (${c.length}):\n${c.map(x => `  - ${x.id} [${x.type}] ${String(x.pattern || x.text || '').slice(0, 70)} (src ${x.source_type})`).join('\n')}`
+        : 'No candidates awaiting review.';
+      return { code: 0, text, data: { candidates: c } };
+    }
+    if (action === 'gaps') {
+      const g = productKnowledge.readGaps();
+      const text = g.length
+        ? `Knowledge gaps (${g.length}):\n${g.map(x => `  - role=${x.role || '-'} segment=${x.segment || '-'} competitor=${x.competitor || '-'} type=${x.type || '-'}`).join('\n')}`
+        : 'No gaps logged.';
+      return { code: 0, text, data: { gaps: g } };
+    }
+    if (action === 'add') {
+      const entry = readProductInput(flags);
+      if (flags.approvedBy) {
+        const res = productKnowledge.addApproved(entry, { approvedBy: flags.approvedBy });
+        return res.ok
+          ? { code: 0, text: `Added approved entry ${res.entry.id} (by ${res.entry.approved_by}).`, data: res }
+          : { code: 1, text: `add failed:\n${res.errors.map(e => `  - ${e}`).join('\n')}`, data: res };
+      }
+      const vt = productKnowledge.validateVocabTags(entry);
+      if (!vt.ok) return { code: 1, text: `add (candidate) failed:\n${vt.errors.map(e => `  - ${e}`).join('\n')}`, data: { ok: false, errors: vt.errors } };
+      const stored = productKnowledge.appendCandidate(entry);
+      return { code: 0, text: `Added candidate ${stored.id} (approved:false, untrusted:true) — operator-only until promoted.`, data: { candidate: stored } };
+    }
+    if (action === 'approve') {
+      if (!flags.id) return { code: 1, text: 'approve requires --id <candidate-id> and --approved-by "<name>"', data: null };
+      const res = productKnowledge.approveCandidate(flags.id, { approvedBy: flags.approvedBy });
+      return res.ok
+        ? { code: 0, text: `Promoted ${res.entry.id} to approved (by ${res.entry.approved_by}).`, data: res }
+        : { code: 1, text: `approve failed:\n${res.errors.map(e => `  - ${e}`).join('\n')}`, data: res };
+    }
+    if (action === 'mine') {
+      if (flags.fromTranscript) {
+        const text = fs.readFileSync(flags.fromTranscript, 'utf8');
+        const opts = { sourceType: flags.sourceType || 'call', sourceRef: flags.sourceRef || flags.fromTranscript };
+        const items = productMine.extractObjectionCandidates(text, opts);
+        const stored = productMine.ingestCandidates(items, opts);
+        return { code: 0, text: `Mined ${stored.length} candidate(s) from transcript -> operator-only review (all approved:false, untrusted:true).`, data: { candidates: stored } };
+      }
+      const input = readProductInput(flags);
+      const items = Array.isArray(input) ? input : (input.items || []);
+      const stored = productMine.ingestCandidates(items, { sourceType: flags.sourceType, sourceRef: flags.sourceRef });
+      return { code: 0, text: `Ingested ${stored.length} candidate(s) -> operator-only review.`, data: { candidates: stored } };
+    }
+    return { code: 1, text: `product: unknown action '${action}' (retrieve | resolve-role | add | approve | candidates | gaps | mine)`, data: null };
+  } catch (err) {
+    return { code: 1, text: `product ${action} failed: ${err.message}`, data: null };
+  }
+}
+
 // --- dispatch ---------------------------------------------------------------
 
 /** Route an argv vector to a handler. @returns {{code:number, text:string, data:*}} */
@@ -324,6 +414,7 @@ function run(argv = []) {
     case 'privacy-purge': return purgeLib.runPurge({ identifier: positional[0], confirm: flags.confirm });
     case 'watch': return watchLib.runWatch({ withinDays: flags.withinDays ? Number(flags.withinDays) : undefined });
     case 'outbound': return handleOutbound(positional, flags);
+    case 'product': return handleProduct(positional, flags);
     default: return { code: 1, text: `Unknown command: ${command}. Run 'escc help' for usage.`, data: null };
   }
 }

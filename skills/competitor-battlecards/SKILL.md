@@ -51,9 +51,12 @@ result — a fabricated weakness is worse than silence.
 
 ## The battlecard model
 
-Each battlecard is a structured document stored at
-`.claude/escc/battlecards/<competitor-slug>.md` (workspace-local; never committed
-with customer data or unvetted claims):
+Approved, quotable differentiation lives as `battlecard`-type entries in
+`product-knowledge` (`competitor` + `differentiation` + a mandatory `guardrail`, retrieved
+by the role + segment + competitor ladder). Each working battlecard is a human-authored
+document stored at `.claude/escc/battlecards/<competitor-slug>.md` (workspace-local; never
+committed with customer data or unvetted claims) — the scratch surface a rep reasons over,
+**not** the quotable source:
 
 | Section | Holds |
 |---|---|
