@@ -122,6 +122,10 @@ Four steps in sequence. Each depends on the prior step's tool-result output.
      step 2 CRM verification.
 2. Apply `[VOICE PROFILE]` from the `brand-voice` skill — the voice profile
    governs tone, formality, and phrasing. Cite it; do not redefine it here.
+   When the account has prior correspondence, also layer its per-account voice
+   overlay (`escc voice show "<account>"`) on the rep base profile — see
+   `brand-voice` §Per-Account Voice Overlay (STYLE only; never the buyer's
+   claims or numbers).
 3. The recap structure:
 
 ```text

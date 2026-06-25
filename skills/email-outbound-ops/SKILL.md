@@ -114,6 +114,14 @@ Before writing a single word of copy, load the `[VOICE PROFILE]` owned by
 a style or tone. If the calling skill has already applied the voice profile to
 the draft it passes in, validate that the draft is consistent before placing it.
 
+When composing to an account with prior correspondence, also build or refresh
+its **per-account voice overlay** from the buyer side of the thread
+(`escc voice account "<account>" --input '{"texts":[...]}'`, buyer messages
+only) and layer it (`escc voice show "<account>"`) on the rep base profile — see
+`brand-voice` §Per-Account Voice Overlay. STYLE only: it mirrors the account's
+register and recurring words, never their claims or numbers; every fact still
+comes from approved `product-knowledge`.
+
 Cite `rules/common/messaging-style.md` for structural rules: length limits,
 one-CTA requirement, banned soft closes, subject-line constraints.
 
