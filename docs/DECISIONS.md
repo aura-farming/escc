@@ -327,3 +327,55 @@ test is net-new (no prior precedent). An optional fail-closed path-block
 `Read`-hook on the candidate path (registered in `FAIL_CLOSED_HOOKS`, mirroring
 the send-gate) can be added later as defense-in-depth, but it presupposes the
 physical separation and is not load-bearing.
+
+---
+
+## ADR-0013: Open-source readiness — company-neutral by construction, enforced by CI
+
+**Status:** Accepted
+
+**Context.** ESCC is being prepared for public open-source release for any sales
+team worldwide. The v1.2.0 persona/role knowledge layer (ADR-0012) shipped with
+the maintainer's own employer baked into committed example/seed data: the
+controlled vocabulary (`config/knowledge-vocab.json`) carried that company's real
+competitors and industry segments, and the product-knowledge examples plus several
+test fixtures named the company, its competitors, and a `help.<company>` URL. A
+repo-wide audit found the leak is small and concentrated — ~10 files, all orbiting
+the product-knowledge layer (the "~90 hits" of a naive case-insensitive grep were
+the brand as a substring inside "standard" / "meeting-standards", not the brand
+itself). No credential was ever committed — in the working tree OR anywhere in git
+history — and there was no CI guard preventing either a brand name or a secret
+from being committed in the first place.
+
+**Decision.** ESCC is **company-neutral by construction, enforced by CI** — not by
+reviewer diligence. (1) The shipped controlled vocabulary becomes a generic,
+cross-industry template (`competitors: []`, `segments: ["general"]`, cross-industry
+roles plus a generic title map); a rep's real vocabulary lives in a per-workspace
+override at `<data-home>/escc/product/knowledge-vocab.json` via a new `loadVocab`
+precedence tier (inline > vocabPath > **workspace** > shipped template >
+general-only fallback), seeded by `escc product vocab init` and extended by
+`escc product vocab suggest`. No company data is migrated into the repo — the
+maintainer re-feeds their own data into their gitignored workspace. (2) All
+company-identifying tokens are removed from committed example/seed/test data and
+replaced with neutral placeholders (`Acme` / `competitor-x` / `Example Operator`).
+Legitimate authorship (the MIT `LICENSE` / `plugin.json` author) is **kept** — it
+is not a company token. (3) Two CI validators make it un-regressable:
+`validate-no-company-tokens.js` (a banned-brand list in
+`config/banned-company-tokens.json`, word-boundary matched so it never trips on a
+substring) and `validate-no-secrets.js` (high-confidence credential signatures),
+both scanning only git-tracked files so they never false-fail on gitignored
+runtime data. (4) Runtime paths that hold mined company material — `voice/`,
+`patterns/`, and learned/pending instincts — join the existing runtime stores in
+`.gitignore`. **Git history is left intact and scrubbed going forward**: there is
+no credential to purge and only the maintainer's own public brand name in example
+data, so a destructive `git filter-repo` rewrite (which would break every commit
+SHA, all merged PRs, and all clones) buys no security and is rejected.
+
+**Consequence.** Anyone can install ESCC and get a clean, generic harness; their
+own company data only ever exists in their gitignored workspace. A brand name or a
+credential can no longer be committed without failing `npm test`. The costs: the
+shipped vocabulary is intentionally empty of competitors/segments (reps seed their
+own via `escc product vocab init` or the forthcoming `/ingest` intake), and the
+two new validators add to the CI surface. Phases B (drag-and-drop `/ingest`) and C
+(per-account tone-match) build on this clean base and ship after it as v1.4.0 and
+v1.5.0. This is an amendment to ADR-0012, which remains in force.

@@ -34,20 +34,20 @@ test('requiredFieldErrors mirrors the schema per type and rejects approved+untru
   assert.deepEqual(pk.requiredFieldErrors({ id: 'a', type: 'claim', text: 'x', source_type: 'public' }), []);
   assert.ok(pk.requiredFieldErrors({ type: 'claim', text: 'x', source_type: 'public' }).length, 'missing id');
   assert.ok(pk.requiredFieldErrors({ id: 'a', type: 'objection', pattern: 'p', source_type: 'manual' }).some(e => /response/.test(e)), 'objection needs response');
-  assert.ok(pk.requiredFieldErrors({ id: 'a', type: 'battlecard', competitor: 'deputy', differentiation: 'd', source_type: 'public' }).some(e => /guardrail/.test(e)), 'battlecard needs guardrail');
+  assert.ok(pk.requiredFieldErrors({ id: 'a', type: 'battlecard', competitor: 'competitor-x', differentiation: 'd', source_type: 'public' }).some(e => /guardrail/.test(e)), 'battlecard needs guardrail');
   assert.ok(pk.requiredFieldErrors({ id: 'a', type: 'claim', text: 'x', source_type: 'call', approved: true, untrusted: true }).some(e => /firewall/.test(e)));
 });
 
 test('addApproved requires approved_by, validates vocab, and preserves existing rows', () => {
-  const seed = [{ id: 'PK-1', type: 'claim', text: 'existing', segment: 'general', source_type: 'public', approved: true, approved_by: 'Lucas', last_verified: '2026-06-24' }];
+  const seed = [{ id: 'PK-1', type: 'claim', text: 'existing', segment: 'general', source_type: 'public', approved: true, approved_by: 'Example Operator', last_verified: '2026-06-24' }];
   withHome(seed, () => {
     assert.equal(pk.addApproved({ id: 'X', type: 'claim', text: 'x', source_type: 'public' }, {}).ok, false, 'no approved_by -> rejected');
-    assert.equal(pk.addApproved({ id: 'X', type: 'value-prop', text: 'x', role: 'wizard', source_type: 'public' }, { approvedBy: 'Lucas' }).ok, false, 'free-text role -> rejected');
-    const res = pk.addApproved({ id: 'PK-2', type: 'value-prop', text: 'new', segment: 'hospitality', role: 'finance', source_type: 'public' }, { approvedBy: 'Lucas', now: '2026-06-25T00:00:00Z' });
+    assert.equal(pk.addApproved({ id: 'X', type: 'value-prop', text: 'x', role: 'wizard', source_type: 'public' }, { approvedBy: 'Example Operator' }).ok, false, 'free-text role -> rejected');
+    const res = pk.addApproved({ id: 'PK-2', type: 'value-prop', text: 'new', segment: 'general', role: 'finance', source_type: 'public' }, { approvedBy: 'Example Operator', now: '2026-06-25T00:00:00Z' });
     assert.ok(res.ok, JSON.stringify(res.errors));
     assert.equal(res.entry.approved, true);
     assert.equal(res.entry.untrusted, false);
-    assert.equal(res.entry.approved_by, 'Lucas');
+    assert.equal(res.entry.approved_by, 'Example Operator');
     const all = pk.readApprovedFile();
     assert.deepEqual(all.map(r => r.id).sort(), ['PK-1', 'PK-2'], 'existing row preserved');
   });
@@ -55,10 +55,10 @@ test('addApproved requires approved_by, validates vocab, and preserves existing 
 
 test('approveCandidate is the human gate: promotes a candidate and removes it from the candidate area', () => {
   withHome(null, () => {
-    pk.appendCandidate({ id: 'C-1', type: 'pain', role: 'payroll', text: 'mined pain', source_type: 'call' });
+    pk.appendCandidate({ id: 'C-1', type: 'pain', role: 'finance', text: 'mined pain', source_type: 'call' });
     assert.equal(pk.approveCandidate('C-1', {}).ok, false, 'no approved_by -> rejected');
-    assert.equal(pk.approveCandidate('nope', { approvedBy: 'Lucas' }).ok, false, 'unknown id -> rejected');
-    const res = pk.approveCandidate('C-1', { approvedBy: 'Lucas', now: '2026-06-25T00:00:00Z' });
+    assert.equal(pk.approveCandidate('nope', { approvedBy: 'Example Operator' }).ok, false, 'unknown id -> rejected');
+    const res = pk.approveCandidate('C-1', { approvedBy: 'Example Operator', now: '2026-06-25T00:00:00Z' });
     assert.ok(res.ok, JSON.stringify(res.errors));
     assert.equal(res.entry.approved, true);
     assert.equal(res.entry.untrusted, false);
@@ -68,7 +68,7 @@ test('approveCandidate is the human gate: promotes a candidate and removes it fr
 });
 
 test('miner: extractObjectionCandidates flags only cue-matched lines, never infers a response', () => {
-  const text = 'We already have payroll software. The weather is nice today. Honestly it is too expensive for us.';
+  const text = 'We already have a tool for this. The weather is nice today. Honestly it is too expensive for us.';
   const cands = mine.extractObjectionCandidates(text, { sourceRef: 'call:1' });
   assert.equal(cands.length, 2, 'two cue lines flagged, the neutral one ignored');
   for (const c of cands) {
@@ -81,7 +81,7 @@ test('miner: extractObjectionCandidates flags only cue-matched lines, never infe
 test('miner: ingestCandidates forces approved:false + untrusted:true (cannot ever approve)', () => {
   withHome(null, () => {
     const stored = mine.ingestCandidates(
-      [{ type: 'objection', pattern: 'we already have payroll', response: 'r', approved: true, untrusted: false }],
+      [{ type: 'objection', pattern: 'we already have a tool', response: 'r', approved: true, untrusted: false }],
       { sourceType: 'email', sourceRef: 'email:1' });
     assert.equal(stored.length, 1);
     assert.equal(stored[0].approved, false, 'forced not-approved even though caller passed approved:true');
