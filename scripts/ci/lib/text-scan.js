@@ -84,6 +84,81 @@ function findPersonalPaths(content) {
   return leaks;
 }
 
+/** Escape a string for safe use as a literal inside a RegExp. */
+function escapeRegExp(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Find banned company tokens in content (the de-companyfication guard, CLAUDE.md
+ * §4/§5 + ADR open-source-readiness). A plain word token is matched
+ * case-insensitively with NON-word boundaries on both sides, so a short brand
+ * name can never trip on a larger word that merely contains it as a substring. A
+ * domain- or email-host-shaped token (one containing a dot) is matched literally
+ * anywhere, so it also covers addresses like name@that-host.
+ * @param {string} content
+ * @param {string[]} tokens
+ * @returns {string[]} the offending matched substrings (verbatim)
+ */
+function findBannedTokens(content, tokens) {
+  const hits = [];
+  for (const token of tokens || []) {
+    if (!token || typeof token !== 'string') continue;
+    const esc = escapeRegExp(token);
+    const re = token.includes('.')
+      ? new RegExp(esc, 'gi')
+      : new RegExp(`(?<![A-Za-z0-9])${esc}(?![A-Za-z0-9])`, 'gi');
+    let m;
+    while ((m = re.exec(content)) !== null) {
+      hits.push(m[0]);
+      if (m.index === re.lastIndex) re.lastIndex += 1; // zero-width guard
+    }
+  }
+  return hits;
+}
+
+// High-confidence committed-secret signatures (near-zero false positives). The
+// generic key=value rule (last) is the only one that captures a value group, so
+// it alone is filtered against obvious placeholders.
+const SECRET_PATTERNS = [
+  { type: 'AWS access key id', re: /\bAKIA[0-9A-Z]{16}\b/g },
+  { type: 'private key block', re: /-----BEGIN (?:RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY-----/g },
+  { type: 'GitHub token', re: /\bgh[posru]_[A-Za-z0-9]{36,}\b/g },
+  { type: 'Slack token', re: /\bxox[baprs]-[0-9A-Za-z-]{10,}\b/g },
+  { type: 'Slack webhook', re: /https:\/\/hooks\.slack\.com\/services\/[A-Za-z0-9/_-]+/g },
+  { type: 'Google API key', re: /\bAIza[0-9A-Za-z_-]{35}\b/g },
+  { type: 'Stripe live key', re: /\b[sprk]k_live_[0-9A-Za-z]{20,}\b/g },
+  { type: 'Twilio account SID', re: /\bAC[0-9a-f]{32}\b/g },
+  { type: 'secret assignment', re: /\b(?:api[_-]?key|secret|access[_-]?token|client[_-]?secret|auth[_-]?token|private[_-]?key)\b["'\s]*[:=]["'\s]*([A-Za-z0-9/+_-]{24,})/gi },
+];
+
+// Substrings that mark a captured value as a placeholder, not a real secret.
+const SECRET_PLACEHOLDER_RE = /(?:example|placeholder|your[_-]?|change[_-]?me|redacted|dummy|sample|fake|test|xxxx|\.\.\.)/i;
+
+/**
+ * Find committed-secret signatures in content. Returns the secret TYPE plus a
+ * truncated match (never the full secret) so CI output cannot itself leak one.
+ * @param {string} content
+ * @returns {{type: string, match: string}[]}
+ */
+function findSecrets(content) {
+  const hits = [];
+  for (const { type, re } of SECRET_PATTERNS) {
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(content)) !== null) {
+      const captured = m[1];
+      if (captured !== undefined && SECRET_PLACEHOLDER_RE.test(captured)) {
+        if (m.index === re.lastIndex) re.lastIndex += 1;
+        continue;
+      }
+      hits.push({ type, match: `${m[0].slice(0, 24)}…` });
+      if (m.index === re.lastIndex) re.lastIndex += 1;
+    }
+  }
+  return hits;
+}
+
 /**
  * 1-based line and column for a character index into `text`.
  * @param {string} text
@@ -139,6 +214,9 @@ module.exports = {
   CURLY_QUOTE_RE,
   TILDE_PATH_RE,
   findPersonalPaths,
+  escapeRegExp,
+  findBannedTokens,
+  findSecrets,
   lineAndColumn,
   walkFiles,
   DEFAULT_IGNORE_DIRS,

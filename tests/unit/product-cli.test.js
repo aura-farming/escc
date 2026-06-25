@@ -39,14 +39,14 @@ test('product resolve-role maps a job title via the committed vocab', () => {
 
 test('product add: a candidate by default, an approved entry with --approved-by', () => {
   withHome((home) => {
-    const cand = writeJson(home, 'c.json', { id: 'CLI-C1', type: 'objection', pattern: 'we already have payroll', response: '(candidate)', source_type: 'call' });
+    const cand = writeJson(home, 'c.json', { id: 'CLI-C1', type: 'objection', pattern: 'we already have a tool for this', response: '(candidate)', source_type: 'call' });
     const a = run(['product', 'add', '--input', cand]);
     assert.equal(a.code, 0);
     assert.match(a.text, /candidate/i);
     assert.equal(run(['product', 'candidates']).data.candidates.length, 1);
 
-    const appr = writeJson(home, 'a.json', { id: 'CLI-A1', type: 'claim', text: 'exampleco is STP registered.', segment: 'general', source_type: 'public' });
-    const r = run(['product', 'add', '--input', appr, '--approved-by', 'Lucas']);
+    const appr = writeJson(home, 'a.json', { id: 'CLI-A1', type: 'claim', text: 'Acme is SOC 2 Type II certified.', segment: 'general', source_type: 'public' });
+    const r = run(['product', 'add', '--input', appr, '--approved-by', 'Example Operator']);
     assert.equal(r.code, 0, r.text);
     assert.match(r.text, /approved/i);
     const got = run(['product', 'retrieve', '--segment', 'general', '--type', 'claim']);
@@ -57,7 +57,7 @@ test('product add: a candidate by default, an approved entry with --approved-by'
 test('product add: a free-text role is rejected at the CLI boundary', () => {
   withHome((home) => {
     const bad = writeJson(home, 'bad.json', { id: 'CLI-B1', type: 'value-prop', text: 'x', role: 'wizard', source_type: 'public' });
-    const r = run(['product', 'add', '--input', bad, '--approved-by', 'Lucas']);
+    const r = run(['product', 'add', '--input', bad, '--approved-by', 'Example Operator']);
     assert.equal(r.code, 1);
     assert.match(r.text, /vocabulary/i);
   });
@@ -65,10 +65,10 @@ test('product add: a free-text role is rejected at the CLI boundary', () => {
 
 test('product approve promotes a candidate (human gate), then it is gone from candidates', () => {
   withHome((home) => {
-    const cand = writeJson(home, 'c.json', { id: 'CLI-PROMO', type: 'pain', role: 'payroll', text: 'mined pain', source_type: 'call' });
+    const cand = writeJson(home, 'c.json', { id: 'CLI-PROMO', type: 'pain', role: 'finance', text: 'mined pain', source_type: 'call' });
     run(['product', 'add', '--input', cand]);
     assert.equal(run(['product', 'approve', '--id', 'CLI-PROMO']).code, 1, 'no --approved-by -> blocked');
-    const r = run(['product', 'approve', '--id', 'CLI-PROMO', '--approved-by', 'Lucas']);
+    const r = run(['product', 'approve', '--id', 'CLI-PROMO', '--approved-by', 'Example Operator']);
     assert.equal(r.code, 0, r.text);
     assert.equal(run(['product', 'candidates']).data.candidates.length, 0);
   });
@@ -77,7 +77,7 @@ test('product approve promotes a candidate (human gate), then it is gone from ca
 test('product mine --from-transcript writes candidates only', () => {
   withHome((home) => {
     const tf = path.join(home, 't.txt');
-    fs.writeFileSync(tf, 'We already have payroll software. Lovely day. It is too expensive right now.');
+    fs.writeFileSync(tf, 'We already have a tool for this. Lovely day. It is too expensive right now.');
     const r = run(['product', 'mine', '--from-transcript', tf]);
     assert.equal(r.code, 0, r.text);
     assert.match(r.text, /Mined 2 candidate/);
@@ -89,11 +89,11 @@ test('product mine --from-transcript writes candidates only', () => {
 
 test('product gaps surfaces clean-miss gaps logged by retrieve', () => {
   withHome(() => {
-    run(['product', 'retrieve', '--role', 'payroll', '--segment', 'aged care', '--type', 'objection']);
+    run(['product', 'retrieve', '--role', 'finance', '--segment', 'logistics', '--type', 'objection']);
     const g = run(['product', 'gaps']);
     assert.equal(g.code, 0);
     assert.equal(g.data.gaps.length, 1);
-    assert.equal(g.data.gaps[0].role, 'payroll');
+    assert.equal(g.data.gaps[0].role, 'finance');
   });
 });
 
@@ -101,4 +101,31 @@ test('product: unknown action is a clean error, not a throw', () => {
   const r = run(['product', 'frobnicate']);
   assert.equal(r.code, 1);
   assert.match(r.text, /unknown action/);
+});
+
+test('product vocab show / init / suggest operate on the workspace override', () => {
+  withHome((home) => {
+    // show: the shipped generic template by default
+    const show = run(['product', 'vocab', 'show']);
+    assert.equal(show.code, 0);
+    assert.equal(show.data.source, 'shipped');
+    assert.ok(show.data.vocab.roles.includes('general'));
+    // init: creates the gitignored workspace override
+    const init = run(['product', 'vocab', 'init']);
+    assert.equal(init.code, 0, init.text);
+    assert.ok(init.data.created);
+    assert.ok(fs.existsSync(path.join(home, 'escc', 'product', 'knowledge-vocab.json')));
+    // show now resolves to the workspace source
+    assert.equal(run(['product', 'vocab', 'show']).data.source, 'workspace');
+    // re-init without --force is a clean refusal; --force overwrites
+    assert.equal(run(['product', 'vocab', 'init']).code, 1);
+    assert.equal(run(['product', 'vocab', 'init', '--force']).code, 0);
+    // suggest: slugifies CRM industries supplied via --input (MCP-free)
+    const inp = writeJson(home, 'ind.json', { industries: ['Field Services', 'general', 'Oil & Gas'] });
+    const sug = run(['product', 'vocab', 'suggest', '--input', inp]);
+    assert.equal(sug.code, 0, sug.text);
+    assert.deepEqual(sug.data.suggested, ['field-services', 'oil-gas']);
+    // unknown sub-verb is a clean error, not a throw
+    assert.equal(run(['product', 'vocab', 'frobnicate']).code, 1);
+  });
 });

@@ -1,0 +1,4 @@
+{
+  "note": "Company-identifying tokens that must never appear in COMMITTED example / seed / demo / test data. The default list carries the maintainer's own organisation name so it cannot leak back into this public source repo. A plain word token is matched with word boundaries (so 'exampleco' never trips on 'standard'); a token containing a dot (a domain or email host) is matched literally and also covers emails like name@host. Real company data — your competitors, segments, customers, product names — belongs ONLY in your gitignored workspace (~/.claude/escc/...), never here. When you fork ESCC for internal use, add your own org name and product names to this list. Author/owner names (the MIT LICENSE/plugin.json author) are NOT company tokens and are not listed. CI: scripts/ci/validate-no-company-tokens.js.",
+  "tokens": ["exampleco"]
+}

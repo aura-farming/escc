@@ -1,14 +1,18 @@
 {
   "version": 1,
-  "roles": ["general", "owner", "operations", "finance", "hr", "payroll"],
-  "segments": ["general", "hospitality", "retail", "multi-site", "aged care", "healthcare"],
-  "competitors": ["competitor-x", "employment-hero", "humanforce", "planday"],
+  "note": "Generic cross-industry starter vocabulary shipped with ESCC. Customize it for YOUR business: add your competitors, formalize your industry segments (lowercase slugs, e.g. \"field-services\"), and extend title_to_role for the job titles you sell into. Run `escc product vocab init` to copy this into your gitignored workspace override (<data-home>/escc/product/knowledge-vocab.json), which survives plugin updates. Real company data belongs only in your workspace override — never committed back here.",
+  "roles": ["general", "owner", "executive", "finance", "operations", "it", "hr", "revenue", "procurement"],
+  "segments": ["general"],
+  "competitors": [],
   "title_to_role": [
-    { "match": ["payroll"], "role": "payroll" },
-    { "match": ["chro", "chief people", "human resources", "people and culture", "people & culture", "head of people", "hr manager", "hr director", "hr business", "people partner", "talent"], "role": "hr" },
-    { "match": ["cfo", "chief financial", "finance", "financial controller", "accountant", "bookkeeper", "controller"], "role": "finance" },
-    { "match": ["coo", "chief operating", "operations", "operating officer", "ops manager", "store manager", "venue manager", "general manager", "area manager", "duty manager", "restaurant manager", "site manager"], "role": "operations" },
-    { "match": ["ceo", "chief executive", "owner", "founder", "co-founder", "managing director", "proprietor", "publican", "principal", "director of"], "role": "owner" }
+    { "match": ["chief executive", "ceo", "owner", "founder", "co-founder", "managing director", "proprietor", "principal", "president"], "role": "owner" },
+    { "match": ["chief financial", "cfo", "finance", "financial controller", "controller", "accountant", "bookkeeper", "treasurer"], "role": "finance" },
+    { "match": ["chief people", "chro", "chief human", "human resources", "people and culture", "people & culture", "head of people", "talent", "recruiting"], "role": "hr" },
+    { "match": ["chief information", "chief technology", "cio", "ciso", "cto", "information technology", "it manager", "it director", "engineer", "developer", "sysadmin", "technology"], "role": "it" },
+    { "match": ["chief operating", "coo", "operations", "operating officer", "ops manager", "general manager", "area manager", "site manager", "plant manager", "store manager"], "role": "operations" },
+    { "match": ["chief revenue", "cro", "sales", "revenue", "account executive", "business development", "growth", "marketing"], "role": "revenue" },
+    { "match": ["procurement", "purchasing", "buyer", "sourcing", "vendor management"], "role": "procurement" },
+    { "match": ["chief", "vp ", "vice president", "head of", "director of", "executive", "officer"], "role": "executive" }
   ],
   "fallback_role": "general"
 }

@@ -70,11 +70,11 @@ committed with real customer data). The shape is pinned by
 
 **Tags (all optional, controlled vocabulary — `config/knowledge-vocab.json`):**
 
-- `role` — the buyer role the entry serves (`owner` / `operations` / `finance` / `hr` /
-  `payroll` / `general`). Free-text roles are forbidden — they silently break the join.
-- `segment` — the industry it applies to (`general` / `hospitality` / `retail` /
-  `multi-site` / `aged care` / `healthcare`); may be a comma-joined list.
-- `competitor` — the competitor a battlecard targets (`competitor-x` / `employment-hero` / …).
+- `role` — the buyer role the entry serves (`owner` / `executive` / `finance` / `operations` /
+  `it` / `hr` / `revenue` / `procurement` / `general`). Free-text roles are forbidden — they silently break the join.
+- `segment` — the industry it applies to (`general` plus your own industry slugs, e.g.
+  `manufacturing` / `field-services`); may be a comma-joined list.
+- `competitor` — the competitor a battlecard targets (`competitor-x` / …).
 
 Every entry also carries provenance (`source_title`, `source_url`, `source_type`),
 `approved` (bool), `approved_by`, `last_verified` (ISO date), and an optional `guardrail`.
@@ -89,7 +89,7 @@ Retrieval is **coded**, deterministic, and approved-only — `scripts/lib/produc
 hooks, the worklist orchestrator) call it directly; in a prose context, apply the same
 ladder by reading the approved store file. The ladder, most specific first:
 
-1. **role + segment + competitor** (e.g. a battlecard for finance at multi-site vs competitor-x)
+1. **role + segment + competitor** (e.g. a battlecard for finance at field-services vs competitor-x)
 2. **role + segment** (the role's value prop for that industry)
 3. **segment** (the industry entry — today's behavior)
 4. **general** (the role-agnostic, industry-agnostic fallback)
@@ -135,7 +135,7 @@ the entry retired with a reason. `battlecard` and `pain` entries decay faster (s
 
 ## Objections, pains, and battlecards
 
-- **objection** — store the *abstracted* pattern ("we already have payroll software") and
+- **objection** — store the *abstracted* pattern ("we already have a tool for this") and
   the *approved* response. No prospect identity, no verbatim quote (those live in
   `account-memory`). `objection-handling` reads these; the mined raw objection enters as a
   candidate first.
@@ -167,17 +167,17 @@ quote, store the *abstracted* claim here and the attributable quote in account-m
 **Retrieve, role-keyed, with a clean miss:**
 
 ```text
-Caller (cold-outreach): proof for a finance buyer at a hospitality account.
-product-knowledge → retrieve({ role:'finance', segment:'hospitality' })
+Caller (cold-outreach): proof for a finance buyer at a manufacturing account.
+product-knowledge → retrieve({ role:'finance', segment:'manufacturing' })
   MATCH (value-prop EX-02, tier role+segment, approved, verified 2026-06-24):
-    "Live wage cost against budget — wage % and sales per labour hour — updates as a
-     roster is built." guardrail: do not attach a labour-cost-saving %.
+    "Live cost against budget updates as a schedule is built, so spend is controlled
+     before publish." guardrail: do not attach a cost-saving %.
   → embed the attributable version, cite the entry id.
 
-Caller: proof for an HR buyer at hospitality.
-product-knowledge → retrieve({ role:'hr', segment:'hospitality' })
-  No HR entry → falls back to the hospitality/general entry (tier segment/general).
-  If nothing approved: "no approved proof for role=hr segment=hospitality" → soften,
+Caller: proof for an HR buyer at manufacturing.
+product-knowledge → retrieve({ role:'hr', segment:'manufacturing' })
+  No HR entry → falls back to the manufacturing/general entry (tier segment/general).
+  If nothing approved: "no approved proof for role=hr segment=manufacturing" → soften,
   ask a question, log the gap. Never invent.
 ```
 
@@ -186,7 +186,7 @@ product-knowledge → retrieve({ role:'hr', segment:'hospitality' })
 ```text
 Caller (competitor-battlecards): we're up against competitor-x.
 product-knowledge → retrieve({ competitor:'competitor-x', type:'battlecard' })
-  MATCH (battlecard EX-05): differentiation = "built-in award automation, not a
+  MATCH (battlecard EX-05): differentiation = "built-in automation, not a
     configure-it-yourself rules engine." guardrail = state our differentiation only;
     do NOT assert what competitor-x does or doesn't do.
 ```

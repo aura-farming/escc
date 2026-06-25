@@ -1,6 +1,6 @@
 {
   "name": "escc",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "description": "EverythingSales Claude Code (ESCC) - a Claude Code sales harness for SDRs, AEs, Sales Managers, and RevOps. Adapted from Everything Claude Code (MIT).",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "escc": "scripts/escc.js"
   },
   "scripts": {
-    "test": "node scripts/ci/check-unicode-safety.js && node scripts/ci/validate-agents.js && node scripts/ci/validate-commands.js && node scripts/ci/validate-rules.js && node scripts/ci/validate-skills.js && node scripts/ci/validate-hooks.js && node scripts/ci/validate-manifests.js && node scripts/ci/validate-no-personal-paths.js && npm run catalog:check && npm run registry:check && node tests/run-all.js",
+    "test": "node scripts/ci/check-unicode-safety.js && node scripts/ci/validate-agents.js && node scripts/ci/validate-commands.js && node scripts/ci/validate-rules.js && node scripts/ci/validate-skills.js && node scripts/ci/validate-hooks.js && node scripts/ci/validate-manifests.js && node scripts/ci/validate-no-personal-paths.js && node scripts/ci/validate-no-secrets.js && node scripts/ci/validate-no-company-tokens.js && npm run catalog:check && npm run registry:check && node tests/run-all.js",
     "catalog": "node scripts/ci/catalog.js --text",
     "catalog:check": "node scripts/ci/catalog.js --check --text",
     "catalog:write": "node scripts/ci/catalog.js --write --text",
