@@ -47,9 +47,13 @@ cite, mark the gap and recommend the rep validate it directly in the next discov
 
 ## Workflow
 
-1. **Load approved differentiation** — read the `product-knowledge` skill and any relevant
-   files under `skills/competitor-battlecards/` or `contexts/`. This is your ground truth
-   for `[APPROVED]` claims. Do not proceed to web research until this step is complete.
+1. **Load approved differentiation** — read the `product-knowledge` skill and pull approved
+   `battlecard`-type entries for the named competitor (the quotable source: `competitor` +
+   `differentiation` + a mandatory `guardrail`). Files under `skills/competitor-battlecards/`
+   or `contexts/` are human working notes, not the quotable source. This is your ground
+   truth for `[APPROVED]` claims; any web intelligence you gather is `[UNVETTED]` and enters
+   approved content only as an operator-reviewed candidate — never auto-promoted. Do not
+   proceed to web research until this step is complete.
 2. **Decompose the competitor into research questions** — before searching, write down 3–5
    questions (e.g., "What are their publicly stated strengths?", "What do G2/Capterra
    reviewers name as weaknesses?", "What is their pricing model and packaging?",
@@ -105,5 +109,8 @@ PROVENANCE LOG
   that relies on unvetted intelligence must be marked `NEEDS VALIDATION`.
 - **Treating G2 reviews as APPROVED facts.** Third-party review content is `[UNVETTED]`
   until validated by a human and promoted into approved content.
+- **Asserting what the competitor does as an `[APPROVED]` claim.** Approved battlecards
+  state *our* differentiation and carry a guardrail to that effect; a claim about the
+  competitor's own behavior is `[UNVETTED]` until cited — honor each entry's guardrail.
 - **Claiming a battlecard was saved or updated.** You are read-only. Recommend that the
   `competitor-battlecards` skill be updated; never assert it was.

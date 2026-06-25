@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "escc.product-knowledge.v1",
+  "title": "ESCC Product Knowledge Store Schema",
+  "description": "The approved 'what we sell' knowledge layer (skills/product-knowledge) plus the persona/role-keyed extension (ADR-0012). A flat array of entries. New type values (objection/pain/battlecard) and tags (role/competitor) are OPTIONAL and additive: legacy entries validate unchanged. The candidate store holds the SAME entry shape (one taxonomy) as JSONL lines, differing only by approved:false + untrusted:true; approved:true together with untrusted:true is rejected (the fabrication firewall). role/segment/competitor are strings here (shape only); controlled-vocabulary membership is enforced at ingest against config/knowledge-vocab.json, not in this schema, so the vocab can grow without a schema change.",
+  "type": "array",
+  "items": { "$ref": "#/$defs/entry" },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "isoDate": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "source_type", "approved"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmptyString" },
+        "type": {
+          "type": "string",
+          "enum": ["value-prop", "use-case", "proof-point", "claim", "objection", "pain", "battlecard"]
+        },
+        "text": { "$ref": "#/$defs/nonEmptyString" },
+        "segment": { "$ref": "#/$defs/nonEmptyString" },
+        "role": { "$ref": "#/$defs/nonEmptyString" },
+        "competitor": { "$ref": "#/$defs/nonEmptyString" },
+        "pattern": { "$ref": "#/$defs/nonEmptyString" },
+        "response": { "$ref": "#/$defs/nonEmptyString" },
+        "differentiation": { "$ref": "#/$defs/nonEmptyString" },
+        "source_title": { "type": "string" },
+        "source_url": { "type": "string" },
+        "source_ref": { "type": "string" },
+        "source_type": {
+          "type": "string",
+          "enum": ["public", "case_study", "internal_metric", "customer_quote", "call", "email", "web", "manual"]
+        },
+        "approved": { "type": "boolean" },
+        "approved_by": { "type": "string" },
+        "last_verified": { "$ref": "#/$defs/isoDate" },
+        "untrusted": { "type": "boolean" },
+        "guardrail": { "type": "string" },
+        "resonance": { "$ref": "#/$defs/resonance" },
+        "created_at": { "$ref": "#/$defs/isoDate" }
+      },
+      "allOf": [
+        {
+          "$comment": "Fabrication firewall (ADR-0012): an approved entry can never be untrusted.",
+          "not": {
+            "required": ["approved", "untrusted"],
+            "properties": {
+              "approved": { "const": true },
+              "untrusted": { "const": true }
+            }
+          }
+        },
+        {
+          "$comment": "Capability types carry their statement in `text`.",
+          "if": { "properties": { "type": { "enum": ["value-prop", "use-case", "proof-point", "claim"] } } },
+          "then": { "required": ["text"] }
+        },
+        {
+          "$comment": "An objection carries an abstracted pattern + an approved response (no identity).",
+          "if": { "properties": { "type": { "const": "objection" } } },
+          "then": { "required": ["pattern", "response"] }
+        },
+        {
+          "$comment": "A pain is a persona-to-pain map entry: the role it afflicts + the pain.",
+          "if": { "properties": { "type": { "const": "pain" } } },
+          "then": { "required": ["role", "text"] }
+        },
+        {
+          "$comment": "A battlecard carries the competitor, our differentiation, and a guardrail.",
+          "if": { "properties": { "type": { "const": "battlecard" } } },
+          "then": { "required": ["competitor", "differentiation", "guardrail"] }
+        }
+      ]
+    },
+    "resonance": {
+      "$comment": "DEFERRED (ADR-0012): human-write-only and unwired. A person populates this from the outcome ledger; nothing in this task computes, infers, or auto-populates it. `updated_by` is required so it cannot be written without a human attribution.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["updated_by"],
+      "properties": {
+        "persona": { "type": "string" },
+        "signal": { "type": "string" },
+        "note": { "type": "string" },
+        "updated_by": { "$ref": "#/$defs/nonEmptyString" },
+        "updated_at": { "$ref": "#/$defs/isoDate" }
+      }
+    }
+  }
+}

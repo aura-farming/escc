@@ -156,7 +156,8 @@ not in the room.
 3. **Build their internal business case.** Produce a version of the business
    case written for their audience — not your pitch deck. It should:
    - Lead with the pain their leadership already recognizes (Metrics from
-     MEDDPICC, framed in the buyer's language)
+     MEDDPICC, framed in the buyer's language; seed it with the approved
+     role-keyed `pain` entry from `product-knowledge` for the champion's role)
    - Connect the solution to strategic priorities the champion's leadership
      is measured on
    - Address the "why now" — the cost of doing nothing or waiting

@@ -103,8 +103,9 @@ retroactively; a suppressed contact in a sequence is a compliance violation.
    segment + persona + product motion. If a match exists, start there.
 2. If no template: build from the default cadence structure above, selecting
    the appropriate variant (standard / event-triggered / ABM).
-3. Pull **value props and proof points** from `product-knowledge` — approved
-   entries only, with provenance. If no approved proof exists for the use case,
+3. Pull **value props and proof points** from `product-knowledge` via its specificity
+   ladder — **role + segment + competitor** (the contact's role resolves from `jobtitle`),
+   approved entries only, with provenance. If no approved proof exists for the slot,
    soften to a question; do not invent a metric.
 4. Apply **voice and phrasing** from `brand-voice`. Do not invent a new tone.
 
