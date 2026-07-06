@@ -1,5 +1,5 @@
 {
-  "$comment": "Chaining-hints table (ADR-0016): after a high-signal tool result, suggest the next play ONCE per family per session. `match` is an anchored, case-insensitive regex on the tool name; optional `input_match` is a lowercase substring the tool_input JSON must contain (e.g. only hint deal-review when the CRM read actually touches deals). Keep this list SHORT and high-precision — every entry costs attention on every match.",
+  "$comment": "Chaining-hints table (ADR-0016): after a high-signal tool result, suggest the next play ONCE per family per session. `match` is an anchored, case-insensitive regex on the tool name; optional `input_match` is a case-insensitive REGEX the lowercased tool_input JSON must match (word-boundaried — a bare substring would false-positive on e.g. a contact at 'Dealify Inc'). Keep this list SHORT and high-precision — every entry costs attention on every match.",
   "version": 1,
   "chains": [
     {
@@ -19,7 +19,7 @@
     {
       "family": "crm-deal",
       "match": "mcp__hubspot__(get_crm_objects|search_crm_objects|query_crm_data)",
-      "input_match": "deal",
+      "input_match": "\"objecttype\"\\s*:\\s*\"(deals?|0-3)\"|\"query\"\\s*:\\s*\"[^\"]*\\bdeals?\\b",
       "skill": "deal-review",
       "command": "/deal-review",
       "hint": "you just pulled deal data — escc:deal-review (/deal-review) scores MEDDPICC health with gaps as dated actions; a full-pipeline sweep is escc:pipeline-hygiene (/pipeline)."

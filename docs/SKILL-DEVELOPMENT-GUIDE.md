@@ -124,6 +124,13 @@ Two invariants every authored skill respects:
 ## 5. Length and unicode
 
 - 200-500 lines typical; 800 hard max (hard error above).
+- **The frontmatter `description` is capped at 220 characters, and the TOTAL
+  across all skills is pinned at 14,000 (both hard CI errors in
+  `validate-skills.js`).** The description is the auto-invoke routing surface
+  (ADR-0016): write it as a compressed trigger line — one capability clause +
+  2-4 highest-signal trigger phrases — and put every other detail in the
+  body's "When to Activate". An over-budget surface silently drops
+  descriptions from context and costs the catalog its auto-invocation.
 - ASCII only. The repo-wide `check-unicode-safety.js` scan treats invisible /
   bidi / zero-width / NBSP codepoints as a hard error (these are ASCII-smuggling
   prompt-injection vectors) and emoji as a soft finding. Straight quotes only --

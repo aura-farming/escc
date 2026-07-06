@@ -119,3 +119,11 @@ test('fails open on malformed input and never throws', () => {
   assert.equal(router.run(''), undefined);
   assert.equal(router.run(null), undefined);
 });
+
+test('loadRoutes cache is keyed by plugin root (no cross-root bleed)', () => {
+  const real = router.loadRoutes(); // default root — populated table
+  assert.ok(real.length > 0);
+  const missing = router.loadRoutes('/nonexistent-root-xyz');
+  assert.deepEqual(missing, [], 'a different root reloads (and fails open to []) instead of returning the cached table');
+  assert.ok(router.loadRoutes().length > 0, 'default root loads fresh again');
+});

@@ -1,6 +1,6 @@
 {
   "name": "escc",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "private": true,
   "description": "EverythingSales Claude Code (ESCC) - a Claude Code sales harness for SDRs, AEs, Sales Managers, and RevOps. Adapted from Everything Claude Code (MIT).",
   "license": "MIT",
