@@ -1,15 +1,9 @@
 ---
 name: outreach-analytics
 description: >-
-  Use when an SDR or RevOps analyst needs to measure sequence or variant
-  performance — open rates, reply rates, meeting-booked rates — across steps
-  or A/B variants, compare variants head-to-head, and decide whether to
-  promote a variant to the playbook or retire it. Trigger on "how is this
-  sequence performing", "which variant is winning", "sequence stats",
-  "step conversion", "A/B results", "should I promote this template", or
-  any request to analyse or optimize outbound sequence effectiveness.
-  Read-only analysis only — no sends, no sequence edits. Feeds
-  outbound-sequences and writes winners to playbook-library.
+  Sequence/variant performance — open/reply/meeting rates, A/B compare,
+  promote or retire. Trigger: 'how is this sequence performing', 'which
+  variant is winning', 'sequence stats'. Read-only.
 origin: ESCC
 ---
 

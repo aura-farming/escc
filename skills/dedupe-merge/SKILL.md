@@ -1,13 +1,9 @@
 ---
 name: dedupe-merge
 description: >-
-  Use when duplicate CRM records need to be detected, evaluated, and merged —
-  two contacts for the same person, two companies for the same account, two deals
-  that represent the same opportunity, or any ownership conflict that is rooted in
-  a duplicate. Trigger on "merge duplicates", "dedupe", "which record survives",
-  "we have two records for the same company", "clean up this duplicate", "merge
-  these contacts", or any request to resolve a record collision before routing,
-  forecasting, or reporting can be trusted.
+  Detect and merge duplicate CRM records — contacts, companies, deals — with a
+  survivor recommendation. Trigger: 'merge duplicates', 'dedupe', 'two records
+  for the same company'.
 origin: ESCC
 ---
 

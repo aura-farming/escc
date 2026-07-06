@@ -1,13 +1,9 @@
 ---
 name: escc-guide
 description: >-
-  Use when someone asks a navigation or onboarding question about ESCC: "how do
-  I ...", "what skill should I use for ...", "what does X mean", "which command
-  runs ...", "what is MEDDPICC", "list all skills for SDRs", "how does the
-  send-gate work", "which agent handles forecasting", or any question whose
-  answer lives in README.md, AGENTS.md, docs/, skills/, or commands/. Auto-
-  trigger on help, navigation, glossary-lookup, and component-routing requests.
-  COMMAND-LESS -- activates on natural-language questions, not a slash command.
+  ESCC navigation and onboarding answers — 'how do I', 'which skill/command
+  for', 'what is MEDDPICC', 'how does the send-gate work'. Auto-triggers on
+  help questions; command-less.
 origin: ESCC
 ---
 

@@ -1,15 +1,9 @@
 ---
 name: forecast-rollup
 description: >-
-  Use when a manager or RevOps needs to build or refresh the period forecast
-  roll-up — weighted by MEDDPICC risk, broken into the exact categories defined
-  in rules/common/forecasting-definitions.md, with honest change-vs-last-week
-  (slips, pull-ins, new, expansion). Trigger on "what's our forecast", "build
-  the forecast", "what will we close this quarter", "commit the number",
-  "give me the roll-up", "what changed since last week", "run the forecast for
-  my team", or any request to summarize pipeline into a period call. The
-  /commit shim is a self-scoped alias of this skill filtered to the calling
-  rep's own deals.
+  Build the period forecast — commit/best-case/pipeline weighted by MEDDPICC
+  risk, change vs last week. Trigger: 'what's our forecast', 'commit the
+  number', 'the roll-up'. Past accuracy = forecast-accuracy.
 origin: ESCC
 ---
 

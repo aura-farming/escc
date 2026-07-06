@@ -1,13 +1,9 @@
 ---
 name: daily-brief
 description: >-
-  Use when a rep or manager wants a structured morning or end-of-day rundown --
-  "what do I need to know and do today?", "give me my brief", "/daily", "/standup".
-  Composes: today's calendar meetings (Google Calendar), overdue follow-up promises
-  and open loops (state store / account-memory), deal alerts using the pipeline-hygiene
-  severity rubric (Critical / High / Medium / Low), and a suggested focus list.
-  Two modes: morning brief (/daily) and EOD/standup variant (/standup). Read-only
-  orchestration; nothing is marked done without a tool-result confirming it.
+  Morning or EOD rundown — today's meetings, overdue promises, deal alerts,
+  focus list. Trigger: 'my brief', 'what do I need to know today', /daily,
+  /standup.
 origin: ESCC
 ---
 

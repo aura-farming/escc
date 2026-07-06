@@ -1,12 +1,9 @@
 ---
 name: inbound-lead-response
 description: >-
-  Use when a new inbound lead arrives and needs triage, scoring, and a first response —
-  "new form fill just came in", "MQL from marketing", "someone booked a demo", "respond
-  to this inbound", "triage this lead", or whenever a lead enters the pipeline via web
-  form, chat, event, or marketing handoff. Trigger on any net-new inbound that has not
-  yet been scored, assigned, or responded to. Produces the triage decision, the drafted
-  first response, and the routing action — all before any live send or CRM write.
+  Triage a net-new inbound lead within its speed-to-lead SLA — score, route,
+  draft first response. Trigger: 'form fill just came in', 'MQL', 'someone
+  booked a demo', 'triage this lead'.
 origin: ESCC
 ---
 

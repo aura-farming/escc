@@ -1,15 +1,9 @@
 ---
 name: product-knowledge
 description: >-
-  Use when any buyer-facing statement needs grounding in approved product facts —
-  value propositions, use-cases, proof points, competitive claims, the persona-to-pain
-  map, the objections library, or competitor battlecards — and when establishing or
-  refreshing the durable "what we sell" knowledge layer. Trigger on "what do we say
-  about X", "what's our proof for Y", "what's the rebuttal to objection Z", "what's the
-  pain for <role>", "how do we position against <competitor>", "is this claim approved",
-  or whenever cold-outreach / outbound-sequences / proposal-builder / objection-handling /
-  business-case / competitor-battlecards reach for "concrete proof". The single source
-  other skills pull approved claims from, keyed by buyer role + industry segment + competitor.
+  Approved product facts — value props, proof points, pain-by-role, objection
+  rebuttals, competitor claims. Trigger: 'what do we say about X', 'proof for
+  Y', 'is this claim approved'. Single source for drafting.
 origin: ESCC
 ---
 

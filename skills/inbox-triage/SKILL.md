@@ -1,12 +1,9 @@
 ---
 name: inbox-triage
 description: >-
-  Use when the sales inbox needs to be processed and classified — unread emails,
-  replies from prospects, calendar invites, notifications, or any mixed batch of
-  incoming messages. Trigger on "/inbox", "triage my inbox", "what needs my
-  attention", "draft a reply to this email", or any request to classify, prioritize,
-  and action incoming sales email. Owns the 6-class email classification applied
-  in fixed priority order. Draft-only: never sends directly.
+  Classify the sales inbox into 6 priority classes and draft replies. Trigger:
+  /inbox, 'triage my inbox', 'what needs my attention'. Draft-only; opt-outs
+  route to opt-out-handling.
 origin: ECC-adapted
 ---
 

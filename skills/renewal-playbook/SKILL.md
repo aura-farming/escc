@@ -1,15 +1,9 @@
 ---
 name: renewal-playbook
 description: >-
-  Use when an AE needs to run a renewal health check, triage churn or contraction
-  risk, build an expansion hypothesis, or execute a churn-save play. Trigger on
-  "renewal is coming up for <account>", "are we at risk of losing <account>",
-  "what's the expansion opportunity at <account>", "run a renewal review", "the
-  customer seems disengaged — what do we do", "whitespace mapping", "expansion
-  whitespace", or any request to assess, plan, or execute a renewal or expansion
-  motion. Treats the renewal as a deal — MEDDPICC-aware re-qualification, not an
-  administrative renewal click. Stays within AE renewal/expansion scope; does not
-  cover general customer success.
+  Single-account renewal health, churn-save, expansion plays — MEDDPICC
+  re-qualification. Trigger: 'renewal coming up', 'risk of losing <account>',
+  'expansion whitespace'. Portfolio = retention-rollup.
 origin: ESCC
 ---
 

@@ -1,14 +1,9 @@
 ---
 name: sales-reporting
 description: >-
-  Use when any RevOps metric rollup, funnel analysis, pipeline-coverage check,
-  board narrative, or rep-scorecard is needed. Trigger on "funnel report",
-  "pipeline coverage", "pipeline-coverage ratio", "board narrative", "rep
-  scorecard", "conversion report", "attainment report", "quota attainment",
-  "stage conversion", "how is the funnel", "where are we vs. target", "what
-  does the board see", or any request for a period-level performance summary
-  across reps, segments, or the whole team. This is the canonical RevOps metric
-  rollup -- four modes, one skill.
+  Canonical RevOps metric rollup — funnel, pipeline coverage, attainment, rep
+  scorecards, board narrative. Trigger: 'funnel report', 'pipeline coverage',
+  'quota attainment', 'rep scorecard'.
 origin: ESCC
 ---
 

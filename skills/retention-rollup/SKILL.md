@@ -1,13 +1,9 @@
 ---
 name: retention-rollup
 description: >-
-  Use when portfolio-level NRR, GRR, gross churn, net churn, or at-risk
-  renewal portfolio analysis is needed across multiple accounts. Trigger on
-  "NRR", "GRR", "net revenue retention", "gross revenue retention", "churn
-  rate", "net churn", "at-risk renewals", "renewal portfolio", "expansion
-  rate", "logo retention", "what is our retention", or any request for a
-  cohort or portfolio-level view of customer revenue health. For single-account
-  renewal health, use renewal-playbook instead.
+  Portfolio revenue-retention analysis — NRR, GRR, churn, at-risk renewals,
+  expansion rate. Trigger: 'NRR', 'churn rate', 'renewal portfolio', 'logo
+  retention'. Single account = renewal-playbook.
 origin: ESCC
 ---
 

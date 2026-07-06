@@ -125,6 +125,7 @@ const ADDITIONAL_CONTEXT_EVENTS = new Set([
 // stdin payload omits hook_event_name. Order matters: pre:compact before pre:.
 const HOOK_ID_EVENT_PREFIXES = [
   [/^post:/, 'PostToolUse'],
+  [/^prompt:/, 'UserPromptSubmit'],
   [/^pre:compact/, 'PreCompact'],
   [/^pre:/, 'PreToolUse'],
   [/^stop:/, 'Stop'],

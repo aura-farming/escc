@@ -1,14 +1,9 @@
 ---
 name: deal-review
 description: >-
-  Use when a deal needs a structured MEDDPICC health check — scoring each element
-  red/amber/green with evidence, surfacing qualification gaps, flagging forecast
-  risks, and converting every gap into a dated next action. Trigger on "review
-  this deal", "where are we on <account>", "is <deal> commit-able", "what's
-  missing before I call this forecast", "run MEDDPICC on <opportunity>",
-  "run committee-coverage scoring (fed by stakeholder-mapping)", or any request
-  to inspect deal health, prioritize pipeline, or check committee coverage before
-  a forecast roll-up or QBR.
+  MEDDPICC health check on one deal — red/amber/green per element with
+  evidence, gaps to dated actions. Trigger: 'review this deal', 'is it
+  commit-able', 'run MEDDPICC'. Manager deep-dive = deal-inspection.
 origin: ESCC
 ---
 
