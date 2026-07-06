@@ -211,3 +211,13 @@ test('budgetedJoin does not emit a lone surrogate at the cut', () => {
   assert.ok(out.length <= 4);
   assert.ok(!/[\uD800-\uDBFF]$/.test(out.replace(/…$/, '')), 'no trailing lone surrogate');
 });
+
+test('a /daily nudge is injected on startup only — never on resume/compact (ADR-0016)', () => {
+  const home = freshHome();
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined }, () => {
+    assert.ok(/\/daily/.test(contextOf(hook.run(startInput('startup')))), 'startup carries the /daily nudge');
+    assert.ok(!/\/daily/.test(contextOf(hook.run(startInput('resume')))), 'resume is mid-flow — no nudge');
+    assert.ok(!/\/daily/.test(contextOf(hook.run(startInput('compact')))), 'compact re-entry — no nudge');
+    assert.equal(hook.buildDailyNudgeBlock('clear'), '', 'clear gets no nudge either');
+  });
+});

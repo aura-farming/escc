@@ -1,14 +1,9 @@
 ---
 name: qbr-builder
 description: >-
-  Use when a manager or AE needs to assemble a Quarterly Business Review
-  narrative or deck from the quarter's CRM data and approved proof. Trigger on
-  "build a QBR", "write the QBR deck", "quarterly business review", "QBR doc",
-  "prep for QBR", "compile the quarter", or any request to produce a structured
-  quarter-in-review narrative for leadership, customers, or the board. Also
-  activates for "customer QBR" when the output is a joint business review with
-  an account. DEFER metric computation to the sales-reporting skill; qbr-builder
-  narrates and structures -- it does not compute.
+  Assemble the QBR narrative/deck from the quarter's CRM data. Trigger: 'build
+  a QBR', 'quarterly business review', 'compile the quarter'. Narrates only —
+  metric math = sales-reporting.
 origin: ESCC
 ---
 

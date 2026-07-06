@@ -1,13 +1,9 @@
 ---
 name: meeting-booking
 description: >-
-  Use when an SDR or AE needs to propose meeting times, send a calendar invite,
-  confirm a booked meeting, or recover from a no-show. Trigger on "book a
-  meeting", "send a calendar invite", "propose times", "confirm our call",
-  "reschedule", or "they didn't show — what now". Also activates when
-  outbound-sequences or cold-outreach reach the step where a prospect agrees
-  to a meeting and the invite must be dispatched. The Calendar MCP is the
-  execution surface; nothing is claimed booked without a tool-result.
+  Propose times, send the invite, confirm, recover no-shows via Calendar MCP.
+  Trigger: 'book a meeting', 'propose times', 'reschedule', 'they didn't
+  show'. Nothing claimed booked without a tool-result.
 origin: ESCC
 ---
 

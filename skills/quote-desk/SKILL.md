@@ -1,13 +1,9 @@
 ---
 name: quote-desk
 description: >-
-  Use when any pricing, packaging, discount, or approval-routing question arises —
-  building a CPQ quote, applying a discount, structuring a ramp or multi-year deal,
-  selecting the right SKU/tier, or routing a deal term for manager/VP/CRO sign-off.
-  Trigger on "what should I quote", "can I give X% off", "what needs approval",
-  "how do I structure the ramp", "which tier fits", or whenever proposal-builder /
-  business-case / negotiation-prep need a concrete number. The single pricing-math
-  owner for the whole plugin — other skills defer here for any number.
+  The pricing-math owner — CPQ quotes, discounts, ramps, tiers, approval
+  routing. Trigger: 'what should I quote', 'can I give X% off', 'what needs
+  approval'. Other skills defer here for any number.
 origin: ESCC
 ---
 

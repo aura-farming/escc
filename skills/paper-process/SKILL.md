@@ -1,16 +1,9 @@
 ---
 name: paper-process
 description: >-
-  Use when tracking or advancing the legal and procurement document artifacts
-  required to close a deal — MSA, DPA, order form, security review questionnaire —
-  each with its current status, owner, blocker, and date. Trigger on "where is the
-  MSA", "what legal docs do we need", "procurement needs a DPA", "security review
-  questionnaire is outstanding", "what is the paper process status", or whenever
-  MEDDPICC element P (paper process) needs to be populated or updated. Maps directly
-  to MEDDPICC P. Data-processing terms reference rules/lawful-basis.md and
-  rules/jurisdiction-routing.md. Distinct from close-plan (which sequences when
-  each artifact must complete) and mutual-action-plan (the shared buyer milestone
-  view) — this skill owns the per-artifact status log.
+  Per-artifact status log for legal/procurement docs — MSA, DPA, order form,
+  security review. Trigger: 'where is the MSA', 'paper process status'. Maps
+  to MEDDPICC P. Sequencing = close-plan.
 origin: ESCC
 ---
 

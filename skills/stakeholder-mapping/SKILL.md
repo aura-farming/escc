@@ -1,14 +1,9 @@
 ---
 name: stakeholder-mapping
 description: >-
-  Use when building or updating a buying-committee map for an account — identifying
-  who holds economic authority, who can champion the deal internally, who will
-  evaluate technically, who can block, and how each person is currently engaged.
-  Trigger on "map the stakeholders at <account>", "who's in the buying committee",
-  "is <person> a champion or a coach", "how do I develop my champion", "who else
-  should I be talking to", "multi-thread this deal", "build a champion-enablement
-  plan", "champion enablement", or any request to understand the human landscape of
-  an account before progressing a deal or planning outreach.
+  Build the buying-committee map — economic buyer, champion, evaluators,
+  blockers, engagement level. Trigger: 'map the stakeholders', 'who's in the
+  buying committee', 'develop my champion'.
 origin: ESCC
 ---
 

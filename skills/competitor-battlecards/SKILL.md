@@ -1,14 +1,9 @@
 ---
 name: competitor-battlecards
 description: >-
-  Use when building or maintaining a competitive battlecard, running live
-  "against <competitor>" deal prep, or preparing a displacement play to unseat
-  an entrenched incumbent. Trigger on "build a battlecard for X", "how do we
-  beat X", "we're up against X in the TechCorp deal", "they're already using X
-  — how do we get in", "what traps do we set against X", or any request for
-  approved differentiation, rebuttal language, or rip-and-replace positioning.
-  All claims sourced from product-knowledge (approved); competitor-analyst agent
-  supplies live web intel for human vetting before any claim is promoted to approved.
+  Battlecards + live 'against X' deal prep and displacement plays. Trigger:
+  'how do we beat X', 'up against X', 'battlecard for X'. Claims only from
+  approved product-knowledge.
 origin: ESCC
 ---
 

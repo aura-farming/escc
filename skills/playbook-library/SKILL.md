@@ -1,14 +1,9 @@
 ---
 name: playbook-library
 description: >-
-  Use when a drafting skill (cold-outreach, outbound-sequences, objection-handling,
-  cold-calling) needs to pull an approved exemplar, proven sequence structure, or
-  collateral pointer as its anchor before personalizing — and when establishing,
-  updating, or retiring entries in the library itself. Trigger on "do we have a winning
-  email for X", "what's our best opener for <persona>", "what objection rebuttal should
-  I use for Y", "show me the sequence structure for <segment>", "add this as an approved
-  exemplar", or "our reply rate on Z sequence has dropped — retire it". The durable
-  approved-exemplars + collateral-index layer that anchors all outreach wording.
+  Approved exemplars + collateral index that anchor outreach — winning emails,
+  openers, rebuttals, sequence structures. Trigger: 'best opener for
+  <persona>', 'winning email for X', 'add this exemplar'.
 origin: ESCC
 ---
 

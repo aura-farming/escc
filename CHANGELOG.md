@@ -10,6 +10,68 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.6.0] - 2026-07-06
+
+The agentic routing core: ESCC now **auto-invokes reliably instead of waiting
+for slash commands**. The fix is architectural (see
+[ADR-0016](docs/DECISIONS.md)): the skill-description routing surface is
+compressed to fit the harness's context budget (so every skill is visible to
+auto-invocation again), a deterministic **intent-router** hook suggests the
+right skill at prompt time even when descriptions are truncated, a
+**chaining-hints** hook proposes the next play after a high-signal tool result,
+and session start teaches `/daily`. See
+[docs/releases/v1.6.0.md](docs/releases/v1.6.0.md).
+
+### Added
+
+- **`prompt:intent-router` (UserPromptSubmit hook).** Keyword-matches the
+  user's prompt against `config/skill-keywords.json` — a priority-ordered
+  routing table (~60 routes: compliance first, specific before general, one
+  entry per collision-cluster winner) — and injects ONE one-line
+  `escc:<skill>` hint. Budget-independent: it routes even where a skill's
+  description was dropped from context. Skips slash commands, explicit
+  `escc:<skill>` mentions, and short prompts; pure hint; fails open.
+- **`post:chaining-hints` (PostToolUse hook).** After a high-signal tool
+  result, proposes the chained next play from
+  `config/tool-skill-chains.json`: a Fireflies transcript → `discovery-notes`
+  (or `call-review`), a Gmail thread read → `reply-handling` (or
+  `inbox-triage`), a HubSpot **deal** read → `deal-review` (an `input_match`
+  filter keeps contact/company reads silent). Each chain family fires at most
+  once per session; errored calls are skipped; pure hint; fails open.
+- **Session-start `/daily` nudge.** On a true startup (never resume/clear/
+  compact), one line teaching the morning brief — lowest-priority block, first
+  dropped under the context budget.
+- **Routing-budget CI pin** in `validate-skills.js`: any description over 220
+  chars, or a total routing surface over 14,000 chars, fails the build — the
+  overflow that silently disabled auto-invocation can never regress.
+
+### Changed
+
+- **All 66 skill descriptions compressed** from 39,193 to 12,645 chars
+  (avg 594 → 192) into trigger-style lines, resolving the five
+  trigger-collision clusters (forecast, follow-up, call, pipeline, deal) with
+  unique phrase ownership per skill. No content lost: every detail remains in
+  each skill's "When to Activate" body section.
+- Catalog: **28 hook matchers** (was 26; CI-pinned). `docs/HOOKS.md` documents
+  both new hooks; `run-with-flags.js` maps the `prompt:` hookId prefix to
+  UserPromptSubmit.
+
+### Fixed
+
+- **Date-bomb in `outbound-approve.test.js`:** the clean-draft case approved
+  with a pinned past date, so its 7-day approval token expired on 2026-06-30
+  and the (correctly behaving) fail-closed send-gate began blocking it. The
+  test now approves at the real current time; the machinery was never wrong.
+
+### Security
+
+- Both new hooks are **pure hints**: they inject one suggestion line, never
+  block, never rewrite a prompt or a tool result, and fail OPEN on any internal
+  error. The fail-closed send-gate, the CRM write guard, and every other
+  enforcement surface are untouched. Routing tables are data
+  (`config/*.json`), not code, and CI verifies every route points at a real
+  skill.
+
 ## [1.5.0] - 2026-06-25
 
 Per-account / per-KDM tone-match: a new deterministic **per-account voice

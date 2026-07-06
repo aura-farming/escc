@@ -1,16 +1,9 @@
 ---
 name: prospecting-pipeline
 description: >-
-  Use when an SDR needs to run end-to-end prospecting from a target definition
-  (ICP segment, named account list, or territory) through to review-ready
-  first-touch drafts. Trigger on "build me a prospect list", "who should I
-  target this week", "find and prioritize accounts in <segment>", "run the full
-  pipeline on <account>", "score my list against ICP", "find a warm path into
-  <company>", or any request that spans find → score → warm-path → enrich →
-  draft as a single orchestrated flow. The flagship SDR orchestrator — it
-  coordinates account-researcher, prospect-researcher, signal-scorer,
-  warm-path-mapper, outreach-drafter, and outbound-reviewer so the SDR gets
-  one prioritized, draft-ready plan rather than six separate tool outputs.
+  END-TO-END SDR prospecting: find -> ICP-score -> warm path -> enrich ->
+  first-touch drafts. Trigger: 'build me a prospect list', 'who should I
+  target', 'run the full pipeline'. The flagship SDR orchestrator.
 origin: ESCC
 ---
 

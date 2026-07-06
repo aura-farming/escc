@@ -1,13 +1,9 @@
 ---
 name: sales-handoffs
 description: >-
-  Use when an SDR is handing a qualified deal to an AE, or an AE is handing
-  a closed-won deal to Customer Success — to produce a complete, structured
-  handoff document with context, open loops, MEDDPICC coverage, and a clear
-  next step. Also activates when the RECEIVING persona needs to formally
-  accept or reject the handoff. Trigger on "handoff to AE", "handoff to CS",
-  "closed won handoff", "accept this handoff", "reject this handoff", or
-  any request to document the transfer of deal ownership between roles.
+  Structured SDR->AE and AE->CS handoffs with completeness checks, plus formal
+  accept/reject. Trigger: 'handoff to AE', 'closed-won handoff', 'accept this
+  handoff'.
 origin: ESCC
 ---
 

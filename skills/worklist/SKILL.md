@@ -1,15 +1,9 @@
 ---
 name: worklist
 description: >-
-  Use when a rep or manager needs to work a whole LIST of accounts/contacts in
-  one pass — a HubSpot overdue-task list for an owner, a territory's untouched
-  accounts, or an explicit set of contact/account ids — through research →
-  draft → gate review → a single consolidated review-pack → approved, gated
-  send. Trigger on "/escc-worklist", "work my overdue tasks", "run my list",
-  "clear my task backlog", "draft outreach for these accounts", or "batch
-  prospect this list". This is the on-ramp that makes the safe motion the easy
-  motion: every drafted message passes the four outbound gates and the
-  fail-closed send-gate, so a batch never becomes 40 unreviewed direct sends.
+  Work a whole LIST of accounts/contacts: research -> draft -> gates -> one
+  consolidated review-pack -> approved gated send. Trigger: /escc-worklist,
+  'work my overdue tasks', 'batch prospect this list'.
 origin: ESCC
 ---
 

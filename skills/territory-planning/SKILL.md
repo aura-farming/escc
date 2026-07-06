@@ -1,17 +1,9 @@
 ---
 name: territory-planning
 description: >-
-  Use when a manager or RevOps needs to plan account distribution, identify
-  territory coverage gaps, or rebalance territories across reps. Trigger on
-  "territory planning", "rebalance territories", "territory coverage gaps",
-  "whitespace accounts", "coverage analysis", "territory design", "account
-  distribution", "who owns what", "how many accounts per rep", or any request
-  to assess or restructure how accounts are divided across the sales team.
-  Also activates for "territory rebalance" following a hire, departure, or
-  segment shift. DEFER ownership policy to rules/routing-rules.md; DEFER
-  capacity math to the capacity-planning skill; DEFER quota to rules/targets.md.
-  Always say "territory coverage" (accounts worked vs. whitespace) -- never
-  bare "coverage".
+  Account distribution, territory coverage gaps, whitespace, rebalance across
+  reps. Trigger: 'territory planning', 'rebalance', 'whitespace accounts'.
+  Headcount math = capacity-planning.
 origin: ESCC
 ---
 

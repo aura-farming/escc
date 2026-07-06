@@ -21,6 +21,20 @@ const { CURLY_QUOTE_RE } = require('./lib/text-scan');
 const SKILLS_DIR = path.join(__dirname, '..', '..', 'skills');
 const MAX_LINES = 800;
 
+// The frontmatter `description` is the auto-invoke ROUTING SURFACE: Claude Code
+// loads every skill's description into context under a budget (~1% of the
+// context window), dropping descriptions that overflow — an over-budget catalog
+// silently loses auto-invocation for the skills that get cut (ADR-0016). Keep
+// each description a compressed trigger line (detail lives in the body's
+// "When to Activate") and pin the total so the surface can never regress.
+const MAX_DESC_CHARS = 220;
+const MAX_TOTAL_DESC_CHARS = 14000;
+
+/** Normalized length of a (possibly folded) frontmatter description. */
+function descriptionLength(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim().length;
+}
+
 // `description` is written as trigger conditions and is the routing surface, so
 // it must be present. Section presence is matched loosely (heading wording
 // varies) — the same checks the content was authored against.
@@ -43,6 +57,7 @@ function main() {
     .map(entry => entry.name);
 
   let validated = 0;
+  let totalDescChars = 0;
   for (const dir of dirs) {
     const rel = `skills/${dir}/SKILL.md`;
     const file = path.join(SKILLS_DIR, dir, 'SKILL.md');
@@ -60,8 +75,15 @@ function main() {
     else if (name !== dir) reporter.error(rel, `frontmatter name "${name}" != directory "${dir}"`);
 
     if (!fm.values.description) reporter.error(rel, 'frontmatter missing required field: description');
-    else if (fm.indicators.description === '|') {
-      reporter.finding(rel, "description uses a literal '|' block scalar (preserves newlines); use an inline or folded '>' scalar");
+    else {
+      if (fm.indicators.description === '|') {
+        reporter.finding(rel, "description uses a literal '|' block scalar (preserves newlines); use an inline or folded '>' scalar");
+      }
+      const descLen = descriptionLength(fm.values.description);
+      totalDescChars += descLen;
+      if (descLen > MAX_DESC_CHARS) {
+        reporter.error(rel, `description is ${descLen} chars (max ${MAX_DESC_CHARS} — it is the auto-invoke routing surface; move detail into "When to Activate")`);
+      }
     }
 
     const origin = fm.values.origin;
@@ -80,7 +102,11 @@ function main() {
     validated += 1;
   }
 
-  reporter.finish(`Validated ${validated} skill directories`);
+  if (totalDescChars > MAX_TOTAL_DESC_CHARS) {
+    reporter.error('skills/', `total description routing surface is ${totalDescChars} chars (max ${MAX_TOTAL_DESC_CHARS}) — over-budget descriptions get dropped from context and lose auto-invocation`);
+  }
+
+  reporter.finish(`Validated ${validated} skill directories (routing surface: ${totalDescChars}/${MAX_TOTAL_DESC_CHARS} chars)`);
 }
 
 main();

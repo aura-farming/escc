@@ -1,14 +1,9 @@
 ---
 name: close-plan
 description: >-
-  Use when a rep needs to build or update the seller's backward date-plan from a
-  target signature date through every enterprise gate (security review, procurement,
-  legal, economic buyer sign-off) back to today. Trigger on "build a close plan",
-  "what do we need to hit our close date", "map the path to signature", "what are
-  the steps before we can close", or whenever a deal enters the Proposal/Negotiation
-  stage. Distinct from mutual-action-plan (the shared buyer+seller milestone document)
-  and paper-process (which tracks individual legal document status) — this skill
-  produces the SELLER's internal backward-dated sequence with owners and gate criteria.
+  Seller's backward date-plan from target signature through every gate back to
+  today. Trigger: 'close plan', 'path to signature', 'hit our close date'. The
+  shared buyer plan is mutual-action-plan.
 origin: ESCC
 ---
 

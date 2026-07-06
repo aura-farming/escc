@@ -1,12 +1,9 @@
 ---
 name: meeting-followthrough
 description: >-
-  Use after any sales call or meeting to turn the transcript into logged CRM
-  updates, a rep recap email, and persisted account memory — in one orchestrated
-  flow. Trigger on "write up this call", "process the transcript", "send the
-  recap", "log the meeting", "update MEDDPICC from this call", or any request
-  to go from a Fireflies transcript (or pasted transcript text) to a complete
-  post-meeting action set. Pillar 2: Transcript -> Intelligence -> Record -> Recap.
+  One flow AFTER a meeting: transcript -> CRM updates + recap email + account
+  memory. Trigger: 'write up this call', 'process the transcript', 'send the
+  recap', 'log the meeting'.
 origin: ESCC
 ---
 

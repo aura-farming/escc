@@ -1,14 +1,9 @@
 ---
 name: call-prep
 description: >-
-  Use before any customer or prospect meeting — discovery call, champion sync,
-  executive briefing, QBR, or renewal — to produce a pre-meeting brief: confirmed
-  attendees and their roles, account and deal history pulled from HubSpot first,
-  the current MEDDPICC gaps to probe in this call (per the deal-review scoring),
-  a stated meeting goal, and a structured talk track. Trigger on "prep for my
-  call with X", "I have a meeting with Y tomorrow", "what should I ask in the
-  discovery", "get me ready for the demo debrief", or any request to plan a
-  customer-facing conversation before it happens.
+  Pre-meeting brief BEFORE any customer call — attendees, history, MEDDPICC
+  gaps to probe, talk track. Trigger: 'prep for my call', 'meeting with X
+  tomorrow', 'get me ready for the demo'.
 origin: ESCC
 ---
 

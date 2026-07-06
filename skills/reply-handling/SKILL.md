@@ -1,13 +1,9 @@
 ---
 name: reply-handling
 description: >-
-  Use when a prospect or contact has replied to an outbound message and you need
-  to classify the reply, decide the right response channel, and execute via the
-  correct skill. Trigger on "they replied", "draft a response to this reply",
-  "what do I do with this reply", "how should I handle this response", or any
-  inbound reply to a sales email that has been classified by inbox-triage as
-  deal_action or action_required. Owns the reply disposition taxonomy. NEVER
-  compose without reading the full thread first.
+  Disposition an inbound reply — classify, pick channel, execute next action.
+  Trigger: 'they replied', 'handle this response', 'what do I do with this
+  reply'. Reads the thread first. No reply yet = follow-up-ops.
 origin: ESCC
 ---
 

@@ -1,13 +1,9 @@
 ---
 name: cold-outreach
 description: >-
-  Use when writing or reviewing a first-touch outbound message to a prospect
-  who has not previously engaged — cold email, cold LinkedIn InMail, or a
-  first-touch call opener. Trigger on "write a cold email to <prospect>",
-  "draft a first touch for <persona>", "is this opener good enough", or
-  whenever a first-touch message needs to clear the quality gate before being
-  handed to outbound-reviewer. The skill that owns personalization rigor,
-  the fabrication firewall, and the quality gate for every opening move.
+  Write or pressure-test a FIRST-touch message to a cold prospect (email,
+  InMail, opener). Trigger: 'cold email', 'draft a first touch', 'is this
+  opener good'. Owns the personalization quality gate.
 origin: ESCC
 ---
 

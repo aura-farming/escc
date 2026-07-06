@@ -1,13 +1,9 @@
 ---
 name: activity-audit
 description: >-
-  Use when a manager needs a per-rep cadence and logging-compliance scorecard —
-  are reps hitting their activity targets, and are they logging their work in
-  HubSpot? Trigger on "activity audit", "are reps logging", "cadence compliance",
-  "show me activity by rep", "who is behind on dials", "check logging compliance",
-  or any request to assess rep activity volume or CRM logging discipline. Also
-  activated by the /activity command. Frame output as a coaching input, not
-  a surveillance report — pair with coaching-prep.
+  Per-rep activity and logging-compliance scorecard for managers. Trigger:
+  'activity audit', 'are reps logging', 'who is behind on dials'. Coaching
+  input, not surveillance.
 origin: ESCC
 ---
 
