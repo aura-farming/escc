@@ -128,6 +128,24 @@ before the required approval is recorded.
 3. Flag any anomaly: a term offered to a customer with no recorded approval is
    a compliance gap. Surface it; do not silently close it.
 
+### D. Pending-approvals board (manager visibility)
+
+When a manager asks "what approvals are pending", "what's stuck at deal desk",
+or "show me the approval queue", produce a read-only status board — the
+visibility layer over the intake/decide/audit flow above:
+
+1. Sweep for open approval requests: deals whose approval status
+   property/notes mark a pending request (read-only HubSpot query), plus any
+   locally logged intakes from step A not yet decided.
+2. Render one row per pending request: deal, requested term, required tier
+   (from the approval matrix), current approver, age in business days.
+3. **Escalation flags:** age > 2 business days at the same approver → flag
+   "stalled — nudge <approver>"; a request whose close date lands inside the
+   approval SLA window → flag "close-date risk".
+4. Sort by close-date risk first, then age. This board reads and flags only —
+   nudging the approver is the manager's action, and any CRM field update
+   routes through `crm-operator`.
+
 ## Examples
 
 **Intake: discount requiring Sales Manager approval**

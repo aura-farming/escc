@@ -10,6 +10,66 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.7.0] - 2026-07-06
+
+First-run that can't fail silently, and the funnel gaps closed: the
+`configure-escc` wizard becomes a **setup doctor** (it checks the MCP stack
+against reality, verifies with `escc doctor`, and offers to seed vocabulary,
+voice, and persona routing focus), a new **`enrichment-ops`** skill finally
+orchestrates the enrichment MCPs that were configured but never called, and
+three coverage gaps from the v1.6.0 audit close inside existing skills. See
+[ADR-0017](docs/DECISIONS.md) and
+[docs/releases/v1.7.0.md](docs/releases/v1.7.0.md).
+
+### Added
+
+- **`enrichment-ops` skill + `/enrich` command.** On-demand contact/company
+  enrichment — firmographics, roles, tech stack, contact data — with strict
+  source precedence (HubSpot record first → wired enrichment MCP
+  (Apollo/Clay, detected at runtime) → research-agent web fallback), per-field
+  provenance + confidence labels (`verified` / `reported` / `inferred`), and a
+  review-pack proposal that only `crm-operator` applies. An inferred email is
+  never a send target; unfilled beats invented. Installed with the SDR
+  persona; routed by the intent-router (`"enrich this"`, `"find their
+  email"`).
+- **configure-escc setup doctor.** New Step 0.5 stack-health check (HubSpot /
+  Gmail REQUIRED, Calendar / Fireflies / enrichment optional — missing
+  required connections are called out with the fix, never silently passed);
+  post-install verification now runs `escc doctor --exit-code` (with `escc
+  repair` offered on drift); new Step 6.5 offers first-run seeding — `escc
+  product vocab init`, voice/knowledge via `/ingest`, and an optional,
+  reversible `skillOverrides` persona routing focus; the summary now teaches
+  the persona-alias one-liner and `/daily`.
+- **Renewal-window triggers** in `trigger-detection`: a 6th trigger category
+  computed deterministically from HubSpot renewal/contract-end dates (never
+  fetched), mapped to `renewal-playbook` (health check; expansion mode when a
+  growth signal co-occurs).
+- **Pending-approvals board** in `deal-desk`: a read-only manager view of the
+  approval queue — deal, term, required tier, approver, age — with
+  stalled (>2 business days) and close-date-risk escalation flags.
+- **Proactive referral ask** in `follow-up-ops`: the referral play no longer
+  waits for a dead lead — closed-won kickoffs, strong QBRs, and renewals
+  trigger a one-sentence, one-ask referral request (evidence-backed, no
+  improvised incentives, logged via `crm-operator`).
+
+### Changed
+
+- Getting-started guides (SDR / AE / Manager) now show the **actual persona
+  alias setup** (`alias claude-sdr='claude --append-system-prompt-file
+  "$ESCC_ROOT/contexts/prospecting.md"'`) — previously the alias was referenced
+  but never defined, a guaranteed first-run dead end.
+- Catalog: **67 skills, 69 commands** (CI-pinned); command registry
+  regenerated; `skills-sdr` module now carries 12 skills.
+
+### Security
+
+- `enrichment-ops` follows every existing invariant: read-only + propose-only
+  (`crm-operator` remains the sole writer), provider/web output is untrusted
+  data, PII collection is minimum-necessary per `data-handling.md`, and no
+  contact data is ever fabricated or pattern-guessed. The setup doctor only
+  reads tool availability; the optional `skillOverrides` write happens only
+  after showing the exact JSON and defaults to Skip.
+
 ## [1.6.0] - 2026-07-06
 
 The agentic routing core: ESCC now **auto-invokes reliably instead of waiting
