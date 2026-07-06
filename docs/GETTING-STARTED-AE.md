@@ -40,6 +40,14 @@ ESCC ships a CLI persona alias for AE work:
 claude-ae
 ```
 
+The alias does not exist until you create it — it is one line of shell setup.
+Add to your `~/.zshrc` / `~/.bashrc` (adjust the path to your ESCC plugin
+install or repo checkout):
+
+```bash
+alias claude-ae='claude --append-system-prompt-file "$ESCC_ROOT/contexts/deal-work.md"'
+```
+
 `claude-ae` preloads `contexts/deal-work.md`, which puts the session in **deal-work
 mode**: prep -> discover and qualify -> map the committee -> prove value -> plan the close
 -> review honestly. It also pins the rules that govern deal work (`lifecycle-stages`,

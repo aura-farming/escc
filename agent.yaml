@@ -4,7 +4,7 @@
 # https://github.com/affaan-m/ECC
 spec_version: "0.1.0"
 name: escc
-version: "1.6.0"
+version: "1.7.0"
 author: lucas
 license: MIT
 description: EverythingSales Claude Code — a skills-first Claude Code sales harness for SDRs, AEs, Sales Managers, and RevOps.

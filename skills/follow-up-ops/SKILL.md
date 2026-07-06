@@ -127,12 +127,27 @@ do not discard — recycle or refer.
    product release that would change the conversation. When the trigger fires, pull
    them out of nurture and restart with `cold-outreach` or `outbound-sequences`.
 
-**Referral ask:**
+**Referral ask (wrong fit, goodwill intact):**
 When the prospect is not the right person (or organization) but you have goodwill:
 1. Draft a brief, direct referral request: acknowledge the fit wasn't right, ask
    if they know of someone facing the problem you solve.
 2. Make it frictionless — one sentence, no lengthy re-pitch.
 3. Log the ask in HubSpot via `crm-operator`.
+
+**Proactive referral ask (happy customer / champion):**
+Do not wait for a dead lead to ask — the strongest referral moments are
+positive ones: a closed-won kickoff, a strong QBR, a renewal, a public praise
+moment. When one occurs:
+1. Confirm the moment is real and recent (a logged win, QBR note, or reply —
+   never assume goodwill without evidence on record).
+2. Draft a short, specific ask tied to that moment: name the outcome they just
+   saw, ask for ONE intro to a peer facing the same problem. One sentence, one
+   ask — never a list of target accounts to shop around.
+3. Never promise an incentive or reward without explicit approval (compliance:
+   referral incentives are a `deal-desk` / manager question, not a rep
+   improvisation).
+4. Log the ask and any resulting intro in HubSpot via `crm-operator`; a granted
+   intro routes to `warm-path-mapper` -> `cold-outreach` as a warm first touch.
 
 ### F. Bulk follow-up gate
 
