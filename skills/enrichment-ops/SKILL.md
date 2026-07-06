@@ -33,7 +33,7 @@ enrichment through it rather than calling providers directly.
 >
 > **Governing rules:** `rules/common/data-handling.md` (prospect PII: collect
 > the minimum needed, provenance required, honor deletion via
-> `escc privacy-purge`), `rules/common/lawful-basis.md` (enriched personal
+> `escc privacy-purge`), `rules/lawful-basis.md` (enriched personal
 > data still needs a lawful basis before outreach),
 > `rules/common/selling-principles.md` (never fabricate a data point).
 

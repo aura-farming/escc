@@ -52,9 +52,15 @@ function hasRunnerRoot(candidate) {
  * Resolve the ESCC plugin root:
  *   1. CLAUDE_PLUGIN_ROOT (native — the normal path)
  *   2. ESCC_PLUGIN_ROOT (set by run-with-flags for nested spawns)
- *   3. ~/.claude (direct install)
- *   4. ~/.claude/plugins/{escc, escc@escc, marketplaces/escc}
- *   5. versioned cache ~/.claude/plugins/cache/escc/<org>/<version>/
+ *   3. SELF — this file lives at <plugin-root>/scripts/hooks/, and the copy
+ *      that is executing is by definition inside the plugin Claude Code
+ *      invoked. Self-resolution must beat any OTHER install: without it, a
+ *      SessionStart that fires before CLAUDE_PLUGIN_ROOT is populated would
+ *      silently delegate to a STALE marketplace/cache copy and run that
+ *      version's session-start (version skew on the hydration hook).
+ *   4. ~/.claude (direct install)
+ *   5. ~/.claude/plugins/{escc, escc@escc, marketplaces/escc}
+ *   6. versioned cache ~/.claude/plugins/cache/escc/<org>/<version>/
  * Returns '' when nothing resolves (caller fails open).
  * @returns {string}
  */
@@ -64,6 +70,11 @@ function resolvePluginRoot() {
     if (hasRunnerRoot(envRoot)) {
       return path.resolve(envRoot.trim());
     }
+  }
+
+  const selfRoot = path.resolve(__dirname, '..', '..');
+  if (hasRunnerRoot(selfRoot)) {
+    return selfRoot;
   }
 
   const home = require('os').homedir();

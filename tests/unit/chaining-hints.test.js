@@ -94,3 +94,19 @@ test('every configured chain names a real skill directory', () => {
     );
   }
 });
+
+test('input_match is word-boundaried: a contact at "Dealify Inc" gets NO deal hint', () => {
+  const result = hook.run(
+    toolResult('mcp__hubspot__search_crm_objects', {
+      objectType: 'contacts',
+      properties: { company_name: 'Dealify Inc' },
+      query: 'dealify',
+    })
+  );
+  assert.equal(result, undefined, 'substring "deal" inside another word must not trigger the chain');
+});
+
+test('a query_crm_data query mentioning deals DOES chain to deal-review', () => {
+  const result = hook.run(toolResult('mcp__hubspot__query_crm_data', { query: 'open deals closing this month' }));
+  assert.ok(result && /deal-review/.test(result.additionalContext));
+});
