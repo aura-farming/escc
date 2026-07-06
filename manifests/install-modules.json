@@ -26,7 +26,7 @@
     {
       "id": "commands-core",
       "kind": "commands",
-      "description": "All 68 thin command shims (<=20 lines each), each delegating to an installed skill.",
+      "description": "All 69 thin command shims (<=20 lines each), each delegating to an installed skill.",
       "paths": ["commands"],
       "targets": ["claude", "claude-project"],
       "dependencies": [],

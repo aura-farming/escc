@@ -50,15 +50,27 @@ function loadChains(pluginRoot) {
         } catch (_err) {
           /* invalid pattern -> chain skipped */
         }
+        // input_match is a case-insensitive REGEX over the tool_input JSON —
+        // a bare substring would false-positive (a contact at "Dealify Inc"
+        // contains "deal"); word-boundaried patterns don't.
+        let inputMatch = null;
+        if (typeof c.input_match === 'string' && c.input_match) {
+          try {
+            inputMatch = new RegExp(c.input_match, 'i');
+          } catch (_err) {
+            inputMatch = null; // invalid filter -> chain skipped below
+          }
+        }
         return {
           family: c.family || '',
           regex,
-          inputMatch: typeof c.input_match === 'string' ? c.input_match.toLowerCase() : '',
+          hasInputFilter: typeof c.input_match === 'string' && c.input_match.length > 0,
+          inputMatch,
           skill: c.skill || '',
           hint: c.hint || '',
         };
       })
-      .filter((c) => c.family && c.regex && c.skill && c.hint);
+      .filter((c) => c.family && c.regex && c.skill && c.hint && (!c.hasInputFilter || c.inputMatch));
   } catch (_err) {
     cachedChains = [];
   }
@@ -112,7 +124,7 @@ function matchChain(toolName, toolInput, chains) {
       } catch (_err) {
         haystack = '';
       }
-      if (!haystack.includes(chain.inputMatch)) continue;
+      if (!chain.inputMatch.test(haystack)) continue;
     }
     return chain;
   }

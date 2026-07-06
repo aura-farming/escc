@@ -33,12 +33,14 @@ const MAX_SCAN_CHARS = 2000;
 const MIN_PROMPT_CHARS = 12;
 
 let cachedRoutes = null;
+let cachedRoot = null;
 
-/** Load + compile the routing table once per process. Fails open to []. */
+/** Load + compile the routing table once per root. Fails open to []. */
 function loadRoutes(pluginRoot) {
-  if (cachedRoutes) return cachedRoutes;
+  const root = pluginRoot || path.resolve(__dirname, '..', '..');
+  if (cachedRoutes && cachedRoot === root) return cachedRoutes;
+  cachedRoot = root;
   try {
-    const root = pluginRoot || path.resolve(__dirname, '..', '..');
     const parsed = JSON.parse(fs.readFileSync(path.join(root, CONFIG_RELATIVE), 'utf8'));
     const routes = Array.isArray(parsed.routes) ? parsed.routes : [];
     cachedRoutes = routes

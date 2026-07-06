@@ -99,6 +99,11 @@ These are the SDR skills installed by your profile (`skills-sdr` plus the shared
   demo request) and needs triage, scoring, and a first response.
   - `Use escc:inbound-lead-response to triage the form fill that just came in.`
 
+Also in your SDR module: **`enrichment-ops`** (`/enrich` — fill missing contact/company
+fields from wired enrichment MCPs like Apollo/Clay with provenance labels; `crm-operator`
+applies the writes) and **`outreach-analytics`** (`/sequence-stats` — open/reply/meeting
+rates and A/B variant promote-or-retire decisions).
+
 Two more from the shared set you will lean on daily: **`inbox-triage`** (classify and
 draft replies to the sales inbox — draft-only) and **`daily-brief`** (your morning rundown
 of meetings, open follow-up promises, and deal alerts; try `/daily` or `/standup`).

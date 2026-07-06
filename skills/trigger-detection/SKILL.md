@@ -118,7 +118,8 @@ Do not fabricate a play recommendation for a trigger type not covered here.
 ### Step 1: Load the watch list
 
 Read the account and contact watch list from local files (`contexts/watch-list.md`
-or equivalent). Do not fabricate account names or assume accounts are on the
+or equivalent — this file is **user-created per workspace, not shipped with
+ESCC**). Do not fabricate account names or assume accounts are on the
 watch list without a source. If no watch list exists, report that and prompt the
 rep to create one before running a sweep.
 

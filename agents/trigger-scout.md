@@ -63,7 +63,8 @@ Surface triggers in these categories (sourced only from tool results and local f
 ## Workflow
 
 1. **Load the watch list.** Read the account/contact watch list from local files (e.g.,
-   `contexts/watch-list.md` or equivalent). Do not fabricate account names.
+   `contexts/watch-list.md` or equivalent — user-created per workspace, not shipped).
+   Do not fabricate account names; if none exists, say so.
 2. **Read available signal data.** Use Read/Grep/Glob to locate signal files, engagement
    exports, or intent data stored locally. Source only what tool results return.
 3. **Classify triggers.** For each signal found, classify it by category (above),
