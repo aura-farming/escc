@@ -10,6 +10,64 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.7.1] - 2026-07-06
+
+Hardening patch from a full verification run of the plugin (66-check machine
+pass over every CLI verb + all 28 hook matchers through the real dispatcher,
+plus three parallel audits: cross-references, docs accuracy, adversarial bug
+hunt). Everything found is fixed here; no behavior surface is added. See
+[docs/releases/v1.7.1.md](docs/releases/v1.7.1.md).
+
+### Fixed
+
+- **SessionStart bootstrap version-skew (the significant one).**
+  `session-start-bootstrap.js` resolved the plugin root as env vars →
+  `~/.claude` → installed marketplace/cache copies — **never its own tree**.
+  When `CLAUDE_PLUGIN_ROOT` was not yet populated (the exact case the
+  bootstrap exists for), it silently delegated session hydration to a STALE
+  installed copy — reproduced live against a v1.5.0-era marketplace install.
+  Self-resolution (`__dirname`) now beats any other install; regression test
+  proves a payload from the executing tree (and the env override still wins).
+- **chaining-hints false positive.** `input_match` was a substring test on the
+  tool-input JSON, so a *contact* read for a company named "Dealify Inc"
+  triggered the deal-review hint. It is now a word-boundaried regex
+  (`"objecttype":"deals?|0-3"` or a `query` containing the word *deal(s)*),
+  with tests for the Dealify case and `query_crm_data`.
+- **intent-router cache bleed.** `loadRoutes()` cached the compiled table
+  without keying on the plugin root; a second call with a different root
+  returned the first root's table. Cache is now root-keyed.
+- **Manifest count drift.** `commands-core` description said "All 68" shims;
+  regenerating v1.7.0 missed the prose count — now 69.
+- **enrichment-ops rule path typo**: `rules/common/lawful-basis.md` →
+  `rules/lawful-basis.md`.
+
+### Changed
+
+- **`.env.example` now actually covers the surface** (README promises it): 22
+  previously undocumented user-facing vars added with their real code defaults
+  (MCP health TTL/timeout/backoff, session-start hydration + compaction
+  tuning, quarantine context/dir, outbound review-confidence + tools-config
+  override, rep identity/SLA/notify, knowledge volatility, CI scan root), and
+  4 documented-but-never-read vars removed (`ESCC_SESSION_RETENTION_DAYS`,
+  `ESCC_OBSERVE_TIMEOUT_MS`, `ESCC_OBSERVATION_RETENTION_DAYS`,
+  `ESCC_MCP_RECONNECT_COMMAND`).
+- **SKILL-DEVELOPMENT-GUIDE** now documents the 220-char description cap and
+  the 14k total routing-surface pin (contributors previously hit the CI error
+  blind); getting-started guides list the full persona modules
+  (SDR: + `enrichment-ops`, `outreach-analytics`; AE: + the six deal-maturity
+  skills); `contexts/watch-list.md` references now say it is user-created per
+  workspace, not shipped.
+
+### Verified (no change needed)
+
+- Full machine pass green: every `escc` verb end-to-end in a hermetic home
+  (install→doctor→repair→uninstall, product/vocab/voice/outbound/watch/purge),
+  and the send-gate's blessed path proven through the real dispatcher (CLI
+  approval token → matching draft allowed; unapproved draft, live send, and
+  malformed stdin all blocked). All cross-references clean: 67 skills, 18
+  agents, 69 commands, registry, CLI verbs, rules. No route shadowing or
+  ReDoS in the intent-router; no date-bombs remaining in tests.
+
 ## [1.7.0] - 2026-07-06
 
 First-run that can't fail silently, and the funnel gaps closed: the

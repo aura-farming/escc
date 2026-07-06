@@ -103,6 +103,11 @@ These are AE skills installed by your profile (`skills-ae` plus the shared
   contraction risk, and build an expansion hypothesis.
   - `Use escc:renewal-playbook to run a renewal review on Acme.`
 
+Your AE module also carries the deal-maturity set — **`competitor-battlecards`**
+(`/battlecard`), **`rfp-response`** (`/rfp`), **`business-case`** (`/roi`),
+**`evaluation-plan`** (`/poc`), **`paper-process`** (`/paper`), and
+**`reference-coordination`** (`/reference`) — reach for them as deals progress.
+
 Also installed and useful daily: **`multi-threading`** and **`close-plan`** for late-stage
 deals, plus the shared **`inbox-triage`** and **`daily-brief`** (`/daily`) for your rundown.
 

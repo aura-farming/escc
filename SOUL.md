@@ -1,7 +1,7 @@
 # SOUL — ESCC
 
 > The "why" doc. ESCC = EverythingSales Claude Code. Identity and operating principles.
-> Plugin id `escc` · v1.7.0 · MIT (with attribution) · System of record: HubSpot.
+> Plugin id `escc` · v1.7.1 · MIT (with attribution) · System of record: HubSpot.
 
 ---
 
