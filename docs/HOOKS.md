@@ -105,8 +105,9 @@ what they do. All run through `run-with-flags.js`.
 
 ### UserPromptSubmit
 
-ESCC wires no UserPromptSubmit hook in `hooks/hooks.json`. Prompt-time learning
-capture happens on the tool-use events below.
+| Hook id | Matcher | Script | Profiles | What it does |
+| --- | --- | --- | --- | --- |
+| `prompt:intent-router` | `*` | `intent-router.js` | standard, strict | Deterministic skill-routing hint (ADR-0016): keyword-matches the prompt against `config/skill-keywords.json` (priority-ordered, compliance first, specific before general) and injects ONE one-line `escc:<skill>` suggestion. Budget-independent auto-invocation layer — it works even when a skill's description is truncated from context. Skips slash commands, explicit `escc:<skill>` mentions, and very short prompts. Pure hint; never blocks. |
 
 ### PreToolUse
 
@@ -127,6 +128,7 @@ capture happens on the tool-use events below.
 | Hook id | Matcher | Script | Profiles | What it does |
 |---|---|---|---|---|
 | `post:crm-log-reminder` | `mcp__claude_ai_Gmail__create_draft\|mcp__claude_ai_Google_Calendar__create_event\|mcp__claude_ai_Fireflies__.*` | `crm-log-reminder.js` | standard, strict | Nudges / enforces HubSpot activity logging after a Gmail draft, Calendar event, or Fireflies transcript fetch. |
+| `post:chaining-hints` | Fireflies `get_*` \| Gmail `get_thread`/`search_threads` \| HubSpot CRM reads | `chaining-hints.js` | standard, strict | Next-play suggestion after a high-signal tool result (ADR-0016): a transcript lands → `discovery-notes`; a Gmail thread is read → `reply-handling`; HubSpot **deal** data is pulled → `deal-review` (an `input_match` filter keeps contact/company reads silent). Each chain family fires at most once per session (per-session temp-file dedupe); skips errored calls. Pure hint; never blocks. |
 | `post:outbound-style-check` | `Edit\|Write` | `outbound-style-check.js` | standard, strict (async) | Warn-only outbound copy heuristics on deliverables: subject length, spam-trigger words, missing unsubscribe in sequences, broken merge fields (`ESCC_QUALITY_GATE_STRICT`). |
 | `post:deliverables-location` | `Write` | `deliverables-location.js` | standard, strict | Nudges stray generated docs into the `deliverables/` structure. |
 | `post:observe` | `*` | `observe-runner.js` | all (async) | Captures tool-result observations for continuous learning. |

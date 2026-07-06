@@ -1,16 +1,9 @@
 ---
 name: brand-voice
 description: >-
-  Use when a rep or manager needs a reusable writing style profile built from
-  real source material -- sent emails, call openers, winning sequences, LinkedIn
-  messages, meeting recaps -- so every drafted message sounds like the rep, not
-  generic AI output. Activate when setting up voice for the first time, when
-  a drafting skill produces copy that "doesn't sound like me", when onboarding
-  a new rep and baselining their style, or when changing channels and needing
-  per-channel voice notes. The canonical VOICE PROFILE this skill produces is
-  consumed by cold-outreach, outbound-sequences, follow-up-ops, reply-handling,
-  email-outbound-ops, meeting-followthrough, inbox-triage, and any other skill
-  that drafts copy.
+  Build a rep writing-style profile from real sent messages. Trigger: 'doesn't
+  sound like me', 'set up my voice', new-rep baselining. Produces the VOICE
+  PROFILE all drafting skills consume. Auto-triggers.
 origin: ECC-adapted
 ---
 

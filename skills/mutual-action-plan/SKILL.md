@@ -1,15 +1,9 @@
 ---
 name: mutual-action-plan
 description: >-
-  Use when a deal needs a shared, buyer-and-seller milestone plan built, updated, or
-  reviewed — the MAP document both sides agree to and maintain together. Trigger on "create
-  a mutual action plan", "build a MAP", "shared plan with the buyer", "what are our joint
-  milestones", "align on next steps through close", or when a deal enters Validation/Proof
-  stage and no shared plan exists yet. This skill OWNS the MAP artifact: it builds the
-  structure, populates milestones from decision-process evidence and paper-process steps,
-  assigns owners on both sides, and keeps the plan current. Distinct from close-plan (the
-  seller's internal backward date-plan) and paper-process (legal/procurement tracking) --
-  this is the buyer-facing, jointly owned plan those two feed into.
+  Owns the MAP — the shared buyer+seller milestone plan to signature. Trigger:
+  'mutual action plan', 'build a MAP', 'joint milestones'. Seller-internal
+  plan = close-plan; legal artifacts = paper-process.
 origin: ESCC
 ---
 

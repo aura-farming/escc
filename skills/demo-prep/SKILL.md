@@ -1,14 +1,9 @@
 ---
 name: demo-prep
 description: >-
-  Use before any product demonstration — standard demo, technical deep-dive,
-  executive proof-of-concept, or recorded async demo — to build a demo storyline
-  tied to the buyer's discovered pain (MEDDPICC I), stakeholder-specific moments
-  mapped to each buying-committee role, an environment and readiness checklist,
-  and a proof/social-proof block sourced exclusively from product-knowledge.
-  Trigger on "prep the demo for X", "build a demo plan for [account]", "tailor
-  the demo to [persona]", "what should I show the CFO vs. the end user", or any
-  request to prepare a structured demonstration before it runs.
+  Demo storyline tied to discovered pain with stakeholder-specific moments and
+  a readiness checklist. Trigger: 'prep the demo', 'demo plan for <account>',
+  'what do I show the CFO'.
 origin: ESCC
 ---
 

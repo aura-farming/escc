@@ -1,16 +1,9 @@
 ---
 name: multi-threading
 description: >-
-  Use when an active deal is single-threaded or needs broader buying-committee coverage --
-  widen from one contact to multiple stakeholders inside the account through warm, relevant
-  outreach. Trigger on "we're only talking to one person", "need to reach the economic
-  buyer", "multi-thread this deal", "connect with other stakeholders", "we've lost our
-  champion", or when deal-review flags single-threaded as a risk. Consumes the committee
-  map from stakeholder-mapping to select who to add, finds the warmest internal path, and
-  produces role-appropriate DRAFT outreach for each new thread. Never sends -- all output
-  is drafts only. Distinct from cold prospecting (this is warm, intra-account, on active
-  deals only) and from stakeholder-mapping (which builds the committee map -- this skill
-  uses it).
+  Widen a single-threaded active deal to committee coverage with warm,
+  role-specific drafts. Trigger: 'multi-thread', 'only talking to one person',
+  'lost our champion'. Consumes the stakeholder-mapping map.
 origin: ESCC
 ---
 

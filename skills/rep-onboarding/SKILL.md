@@ -1,13 +1,9 @@
 ---
 name: rep-onboarding
 description: >-
-  Use when a new sales rep needs a structured ramp plan, 30/60/90 milestone
-  targets, and certification checkpoints. Trigger on "onboard a rep", "ramp
-  plan", "30/60/90", "new hire certification", "what should a new rep do in
-  their first 90 days", "build a ramp plan for <rep name>", "what are the
-  certification milestones for new reps", or any request to structure a new
-  rep's entry into quota-carrying territory. Ramp months (30/60/90) are
-  distinct from pipeline stages -- never call a ramp month a "stage".
+  30/60/90 ramp plan for a new rep — milestones, certification checkpoints,
+  ramped targets. Trigger: 'onboard a rep', 'ramp plan', '30/60/90', 'new hire
+  certification'.
 origin: ESCC
 ---
 

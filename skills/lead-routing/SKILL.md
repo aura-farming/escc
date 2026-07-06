@@ -1,12 +1,9 @@
 ---
 name: lead-routing
 description: >-
-  Use when a lead or account needs an ownership assignment or reassignment —
-  inbound MQLs, new accounts, named-account conflicts, territory disputes,
-  round-robin fills, or speed-to-lead routing decisions. Trigger on "route this
-  lead", "who owns this", "assign this account", "round-robin", "route to the
-  right rep", "this lead came in — who gets it", "reassign this", or any question
-  about which rep or team should own a record in HubSpot.
+  Assign or reassign lead/account ownership — MQL routing, round-robin,
+  territory disputes, speed-to-lead. Trigger: 'route this lead', 'who owns
+  this', 'who gets it'.
 origin: ESCC
 ---
 

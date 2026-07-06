@@ -1,14 +1,9 @@
 ---
 name: business-case
 description: >-
-  Use when a deal requires a quantified ROI or value-engineering model — trigger on
-  "build the business case", "what's the ROI for this deal", "calculate payback",
-  "model the value", or "how do we justify the investment". Also activate when
-  proposal-builder requests an ROI section, when an economic buyer asks "what is
-  this worth to us", or when a champion needs a financial justification to present
-  internally. Operates on buyer-stated metrics (MEDDPICC M) and approved proof points
-  from product-knowledge; every input number must be sourced. This is value math,
-  not pricing math -- defer pricing and discounts to quote-desk.
+  Quantified ROI / value model for a deal from buyer-stated metrics + approved
+  proof. Trigger: 'business case', 'ROI', 'payback', 'justify the investment'.
+  Value math only — pricing = quote-desk.
 origin: ESCC
 ---
 

@@ -1,13 +1,9 @@
 ---
 name: deal-desk
 description: >-
-  Use when a non-standard deal term requires formal approval before it can be
-  offered to a customer — discount at or above the rep-autonomy ceiling, custom
-  legal redlines, ramp deals, free periods, unusual payment schedules, multi-year
-  commitments, or any term that touches revenue recognition. Trigger on "deal desk",
-  "approve this discount", "non-standard terms", "can I offer X", "do I need approval
-  for Y", "who has to sign off on this", or any request to intake, route, track, or
-  audit an approval before a pricing or legal term reaches the customer.
+  Formal approval for non-standard terms — discounts over ceiling, redlines,
+  ramps, payment terms. Trigger: 'deal desk', 'approve this discount', 'can I
+  offer X', 'who signs off'.
 origin: ESCC
 ---
 

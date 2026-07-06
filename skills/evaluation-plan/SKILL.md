@@ -1,13 +1,9 @@
 ---
 name: evaluation-plan
 description: >-
-  Use when setting up or managing a POC, pilot, or structured technical evaluation —
-  defining mutual success criteria, aligning a go/no-go decision gate, assigning owners
-  on both sides, and tracking progress through the evaluation period. Trigger on "let's
-  do a POC", "what would a pilot look like", "how do we structure the trial", "what
-  does success look like", or whenever a deal enters the Validation / Proof stage.
-  Owns the POC structure; defers to mutual-action-plan for the shared close plan and to
-  deal-review for MEDDPICC scoring of Decision criteria evidence.
+  POC/pilot structure — mutual success criteria, go/no-go gate, owners both
+  sides, progress tracking. Trigger: 'POC', 'pilot', 'structure the trial',
+  'what does success look like'.
 origin: ESCC
 ---
 

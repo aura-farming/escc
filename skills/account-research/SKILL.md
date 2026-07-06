@@ -1,13 +1,9 @@
 ---
 name: account-research
 description: >-
-  Use when a rep needs a deep, sourced account brief before prospecting, outreach,
-  or a first meeting — "research this account", "what do I know about Acme", "build
-  me a brief on this prospect", "find triggers for this company", or whenever
-  cold-outreach / outreach-drafter / prospecting-pipeline reaches for account context
-  before composing. Trigger on new prospect accounts, pre-meeting prep, ICP validation,
-  or when account-memory signals a gap in existing intel. The structured research engine
-  other skills pull account context from.
+  Deep sourced account brief before outreach or a first meeting. Trigger:
+  'research this account', 'build a brief on', 'find triggers for this
+  company'. The research engine other skills pull from.
 origin: ESCC
 ---
 

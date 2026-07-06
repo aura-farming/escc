@@ -1,17 +1,9 @@
 ---
 name: knowledge-intake
 description: >-
-  Use when a rep or operator wants to hand ESCC a file of existing sales
-  knowledge -- sent emails, a call transcript, a case study, a pricing or
-  security one-pager, a competitor doc, or an "industries we sell to" / ICP
-  list -- and have it routed into the right ESCC layer. Trigger on "ingest
-  this", "here is our case study / pricing / battlecard", "learn my writing
-  style from these emails", "pull the objections out of this transcript", "add
-  these segments to my vocab", or any request to import outside knowledge.
-  Untrusted / third-party content (call transcripts, competitor docs) is read
-  ONLY by a read-only quarantine subagent; every product CLAIM lands as an
-  operator-reviewed candidate (never auto-approved); only STYLE (voice) and
-  account CONTEXT auto-apply. COMMAND: /ingest.
+  Route a dropped file into the right ESCC layer — emails->voice,
+  transcript->candidates, case study/pricing->product-knowledge, ICP->vocab.
+  Trigger: 'ingest this', /ingest. Claims stay candidates.
 origin: ESCC
 ---
 

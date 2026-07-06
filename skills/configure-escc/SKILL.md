@@ -1,12 +1,9 @@
 ---
 name: configure-escc
 description: >-
-  Use when someone wants to install, configure, or update ESCC components --
-  when they say "configure escc", "install escc", "set up escc", "I want the
-  SDR module", "add the AE skills", "change my persona to manager", "update my
-  ESCC install", or "what modules are available". Runs an AskUserQuestion-driven
-  install wizard: pick a persona -> resolve modules -> dry-run plan -> apply via
-  scripts/install.js. AUTO-TRIGGERS on "configure escc". COMMAND-LESS.
+  Install/update ESCC components via a persona wizard. Trigger: 'configure
+  escc', 'install escc', 'I want the SDR module', 'change my persona'.
+  Auto-triggers; command-less.
 origin: ESCC
 ---
 

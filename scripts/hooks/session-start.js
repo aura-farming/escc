@@ -394,6 +394,17 @@ function runDecaySweep() {
   }
 }
 
+/**
+ * One-line /daily discoverability nudge, injected only on a true STARTUP —
+ * a resume/clear/compact re-entry is mid-flow, where a "start your day" nudge
+ * is noise (ADR-0016). Sits LAST in the block list so budget pressure drops it
+ * first: it is the lowest-value block by construction.
+ */
+function buildDailyNudgeBlock(source) {
+  if (source !== 'startup') return '';
+  return 'Start of session: run /daily for the full brief (today\'s meetings, overdue follow-ups, deal alerts) — or just ask "what do I need to know today".';
+}
+
 // ----- payload --------------------------------------------------------------
 
 function sessionStartPayload(additionalContext) {
@@ -423,6 +434,7 @@ function buildContext(sessionId, source) {
     restBlock,
     buildRecentSummaryBlock(),
     buildInstinctsBlock(segment),
+    buildDailyNudgeBlock(source),
   ];
   return budgetedJoin(blocks, maxChars);
 }
@@ -454,6 +466,7 @@ module.exports = {
   buildResumeBlock,
   buildPromiseBlocks,
   buildInstinctsBlock,
+  buildDailyNudgeBlock,
   appliesToMatches,
   parseInstinct,
   sessionStartPayload,

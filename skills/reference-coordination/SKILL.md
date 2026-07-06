@@ -1,15 +1,9 @@
 ---
 name: reference-coordination
 description: >-
-  Use when a buyer needs a customer reference -- match the prospect to the right approved
-  reference customer(s) and coordinate the logistics of the intro, prep, and scheduling.
-  Trigger on "can we get a reference", "do we have a customer they can talk to", "reference
-  call", "customer proof", "who's a good reference for this persona/segment/use-case", or
-  when a late-stage deal needs social proof to advance. ONLY uses references approved in
-  product-knowledge, honoring each entry's guardrail and consent level. Protects reference
-  customers from over-use. Never fabricates, implies, or exposes an unapproved reference.
-  Distinct from product-knowledge (which stores and owns approved references) and from
-  stakeholder-mapping (which identifies which buyer stakeholder needs the reference).
+  Match a buyer to approved reference customers and run the intro logistics.
+  Trigger: 'can we get a reference', 'customer they can talk to', 'reference
+  call'. Approved refs only; protects from over-use.
 origin: ESCC
 ---
 

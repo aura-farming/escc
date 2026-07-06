@@ -1,13 +1,9 @@
 ---
 name: opt-out-handling
 description: >-
-  Use when a prospect or contact sends an unsubscribe request, a "remove me"
-  message, a DNC request, or any variant of "stop emailing me" — whether
-  detected by inbox-triage (class: opt_out_request), flagged by reply-handling
-  (disposition: unsubscribe), or surfaced directly by a rep. Auto-trigger with
-  no command. Owns the inbound unsubscribe and DNC request processing workflow
-  end-to-end: detect, suppress, record with provenance, and confirm honored
-  within the jurisdiction deadline. Never drafts a sales reply to an opt-out.
+  Process unsubscribe/DNC requests end-to-end — detect, suppress, record,
+  confirm within jurisdiction deadline. Trigger: 'unsubscribe', 'remove me',
+  'stop emailing', DNC. Auto-triggers; never drafts a sales reply.
 origin: ESCC
 ---
 

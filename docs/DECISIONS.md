@@ -490,3 +490,67 @@ feeding the rep's own side would mis-read the register; greeting/sign-off
 detection is best-effort; and auto-inferred resonance plus the outcome-fed
 ingestion loop remain DEFERRED (ADR-0012). ADR-0012 and ADR-0013 remain in
 force. Ships as v1.5.0 — the last of the Phase A→C roadmap set by ADR-0013.
+
+---
+
+## ADR-0016: Auto-invocation is an architecture — a budgeted routing surface plus deterministic hint hooks
+
+**Status:** Accepted
+
+**Context.** ESCC is skills-first (ADR-0001), and Claude Code auto-invokes a
+skill from its frontmatter `description` — but that listing lives under a
+context budget (~1% of the model's context window; overflowing descriptions
+are dropped, names kept). ESCC's 66 descriptions had grown to **39,193 chars
+(avg 594)** — 2.6× over the observed budget even on a large-context model —
+so most of the catalog, including flagship skills like
+`prospecting-pipeline`, `reply-handling`, and `trigger-detection`, carried
+**no trigger text in context and could not auto-invoke at all**; six
+command-less skills had no invocation path left but exact-name recall. Nothing
+routed at prompt time (the UserPromptSubmit event was reserved in ESCC's own
+hook schema but unwired), and nothing chained a finished tool result to the
+obvious next play. The plugin *felt* like 68 slash commands you had to know.
+An audit also found five trigger-phrase collision clusters (forecast /
+follow-up / call / pipeline / deal) where sibling skills claimed the same
+phrases.
+
+**Decision.** Reliable auto-invocation is engineered as **three independent
+layers**, each of which degrades gracefully without the others. (1) **Fit the
+budget:** every skill description is a compressed trigger line — capability
+clause plus 2–4 highest-signal trigger phrases, with unique phrase ownership
+resolving the five collision clusters — totalling 12,645 chars; the detail
+moved nowhere, it already lives in each skill's required "When to Activate"
+body section. `validate-skills.js` pins this (>220 chars per description or
+>14,000 total fails the build), because an over-budget routing surface fails
+*silently* — the worst kind of regression. (2) **Route despite the budget:**
+a new `prompt:intent-router` UserPromptSubmit hook keyword-matches the prompt
+against `config/skill-keywords.json` — priority-ordered (compliance first,
+specific before general), ~60 routes — and injects ONE `escc:<skill>` hint.
+It is deterministic data, not a model call; it skips already-routed prompts
+(slash commands, explicit `escc:` mentions); and it works even where the
+harness truncated a description — the budget-independent layer small-context
+models rely on. (3) **Chain the workflow:** a new `post:chaining-hints`
+PostToolUse hook proposes the next play after a high-signal tool result
+(transcript → `discovery-notes`; Gmail thread → `reply-handling`; HubSpot
+**deal** read → `deal-review`, gated by an `input_match` filter so
+contact/company reads stay silent), at most **once per chain family per
+session** via a per-session temp-file marker — a worklist doing forty CRM
+reads gets one hint, not forty. A startup-only `/daily` nudge (lowest-priority
+session-start block) completes the loop. Both hooks are **pure hints**: they
+never block, never rewrite anything, fail OPEN on any error, and are plain
+config + ~150-line scripts with zero new dependencies. The hint format names
+the skill and says "ignore if this misreads the ask" — the model, not the
+hook, decides.
+
+**Consequence.** Every skill is visible to auto-invocation again on
+large-context models; on small-context models the deterministic router still
+routes; and the plugin proposes next plays instead of waiting to be asked —
+with the trust boundary unmoved (the send-gate and every enforcement hook are
+untouched; hints carry no authority). Costs accepted: terser descriptions
+lean harder on skill bodies for nuance; the keyword and chain tables are new
+maintenance surfaces — mitigated by CI (unit tests assert every route/chain
+points at a real skill directory, and the collision clusters have regression
+tests); and a keyword hint can occasionally misread an ask — mitigated by
+one-hint-max, skip rules, and explicit ignore language. Fixed alongside: a
+date-bomb in the send-gate's clean-path test (an approval pinned to a past
+date whose 7-day token had expired — the gate was right, the test was wrong).
+Ships as v1.6.0.

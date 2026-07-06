@@ -1,13 +1,9 @@
 ---
 name: email-outbound-ops
 description: >-
-  Use when performing mailbox-operator work on a sales email — resolving which
-  account to send from, reading a thread before composing a reply, producing a
-  draft with provenance, or verifying that a message landed in Sent. Trigger
-  when a drafting skill (cold-outreach, follow-up-ops, reply-handling) needs the
-  actual mail surface operated, or when the rep asks "which account should I send
-  from", "did that email go out", or "show me what is in Sent". Auto-trigger as
-  a sub-workflow. No command — invoked by other skills and directly.
+  Mailbox-operator sub-workflow — resolve send-from account, read thread
+  before composing, draft with provenance, verify Sent. Trigger: 'which
+  account do I send from', 'did that email go out'. Auto-triggers.
 origin: ECC-adapted
 ---
 

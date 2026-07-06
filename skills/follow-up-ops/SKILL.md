@@ -1,14 +1,9 @@
 ---
 name: follow-up-ops
 description: >-
-  Use when a prospect has not replied and you need to decide what to send next —
-  value-add follow-up, a last-touch / breakup email, or a snooze-and-resurface
-  schedule. Trigger on "draft a follow-up", "they haven't replied", "should I
-  break up?", "snooze this", "recycle this lead", or any follow-up cadence step
-  that requires reading the thread before composing. Also activates for
-  recycle-and-refer: when a lead goes cold or closed-lost and you need to route it
-  back to nurture or request a referral. NEVER compose without reading the full
-  thread first. Review-pack required before any bulk follow-up action.
+  Next touch when a prospect has NOT replied — value-add follow-up, breakup,
+  snooze, recycle/refer. Trigger: 'no reply', 'follow up', 'break up?',
+  'snooze'. Reads thread first. If they replied: reply-handling.
 origin: ESCC
 ---
 

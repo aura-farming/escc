@@ -1,14 +1,9 @@
 ---
 name: account-memory
 description: >-
-  Use when you need to load, append to, or hand off the durable per-account
-  working context for an active deal — narrative history, competitor intel,
-  stakeholder color, open loops, and cross-session continuity that does not
-  live cleanly in CRM fields. Trigger on "what do we know about Acme",
-  "load context for this deal", "remember this from the call", "what promises
-  are open on this account", "who have we talked to at Globex", or any task
-  that needs per-account memory across sessions. Also activates automatically
-  at session:start (hydrate) and session:end (append events) via lifecycle hooks.
+  Durable per-account working memory — history, open loops, promises. Trigger:
+  'what do we know about Acme', 'load deal context', 'remember this'.
+  Auto-hydrates at session start/end.
 origin: ECC-adapted
 ---
 

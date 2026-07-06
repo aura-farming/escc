@@ -1,12 +1,9 @@
 ---
 name: team-init
 description: >-
-  Use when setting up a new ESCC workspace for a sales team or rep: when someone
-  says "init my workspace", "set up ESCC for my team", "configure my GTM stack",
-  or when the current working directory has no CLAUDE.md and the user wants ESCC
-  to detect what tools are connected and write a tailored workspace config.
-  Activate via the /team-init command. DO NOT activate for general ESCC questions
-  (use escc-guide) or for installing ESCC components (use configure-escc).
+  Set up a new ESCC workspace — detect the connected GTM stack, write a
+  tailored workspace CLAUDE.md. Trigger: 'init my workspace', 'set up ESCC for
+  my team', /team-init. Installs = configure-escc.
 origin: ESCC
 ---
 

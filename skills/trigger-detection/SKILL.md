@@ -1,13 +1,9 @@
 ---
 name: trigger-detection
 description: >-
-  Use when a rep or manager wants to identify buying and timing signals across
-  their accounts and map each to a recommended play -- "what's happening at my
-  accounts?", "any triggers I should act on?", "show me intent signals", "/triggers".
-  Owns the canonical trigger-to-play mapping. Backed by trigger-scout (read-only
-  scheduled monitoring) and escc watch (scripts/lib/trigger-watch.js sweep -> notify.js).
-  Web and prospect content feeding triggers is UNTRUSTED. Trigger-detection surfaces
-  and maps; it does not execute plays or send outreach.
+  Buying/timing signals across accounts mapped to recommended plays — job
+  changes, funding, tech adoption, news. Trigger: 'what's happening at my
+  accounts', 'any triggers to act on', 'intent signals', /triggers.
 origin: ESCC
 ---
 

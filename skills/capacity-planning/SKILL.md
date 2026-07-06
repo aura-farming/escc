@@ -1,12 +1,9 @@
 ---
 name: capacity-planning
 description: >-
-  Use when top-down revenue capacity needs to be checked or modeled -- whether
-  the current headcount of ramped reps can cover the quota at the required
-  pipeline multiple. Trigger on "capacity planning", "do we have enough reps",
-  "headcount to hit target", "rep capacity gap", "how many reps do we need",
-  "ramp capacity", "can we hit quota with current headcount", "coverage gap vs.
-  target", or any request to map quota to required headcount factoring ramp.
+  Can current ramped headcount cover the quota? Trigger: 'capacity planning',
+  'headcount to hit target', 'how many reps do we need', 'ramp capacity'. Maps
+  quota to required headcount.
 origin: ESCC
 ---
 
