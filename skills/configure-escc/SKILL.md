@@ -56,6 +56,29 @@ Before any install step, determine the source root. Try in order:
 All subsequent file operations read from `$ESCC_ROOT` and write to
 `$TARGET` (the install destination resolved in Step 1).
 
+### Step 0.5 -- Stack health check (MCP connections)
+
+ESCC's skills run on the user's real stack; an install that "succeeds" with no
+MCP wired fails silently at first use. Before installing, check which MCP tool
+families are visible in this session and report:
+
+```
+Stack health:
+  HubSpot   (mcp__hubspot__*)                REQUIRED   [connected / MISSING]
+  Gmail     (mcp__claude_ai_Gmail__*)        REQUIRED   [connected / MISSING]
+  Calendar  (mcp__claude_ai_Google_Calendar__*)  recommended  [connected / missing]
+  Fireflies (mcp__claude_ai_Fireflies__*)    optional   [connected / missing]
+  Enrichment (Apollo / Clay)                 optional   [connected / missing]
+```
+
+- If **HubSpot or Gmail is MISSING**, say so plainly and point at the fix
+  (`/mcp` to connect via claude.ai connectors, or `mcp-configs/` templates for
+  self-hosted servers). Ask whether to continue anyway — never proceed
+  silently, and never claim the install is "ready to sell from" when a
+  required connection is absent.
+- Missing optional tools are noted, not blocking (`team-init` tailors the
+  workspace to whatever is actually wired).
+
 ### Step 1 -- Choose install level
 
 Use `AskUserQuestion`:
@@ -179,6 +202,10 @@ After apply completes, run a quick verification pass:
 3. Check that agent files exist at `$TARGET/agents/<name>.md`.
 4. Check that cross-references within installed skills resolve (a skill that mentions
    another skill by name -- verify the referenced skill was also installed).
+5. Run the machine check: `node "$ESCC_ROOT/scripts/escc.js" doctor --exit-code`
+   -- it verifies every managed target against install-state and reports drift.
+   A non-zero exit means a gap: show the doctor output and offer
+   `node "$ESCC_ROOT/scripts/escc.js" repair`.
 
 Report any gaps:
 
@@ -212,6 +239,34 @@ If the user chooses to optimize:
 - Propose specific section removals or additions.
 - Edit files in `$TARGET` only -- NEVER modify `$ESCC_ROOT` source files.
 
+### Step 6.5 -- Seed knowledge, voice, and persona focus
+
+The install lands generic by design (company-neutral, ADR-0013). Offer the
+three first-run seedings that make it *theirs* — each optional, none silent:
+
+Use `AskUserQuestion` (multi-select):
+
+```
+Question: "Seed your workspace now? (all optional — you can do any of these later)"
+Options:
+  - "Vocabulary" -- "escc product vocab init: your segments/competitors, gitignored, survives updates"
+  - "Voice + knowledge" -- "/ingest your sent emails, case studies, pricing docs into the right layers"
+  - "Persona routing focus" -- "Write skillOverrides so auto-invoke spends its budget on YOUR persona's skills"
+```
+
+- **Vocabulary:** run `node "$ESCC_ROOT/scripts/escc.js" product vocab init`,
+  then walk the user through editing segments/competitors (or route an
+  industries list through `escc product vocab suggest`).
+- **Voice + knowledge:** hand off to the `knowledge-intake` skill (`/ingest`)
+  with whatever the user has — sent emails (voice), case studies/pricing
+  (knowledge candidates), an ICP list (vocab suggestions).
+- **Persona routing focus (optional, reversible):** for a single-persona
+  install, offer to write `skillOverrides` into `$TARGET/settings.json`
+  setting NON-persona skills to `"name-only"` — on small-context models this
+  spends the skill-description budget on the persona's own skills. Show the
+  exact JSON before writing, note it is fully reversible (delete the block),
+  and default to Skip.
+
 ### Step 7 -- Installation summary
 
 Print the completion report:
@@ -237,9 +292,13 @@ Verification:           14/14 skills, 4/4 agents, 2/2 rules -- no gaps.
 Optimizations:          none (skipped)
 
 Next steps:
-  1. Run /team-init to wire up your GTM stack (HubSpot, Gmail, Fireflies).
-  2. Start with /call-prep before your next call, or /deal-review for a deal.
-  3. To add more personas later, say "configure escc" again.
+  1. Run /team-init to write your workspace CLAUDE.md from the connected stack.
+  2. Optional: shell persona alias so sessions open pre-focused (adjust the path):
+       alias claude-ae='claude --append-system-prompt-file "$ESCC_ROOT/contexts/deal-work.md"'
+     (SDR: contexts/prospecting.md · Manager: contexts/pipeline-review.md)
+  3. Start with /daily for your brief, /call-prep before your next call, or
+     /deal-review for a deal.
+  4. To add more personas later, say "configure escc" again.
 ```
 
 ## Examples

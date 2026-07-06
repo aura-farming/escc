@@ -40,6 +40,14 @@ ESCC ships a CLI persona alias for manager work:
 claude-manager
 ```
 
+The alias does not exist until you create it — it is one line of shell setup.
+Add to your `~/.zshrc` / `~/.bashrc` (adjust the path to your ESCC plugin
+install or repo checkout):
+
+```bash
+alias claude-manager='claude --append-system-prompt-file "$ESCC_ROOT/contexts/pipeline-review.md"'
+```
+
 `claude-manager` preloads `contexts/pipeline-review.md`, which puts the session in
 **pipeline-review mode**: hygiene -> inspect -> forecast -> coach -> report. It is
 **read-heavy by default** — any CRM change goes through `crm-operator` with an audit

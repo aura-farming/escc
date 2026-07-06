@@ -554,3 +554,59 @@ one-hint-max, skip rules, and explicit ignore language. Fixed alongside: a
 date-bomb in the send-gate's clean-path test (an approval pinned to a past
 date whose 7-day token had expired — the gate was right, the test was wrong).
 Ships as v1.6.0.
+
+---
+
+## ADR-0017: First-run checks reality, and coverage gaps close inside existing invariants
+
+**Status:** Accepted
+
+**Context.** The v1.6.0 UX audit found two classes of remaining friction.
+First, **first-run failed silently**: `configure-escc` and `team-init` never
+verified that the MCP stack was actually connected, so a rep could complete
+the wizard "successfully" and hit dead air on their first
+`prospecting-pipeline` run; the persona aliases (`claude-sdr`) were referenced
+in three getting-started guides but their setup syntax was never shown; and
+the first-run seedings that make an install useful (vocabulary, voice) were
+invisible outside feature summaries. Second, **capability gaps**: enrichment
+providers (Apollo/Clay) had config templates but no skill ever called them —
+the single biggest configured-but-dead surface — and the audit named renewal
+milestones (absent from the trigger taxonomy), approval-queue visibility, and
+proactive referrals as thin spots a sales team would notice.
+
+**Decision.** (1) `configure-escc` becomes a **setup doctor**: a stack-health
+step reports each MCP family as connected/missing against a required/optional
+tier (HubSpot and Gmail are REQUIRED — a missing one is called out with the
+fix and requires an explicit "continue anyway", never a silent pass);
+post-install verification runs the machine check (`escc doctor --exit-code`,
+offering `escc repair` on drift); and a seeding step offers `escc product
+vocab init`, voice/knowledge via `/ingest`, and an optional, shown-before-
+written, reversible `skillOverrides` persona routing focus (default: Skip).
+The guides now print the real alias one-liner
+(`claude --append-system-prompt-file "$ESCC_ROOT/contexts/<mode>.md"`).
+(2) A new **`enrichment-ops`** skill (+ `/enrich`) owns enrichment
+orchestration under the existing invariants rather than new ones: source
+precedence is CRM-record-first → wired provider MCP (detected at runtime,
+never assumed) → research-agent web fallback; every field carries provenance
+and a `verified`/`reported`/`inferred` confidence label; an inferred email is
+never a send target; **unfilled beats invented**; and output is a review-pack
+that only `crm-operator` applies — the writer monopoly (ADR-0004) and the
+untrusted-input rule are unchanged. (3) The three thin spots close **inside
+the skills that own the concern**, not as new surfaces: `trigger-detection`
+gains a deterministic renewal-window category (date math from CRM properties,
+never fetched — always Concrete) mapped to `renewal-playbook`; `deal-desk`
+gains a read-only pending-approvals board with stalled/close-date-risk flags;
+`follow-up-ops` gains the proactive referral ask (evidence-backed positive
+moments, one ask, no improvised incentives).
+
+**Consequence.** A new rep cannot complete setup while the stack is broken
+without being told exactly what is missing, and the install path now seeds
+what makes ESCC theirs. Enrichment goes from configured-but-dead to a
+governed, provenance-labeled pipeline, and the funnel additions ride existing
+review/write paths — nothing new can send, write, or fabricate. Costs
+accepted: one more skill and command to maintain (67/69, CI-pinned);
+enrichment quality depends on which provider the team wires (the skill says
+which source it used, so a weak answer is at least an honest one). LinkedIn
+send-automation, eSignature, comp modeling, and win-loss interview automation
+remain out of scope (no official API / no MCP / design non-goals). Ships as
+v1.7.0.
