@@ -1,13 +1,9 @@
 ---
 name: outbound-sequences
 description: >-
-  Use when building, launching, or auditing a multi-touch outbound cadence
-  across email, LinkedIn, phone/voicemail, or any combination — including
-  standard SDR cadences, event-triggered sequences, and ABM account plays.
-  Trigger on "build me a sequence", "set up a cadence for <segment>", "what
-  should the touchpoints look like", "enroll <contact> in a sequence", or
-  whenever a rep needs a compliant, multi-step outreach plan ready for
-  outbound-reviewer before the send gate.
+  Build or audit a compliant multi-touch cadence across email/LinkedIn/phone.
+  Trigger: 'build me a sequence', 'set up a cadence', 'enroll <contact>'. All
+  steps draft-only ahead of the send gate.
 origin: ESCC
 ---
 

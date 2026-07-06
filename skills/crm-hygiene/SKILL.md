@@ -1,13 +1,9 @@
 ---
 name: crm-hygiene
 description: >-
-  Use when you need to enforce HubSpot data standards, audit required fields
-  by stage, check for stale records, flag duplicate contacts or companies,
-  review activity-logging compliance, or run a structured data-health scan
-  across the pipeline. Trigger on "CRM cleanup", "data quality check",
-  "fix missing fields", "find duplicates", "audit my pipeline data",
-  "why is my forecast wrong", or any request to make HubSpot trustworthy
-  enough to forecast and coach from.
+  HubSpot data-health enforcement — required fields by stage, stale records,
+  duplicates, logging compliance. Trigger: 'CRM cleanup', 'data quality
+  check', 'fix missing fields', 'why is my forecast wrong'.
 origin: ESCC
 ---
 

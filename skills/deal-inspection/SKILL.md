@@ -1,16 +1,9 @@
 ---
 name: deal-inspection
 description: >-
-  Use when a manager needs a deep, multi-lens interrogation of a single deal
-  -- spawning parallel risk, finance, and competition analyses (capped at 5
-  lenses), then synthesizing agreements vs. conflicts into a prioritized
-  go-deeper list. Trigger on "inspect this deal", "grill this deal", "where
-  are the gaps on <account>", "give me the full picture on <deal>", "what
-  do I ask the rep about <opportunity>", "manager deal review", or any
-  request for a structured interrogation pack a manager will take into a
-  deal call or pipeline review. This is the MANAGER's deep inspection tool --
-  the AE's self-review is the deal-review skill, which this skill calls as
-  its MEDDPICC foundation.
+  MANAGER deep-dive on one deal — parallel risk/finance/competition lenses
+  synthesized into a go-deeper list. Trigger: 'inspect this deal', 'grill this
+  deal', 'manager deal review'. AE self-review = deal-review.
 origin: ESCC
 ---
 

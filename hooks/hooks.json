@@ -124,6 +124,18 @@
         "id": "post:crm-log-reminder"
       },
       {
+        "matcher": "mcp__claude_ai_Fireflies__get_.*|mcp__claude_ai_Gmail__get_thread|mcp__claude_ai_Gmail__search_threads|mcp__hubspot__get_crm_objects|mcp__hubspot__search_crm_objects|mcp__hubspot__query_crm_data",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js post:chaining-hints scripts/hooks/chaining-hints.js standard,strict",
+            "timeout": 5
+          }
+        ],
+        "description": "Next-play suggestion after a high-signal tool result (ADR-0016): transcript -> discovery-notes, Gmail thread -> reply-handling, HubSpot deal read -> deal-review. Once per chain family per session; pure hint, never blocks.",
+        "id": "post:chaining-hints"
+      },
+      {
         "matcher": "Edit|Write",
         "hooks": [
           {
@@ -208,6 +220,20 @@
         ],
         "description": "Capture post-execution governance events. Enable with ESCC_GOVERNANCE_CAPTURE=1.",
         "id": "post:governance-capture"
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js prompt:intent-router scripts/hooks/intent-router.js standard,strict",
+            "timeout": 5
+          }
+        ],
+        "description": "Deterministic skill-routing hint: keyword-match the prompt against config/skill-keywords.json and inject ONE one-line escc:<skill> suggestion (ADR-0016). Budget-independent auto-invocation layer; pure hint, never blocks.",
+        "id": "prompt:intent-router"
       }
     ],
     "Stop": [

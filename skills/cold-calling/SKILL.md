@@ -1,13 +1,9 @@
 ---
 name: cold-calling
 description: >-
-  Use when an SDR is preparing for a call block, needs an opener or talk-track
-  for a specific persona or account, needs to handle a gatekeeper, craft a
-  voicemail script, or log a call disposition to HubSpot after a dial.
-  Trigger on "call block", "dial session", "cold call script", "what do I say
-  to get past the gatekeeper", "voicemail for [persona]", "log this call",
-  or any request to prepare for or debrief a live phone outreach session.
-  Disposition taxonomy and CRM logging apply to EVERY dial.
+  Live phone outreach — call blocks, openers, gatekeepers, voicemail scripts,
+  and logging a disposition after every dial. Trigger: 'call block', 'dial
+  session', 'cold call script', 'voicemail'.
 origin: ESCC
 ---
 

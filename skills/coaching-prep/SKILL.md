@@ -1,15 +1,9 @@
 ---
 name: coaching-prep
 description: >-
-  Use when a manager needs to prepare for a 1:1 or rep coaching session.
-  Trigger on "coaching prep", "1:1 prep", "prep for my 1:1 with <rep>",
-  "get me ready to coach <rep>", "what should I focus on with <rep> this week",
-  "prep my pipeline review with <rep>", or any request to build a structured
-  coaching brief from a rep's pipeline health, activity data, and call patterns
-  before a scheduled 1:1 or coaching conversation. The coaching-analyst agent
-  builds the rep-level brief; this skill owns the structure, framing, and
-  evidence standards for that brief. Targets are coaching inputs, not
-  surveillance -- cite strengths alongside gaps.
+  Structured coaching brief before a 1:1 — rep pipeline health, activity, call
+  patterns. Trigger: 'coaching prep', '1:1 prep', 'prep me to coach <rep>'.
+  Strengths cited alongside gaps.
 origin: ESCC
 ---
 

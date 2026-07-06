@@ -1,16 +1,9 @@
 ---
 name: win-loss-analysis
 description: >-
-  Use when a manager or rep needs to mine closed-won/lost patterns by source,
-  segment, competitor, or reason code. Trigger on "win-loss analysis", "why are
-  we losing", "win rate by segment", "win rate vs. <competitor>", "what's
-  hurting us in enterprise", "loss analysis", "win patterns", "closed-lost
-  debrief", "debrief this deal", or any request to understand patterns across
-  closed deals. Also activates self-scoped for a single closed deal when the
-  user says "debrief this deal" or "why did we lose <account>" -- that is the
-  single-deal mode powering /deal-debrief. CITE competitor-battlecards for
-  competitor patterns; cite product-knowledge for approved proof; never
-  fabricate a pattern or a win metric.
+  Mine closed-won/lost patterns by segment, source, competitor, reason — plus
+  single-deal debrief mode. Trigger: 'win-loss analysis', 'why are we losing',
+  'win rate vs <competitor>', 'debrief this deal'.
 origin: ESCC
 ---
 

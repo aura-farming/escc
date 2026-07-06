@@ -1,14 +1,9 @@
 ---
 name: methodology-audit
 description: >-
-  Use when a manager or RevOps needs a portfolio-level view of MEDDPICC
-  completeness across the full pipeline — not one deal, but the population.
-  Trigger on "methodology audit", "MEDDPICC completeness", "where is qualification
-  weak across the board", "how well-qualified is the pipeline", "show me MEDDPICC
-  gaps by stage", or any request to assess methodology discipline at the team or
-  territory level. Also activated by the /meddpicc-audit command.
-  Boundary: deal-review and deal-inspection cover a single deal; methodology-audit
-  covers the population.
+  Portfolio-level MEDDPICC completeness across the pipeline population.
+  Trigger: 'methodology audit', 'MEDDPICC completeness', 'qualification gaps
+  by stage'. Single deal = deal-review.
 origin: ESCC
 ---
 

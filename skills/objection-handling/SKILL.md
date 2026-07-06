@@ -1,14 +1,9 @@
 ---
 name: objection-handling
 description: >-
-  Use when a prospect raises a price/budget objection, a timing or "not now"
-  objection, an incumbent / "happy with what we have" objection, or a
-  deflection like "just send me info". Auto-triggers when a reply or call note
-  surfaces one of these patterns and a reframe or drafted response is needed.
-  Also activates when you need to identify the MEDDPICC qualification gap behind
-  an objection and decide what to probe next. Sub-workflow — no slash command;
-  invoked by reply-handling, discovery-notes, deal-review, or directly when an
-  objection appears in a message being drafted against.
+  Reframe + draft response when an objection appears — price, timing,
+  incumbent, 'send me info'. Auto-triggers on objection patterns in
+  replies/notes; maps the MEDDPICC gap behind it. Sub-workflow.
 origin: ESCC
 ---
 

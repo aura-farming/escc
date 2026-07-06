@@ -1,15 +1,9 @@
 ---
 name: icp-profile
 description: >-
-  Use when defining, updating, or auditing the Ideal Customer Profile — the firmographic,
-  technographic, and behavioral criteria that determine which accounts are worth pursuing
-  and at what priority. Trigger when setting up scoring weights for the first time, when
-  win/loss patterns suggest the ICP needs refinement, when `signal-scorer` needs updated
-  weights to reflect a new segment or product area, or when `inbound-lead-response`
-  needs the current fit-tier rubric for triage. Also triggered after a `win-loss-analysis`
-  session surfaces a new disqualifier or a recurring pattern in closed-won deals. This
-  skill is command-less by design — it is a sub-workflow and auto-trigger, not a direct
-  user command.
+  Define or refine the Ideal Customer Profile — fit criteria, scoring weights,
+  fit tiers. Feeds signal-scorer and inbound triage; refreshed after win-loss
+  patterns. Sub-workflow; auto-triggers.
 origin: ESCC
 ---
 

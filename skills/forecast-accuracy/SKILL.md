@@ -1,15 +1,9 @@
 ---
 name: forecast-accuracy
 description: >-
-  Use when a manager or RevOps wants to measure how accurate past forecasts
-  were -- tracking commit-vs-actual variance over time, surfacing systematic
-  bias (sandbagging or happy-ears) per rep or per forecast category, and
-  identifying where the roll-up process breaks down. Trigger on "forecast
-  accuracy", "how good is our forecast", "commit vs actual", "how much did
-  we miss by", "which reps sandbag", "happy-ears analysis", "bias by rep",
-  "forecast vs bookings", or any request to compare what was called against
-  what closed. Distinct from forecast-rollup, which answers "what will we
-  close this period?" -- this skill answers "how accurate were our past calls?"
+  How accurate were PAST forecast calls — commit vs actual,
+  sandbagging/happy-ears bias by rep. Trigger: 'forecast accuracy', 'commit vs
+  actual', 'which reps sandbag'. Future call = forecast-rollup.
 origin: ESCC
 ---
 

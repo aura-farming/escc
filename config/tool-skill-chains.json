@@ -1,0 +1,28 @@
+{
+  "$comment": "Chaining-hints table (ADR-0016): after a high-signal tool result, suggest the next play ONCE per family per session. `match` is an anchored, case-insensitive regex on the tool name; optional `input_match` is a lowercase substring the tool_input JSON must contain (e.g. only hint deal-review when the CRM read actually touches deals). Keep this list SHORT and high-precision — every entry costs attention on every match.",
+  "version": 1,
+  "chains": [
+    {
+      "family": "transcript",
+      "match": "mcp__claude_ai_Fireflies__get_.*",
+      "skill": "discovery-notes",
+      "command": "/notes",
+      "hint": "a call transcript just landed — escc:discovery-notes (/notes) turns it into a MEDDPICC capture + CRM update + follow-up draft; escc:call-review (/call-review) scores it for coaching instead."
+    },
+    {
+      "family": "email-thread",
+      "match": "mcp__claude_ai_Gmail__(get_thread|search_threads)",
+      "skill": "reply-handling",
+      "command": "/reply",
+      "hint": "you just read email — if a prospect replied, escc:reply-handling (/reply) dispositions it (full thread first); for a whole inbox pass use escc:inbox-triage (/inbox)."
+    },
+    {
+      "family": "crm-deal",
+      "match": "mcp__hubspot__(get_crm_objects|search_crm_objects|query_crm_data)",
+      "input_match": "deal",
+      "skill": "deal-review",
+      "command": "/deal-review",
+      "hint": "you just pulled deal data — escc:deal-review (/deal-review) scores MEDDPICC health with gaps as dated actions; a full-pipeline sweep is escc:pipeline-hygiene (/pipeline)."
+    }
+  ]
+}

@@ -1,16 +1,9 @@
 ---
 name: instincts
 description: >-
-  Use when reviewing, approving, or rejecting candidate instincts at the human
-  review gate (/instinct-status); when promoting a personal instinct to team
-  scope (/instinct-promote); when graduating high-confidence instinct clusters
-  into evolved skills or commands (/evolve); when exporting instincts for team
-  sharing (/instinct-export) or importing them from a manager or peer
-  (/instinct-import); when capturing a one-shot behavioral pattern (/learn) or
-  mining session history for winning sales motions (/skill-create); or when
-  browsing known workspaces (/instinct-workspaces). Trigger on any request
-  involving "what has Claude learned", "approve/reject a suggestion", "share
-  with the team", "evolve into a playbook", or "what instincts are active".
+  Manage learned instincts — review/approve at the gate, promote to team,
+  export/import, evolve into skills. Trigger: 'what has Claude learned',
+  'approve suggestions', /instinct-status, /evolve, /learn.
 origin: ECC-adapted
 ---
 

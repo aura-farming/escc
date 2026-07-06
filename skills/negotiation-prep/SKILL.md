@@ -1,15 +1,9 @@
 ---
 name: negotiation-prep
 description: >-
-  Use when a rep is entering or approaching the negotiation phase of a deal and
-  needs a structured preparation package — concessions ladder (planned give-gets),
-  BATNA awareness, procurement navigation, and a closing checklist. Trigger on "how
-  should I negotiate this", "what can I give on", "procurement is pushing back on
-  price", "buyer asked for a discount", "we are heading into legal / commercial
-  review", or whenever a deal reaches the Proposal/Negotiation stage in
-  rules/lifecycle-stages.md. Distinct from quote-desk (which prices and approves
-  the numbers) and close-plan (which sequences the milestone timeline) — this skill
-  is the SELLER's preparation playbook before and during the commercial exchange.
+  Seller prep for the commercial exchange — concessions ladder, BATNA,
+  procurement tactics, closing checklist. Trigger: 'how do I negotiate', 'what
+  can I give', 'procurement pushing back'. Numbers = quote-desk.
 origin: ESCC
 ---
 

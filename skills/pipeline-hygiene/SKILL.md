@@ -1,14 +1,9 @@
 ---
 name: pipeline-hygiene
 description: >-
-  Use when a manager or rep needs a structured sweep of the pipeline for health
-  problems — stale deals, missing next steps, stage-exit violations, close-date
-  pushes, and forecast-category mismatches. Trigger on "audit the pipeline",
-  "pipeline hygiene", "what's stale", "what needs a next step", "run a pipeline
-  sweep", "show me at-risk deals", or any request to surface deals that need
-  immediate attention. Also activated by the /pipeline and /my-pipeline commands.
-  Owns the canonical deal-alert severity rubric (Critical / High / Medium / Low)
-  cited by all other skills.
+  Sweep the pipeline for health problems — stale deals, missing next steps,
+  close-date pushes. Trigger: 'pipeline hygiene', 'what's stale', 'at-risk
+  deals', /pipeline. Owns the alert-severity rubric.
 origin: ESCC
 ---
 

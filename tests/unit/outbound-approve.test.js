@@ -41,7 +41,10 @@ test('approveOutbound approves a clean draft and the send-gate then allows it', 
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
     const draft = { to: 'a@b.com', subject: 'Thursday', body: 'You could save your team hours on rostering — worth a quick look?' };
     const records = { notes: [], lead_status: 'new', open_deals: [], priorEngagement: false };
-    const r = approve.approveOutbound({ draft, records, now: '2026-06-23' });
+    // `now` must be the REAL current time: recordApproval stamps expires_at =
+    // now + TTL (7 days), but the send-gate checks expiry against the actual
+    // clock — a past pinned date here becomes a date-bomb once TTL elapses.
+    const r = approve.approveOutbound({ draft, records, now: new Date().toISOString() });
     assert.equal(r.approved, true);
     // the matching draft now passes the fail-closed gate
     assert.equal(gate.run(draftCall(draft)), undefined, 'approved draft passes the send-gate');

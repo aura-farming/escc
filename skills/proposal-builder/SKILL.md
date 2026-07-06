@@ -1,13 +1,9 @@
 ---
 name: proposal-builder
 description: >-
-  Use when it is time to turn a qualified deal into a structured written proposal
-  or business case document — trigger on "write the proposal", "build the deck",
-  "put together our business case", or "draft the proposal for <account>". Also
-  activate when a rep asks to tailor social proof / customer references to a
-  persona or segment, match proof points to stated decision criteria, or assemble
-  a role-specific leave-behind. The proposal-writer agent renders long form;
-  this skill governs structure, proof-sourcing, and section logic.
+  Assemble a structured proposal/business-case document with matched proof.
+  Trigger: 'write the proposal', 'build the deck', 'draft the proposal for
+  <account>'. ROI math = business-case; pricing = quote-desk.
 origin: ESCC
 ---
 
