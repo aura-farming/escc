@@ -118,10 +118,11 @@
     {
       "id": "skills-sdr",
       "kind": "skills",
-      "description": "SDR persona skills (11): prospecting, account research, ICP, outbound sequencing, cold outreach/calling, follow-up, objection handling, meeting booking, inbound response, outreach analytics.",
+      "description": "SDR persona skills (12): prospecting, account research, enrichment, ICP, outbound sequencing, cold outreach/calling, follow-up, objection handling, meeting booking, inbound response, outreach analytics.",
       "paths": [
         "skills/prospecting-pipeline",
         "skills/account-research",
+        "skills/enrichment-ops",
         "skills/icp-profile",
         "skills/outbound-sequences",
         "skills/cold-outreach",

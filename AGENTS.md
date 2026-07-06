@@ -1,6 +1,6 @@
 # ESCC Agents — Routing Map
 
-> **EverythingSales Claude Code** (`escc` v1.6.0) — intent → agent routing for the 18 ESCC subagents.
+> **EverythingSales Claude Code** (`escc` v1.7.0) — intent → agent routing for the 18 ESCC subagents.
 > Adapted (MIT) from Everything Claude Code (ECC) by Affaan Mustafa — https://github.com/affaan-m/ECC.
 > Plugin repo: https://github.com/aura-farming/escc
 

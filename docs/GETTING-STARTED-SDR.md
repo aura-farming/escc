@@ -39,6 +39,14 @@ ESCC ships a CLI persona alias for SDR work:
 claude-sdr
 ```
 
+The alias does not exist until you create it — it is one line of shell setup.
+Add to your `~/.zshrc` / `~/.bashrc` (adjust the path to your ESCC plugin
+install or repo checkout):
+
+```bash
+alias claude-sdr='claude --append-system-prompt-file "$ESCC_ROOT/contexts/prospecting.md"'
+```
+
 `claude-sdr` preloads `contexts/prospecting.md`, which puts the session in **prospecting
 mode**: target -> trigger -> warm path -> personalize -> sequence -> follow up -> log.
 It also pins the rules that matter for outbound (`outbound-compliance`, `messaging-style`,
