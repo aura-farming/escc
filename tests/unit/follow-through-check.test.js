@@ -69,7 +69,7 @@ test('warns when more follow-ups were promised than logged this session', () => 
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
     const tp = writeTranscript(home, [
-      { type: 'user', message: { role: 'user', content: 'Work the Acme thread.' } },
+      { type: 'user', message: { role: 'user', content: 'Work the Example Co thread.' } },
       { type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: "I'll follow up tomorrow. I'll send the deck after." }] } },
     ]);
     const result = hook.run(stopInput('s2', tp));

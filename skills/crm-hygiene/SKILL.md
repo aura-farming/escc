@@ -85,7 +85,7 @@ hygiene defect — surface it in the data-health audit.
 Consistent deal naming: `[Account] — [Use case or Product] — [New | Renewal | Expansion]`.
 
 Examples:
-- `Acme Corp — Forecast Module — New`
+- `Example Co Corp — Forecast Module — New`
 - `Globex — Enterprise Renewal — Renewal`
 - `Initech — Expansion Seats — Expansion`
 
@@ -148,7 +148,7 @@ DATA-HEALTH AUDIT: <scope> · <date>
 <n> deals scanned · <n> gaps found
 
 PRIORITY: P1
-  [MISSING FIELD] deal:7788 "Acme Corp — Forecast Module — New"
+  [MISSING FIELD] deal:7788 "Example Co Corp — Forecast Module — New"
     Stage: Qualification · Missing: economic_buyer_name
     Remediation: add via /notes or directly in HubSpot -> crm-operator
   [ORPHANED DEAL] deal:9901 "Initech — Expansion Seats — Expansion"
@@ -161,7 +161,7 @@ PRIORITY: P2
     Remediation: confirm status with rep; update or advance/close.
 
 PRIORITY: P3
-  [ACTIVITY GAP] deal:7788 "Acme Corp — Forecast Module — New"
+  [ACTIVITY GAP] deal:7788 "Example Co Corp — Forecast Module — New"
     Meeting logged in Fireflies 2026-06-15; no CRM activity entry found.
     Remediation: /recap to log via meeting-followthrough or log manually
     via crm-operator.
@@ -172,7 +172,7 @@ PRIORITY: P4
     Remediation: rename via crm-operator.
 
 POTENTIAL DUPLICATES (route to dedupe-merge)
-  contact:1001 "dana.lee@acme.com" / contact:1042 "d.lee@acme.com"
+  contact:1001 "dana.lee@acme.example" / contact:1042 "d.lee@acme.example"
     Confidence: HIGH (same domain, similar name). Do not merge here.
     -> Route to dedupe-merge + crm-operator.
 
@@ -230,9 +230,9 @@ SUMMARY
 **Pre-create duplicate check:**
 
 ```text
-Rep wants to create contact "dana.lee@acme.com".
--> crm-operator: search_crm_objects contacts email:"dana.lee@acme.com"
-   FOUND: contact:1001 "Dana Lee" acme.com (created 2026-03-10)
+Rep wants to create contact "dana.lee@acme.example".
+-> crm-operator: search_crm_objects contacts email:"dana.lee@acme.example"
+   FOUND: contact:1001 "Dana Lee" acme.example (created 2026-03-10)
 -> FLAG: potential duplicate (confidence: HIGH — exact email match).
    Do not create. Route to dedupe-merge for survivorship review.
    Rep: confirm this is the same person; if yes, use contact:1001 or

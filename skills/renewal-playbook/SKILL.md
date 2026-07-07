@@ -30,13 +30,13 @@ Economic Buyer (still in seat?), Champion (still engaged?), and Competition
 Activate this skill when:
 
 - A renewal date is within **90 days** and no renewal plan exists yet — "renewal
-  check for Acme, 60 days out".
+  check for Example Co, 60 days out".
 - A **churn signal** fires: disengagement, a champion departure, a support
   escalation, usage drop, or negative NPS/sentiment from the account.
 - A **contraction risk** surfaces: the customer wants to reduce seats, scope, or
   tier at renewal.
 - An AE wants to build an **expansion hypothesis** — "where else can we grow
-  in the GlobalBank account?", "what whitespace exists at Acme?"
+  in the GlobalBank account?", "what whitespace exists at Example Co?"
 - The **champion or economic buyer has changed** and the relationship needs to
   be rebuilt before renewal.
 - A manager or AE needs a structured **renewal scorecard** before a QBR or
@@ -204,7 +204,7 @@ at best and blind at worst. This play rebuilds the internal relationship.
 **90-day renewal health check:**
 
 ```text
-rep: "run renewal health check on Acme — 70 days to renewal, $85k ACV"
+rep: "run renewal health check on Example Co — 70 days to renewal, $85k ACV"
 
 renewal-playbook (Mode A):
   account-memory: loaded — last meaningful touch 2026-04-22, champion = Marcus

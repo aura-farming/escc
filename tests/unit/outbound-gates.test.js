@@ -2,12 +2,11 @@
 
 /**
  * Tests for the deterministic four-gate engine (scripts/lib/outbound-gates.js).
- * Each gate gets a passing AND a failing fixture, drawn from the real session
- * that motivated the outbound-enforcement work:
+ * Each gate gets a passing AND a failing fixture:
  *   - a contact who said "call back in six weeks" must not get an email now;
  *   - a draft claiming "you asked me to send a comparison" when the note says
  *     "he'll have a look through the website" must block (fabrication firewall);
- *   - an opener that leads with "a Acme vs competitor-x comparison" must block (WIIFM);
+ *   - an opener that leads with "an Example Co vs competitor-x comparison" must block (WIIFM);
  *   - demo-booked / handed-to-AE / declined accounts must block (contactability).
  * Pure module — no env, no state store.
  */
@@ -65,7 +64,7 @@ test('gateClaims BLOCKS an unsupported "you asked me to send a comparison" claim
 });
 
 test('gateClaims PASSES when a note backs the claim', () => {
-  const draft = { body: 'As you requested, here is the comparison of the two rostering tools.' };
+  const draft = { body: 'As you requested, here is the comparison of the two reporting tools.' };
   const records = { notes: [{ date: '2026-06-12', text: 'On the call he asked for a comparison of the two tools.' }] };
   const v = gates.gateClaims({ draft, records });
   assert.equal(v.status, 'pass');
@@ -79,7 +78,7 @@ test('gateClaims PASSES when the claim is explicitly attested via verifiedClaims
 });
 
 test('gateClaims ignores a draft that makes no prior-interaction claim', () => {
-  const draft = { body: 'Hi Sam — rostering across 4 sites usually means hidden overtime; worth a look?' };
+  const draft = { body: 'Hi Sam — reporting across 4 sites usually means hidden manual hours; worth a look?' };
   const v = gates.gateClaims({ draft, records: { notes: [] } });
   assert.equal(v.status, 'pass');
 });
@@ -87,7 +86,7 @@ test('gateClaims ignores a draft that makes no prior-interaction claim', () => {
 // --- Gate 3: WIIFM ---
 
 test('gateWiifm BLOCKS a product-first opener for a cold prospect', () => {
-  const draft = { body: "Here's a Acme vs competitor-x comparison I put together for you." };
+  const draft = { body: "Here's an Example Co vs competitor-x comparison I put together for you." };
   const v = gates.gateWiifm({ draft, records: { priorEngagement: false } });
   assert.equal(v.status, 'block');
   assert.match(v.reason, /payoff|product\/process/i);
@@ -100,7 +99,7 @@ test('gateWiifm only WARNS on a product-first opener when there is prior engagem
 });
 
 test('gateWiifm PASSES a benefit-led opener', () => {
-  const draft = { body: 'You could cut the overtime your 4 venues rack up each fortnight — here is how.' };
+  const draft = { body: 'You could cut the rework your 4 teams rack up each month — here is how.' };
   const v = gates.gateWiifm({ draft, records: { priorEngagement: false } });
   assert.equal(v.status, 'pass');
 });
@@ -128,7 +127,7 @@ test('gateContactability PASSES a clean, contactable prospect', () => {
 // --- evaluateGates aggregate ---
 
 test('evaluateGates PASSES a clean draft and reports no blocks', () => {
-  const draft = { body: 'You could cut overtime across your venues — open to a quick look next week?' };
+  const draft = { body: 'You could cut manual work across your teams — open to a quick look next week?' };
   const records = { notes: [], lead_status: 'new', open_deals: [], priorEngagement: false };
   const r = gates.evaluateGates({ draft, records, now: '2026-06-23' });
   assert.equal(r.pass, true);
@@ -136,7 +135,7 @@ test('evaluateGates PASSES a clean draft and reports no blocks', () => {
 });
 
 test('evaluateGates fails and collects blocks + blocklist writes when a gate blocks', () => {
-  const draft = { body: "Here's a Acme vs competitor-x comparison." };
+  const draft = { body: "Here's an Example Co vs competitor-x comparison." };
   const records = { notes: [], open_deals: [{ id: 'd1' }], priorEngagement: false };
   const r = gates.evaluateGates({ draft, records, now: '2026-06-23' });
   assert.equal(r.pass, false);
@@ -150,7 +149,7 @@ test('evaluateGates fails and collects blocks + blocklist writes when a gate blo
 // --- inspectPayload: the cheap, no-records hook subset ---
 
 test('inspectPayload hard-fails an egregious overclaim', () => {
-  const r = gates.inspectPayload({ recipient: 'a@b.com', subject: 'Hi', body: 'We deliver guaranteed ROI in 30 days.' });
+  const r = gates.inspectPayload({ recipient: 'a@b.example', subject: 'Hi', body: 'We deliver guaranteed ROI in 30 days.' });
   assert.ok(r.block, 'egregious overclaim is hard-failed');
 });
 
@@ -161,7 +160,7 @@ test('inspectPayload warns (does not block) on an unverifiable prior-interaction
 });
 
 test('inspectPayload is silent on a clean, benefit-led payload', () => {
-  const r = gates.inspectPayload({ body: 'You could save your team hours each week on rostering — worth a look?' });
+  const r = gates.inspectPayload({ body: 'You could save your team hours each week on reporting — worth a look?' });
   assert.equal(r.block, null);
   assert.equal(r.warnings.length, 0);
 });

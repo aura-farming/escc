@@ -77,7 +77,7 @@ These are the manager skills installed by your profile (`skills-manager` plus th
   - `Run escc:pipeline-hygiene across the team and show me Critical and High alerts.`
 - **`deal-inspection`** — use it for a deep, multi-lens interrogation of one deal: parallel
   risk, finance, and competition analyses synthesized into a prioritized go-deeper list.
-  - `Use escc:deal-inspection to grill the Acme deal before my review with the rep.`
+  - `Use escc:deal-inspection to grill the Example Co deal before my review with the rep.`
 - **`forecast-rollup`** — use it to build or refresh the period forecast, weighted by
   MEDDPICC risk, in the exact categories from forecasting-definitions, with honest
   change-vs-last-week.
@@ -90,7 +90,7 @@ These are the manager skills installed by your profile (`skills-manager` plus th
   - `Use escc:coaching-prep to get me ready for my 1:1 with Priya this week.`
 - **`call-review`** — use it to score a call transcript against the methodology and turn it
   into evidence-backed coaching notes with quoted moments.
-  - `Use escc:call-review to score the Fireflies recording from the Acme discovery call.`
+  - `Use escc:call-review to score the Fireflies recording from the Example Co discovery call.`
 - **`qbr-builder`** — use it to assemble a Quarterly Business Review narrative from the
   quarter's CRM data and approved proof.
   - `Use escc:qbr-builder to draft the QBR deck for my segment.`

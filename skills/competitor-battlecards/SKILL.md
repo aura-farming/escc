@@ -30,7 +30,7 @@ Activate this skill when:
 - A rep asks to **build or refresh a battlecard** for a specific competitor ("build
   a battlecard for Workday", "our Salesforce card is stale — update it").
 - A deal has a named competitor and the rep needs **live prep** before a call,
-  demo, or negotiation ("Acme is evaluating us and Pigment — what's our play?").
+  demo, or negotiation ("Example Co is evaluating us and Pigment — what's our play?").
 - A deal's C2 (Competition) is red or amber in `deal-review` and a rep needs to
   close the gap ("our competition element is red — help me understand where we stand").
 - A prospect is an **entrenched incumbent user** and the motion is
@@ -174,7 +174,7 @@ competitor-battlecards:
   2. Retrieved from product-knowledge (mid-market, FP&A use-case):
      - PP-031: "mid-market RevOps teams reach first forecast in 1 day" (approved)
      - VP-007: "MEDDPICC-weighted roll-up out of the box" (approved)
-     - PP-044: "Acme cut planning cycle from 3 weeks to 4 days" (approved, CS-2026-022)
+     - PP-044: "Example Co cut planning cycle from 3 weeks to 4 days" (approved, CS-2026-022)
   3. Commissioning competitor-analyst agent for Pigment public data...
      → returned 6 items labelled UNVETTED:
        - "Pigment pricing: ~$2k/seat/yr (public pricing page, 2026-06-01)"
@@ -193,7 +193,7 @@ competitor-battlecards:
 **Live deal prep, head-to-head with Workday:**
 
 ```text
-rep: "Acme is evaluating us vs Workday — QBR is Thursday, help me prep"
+rep: "Example Co is evaluating us vs Workday — QBR is Thursday, help me prep"
 
 competitor-battlecards (Mode B):
   Loading battlecard: workday.md (last_vetted 2026-05-10 — within retention)
@@ -206,7 +206,7 @@ competitor-battlecards (Mode B):
        Workday implementations average 6-9 months per vetted analyst output [illustrative — in a real battlecard cite the actual product-knowledge proof_point_id + last_vetted date; never mark a competitor stat approved without an entry]
     2. MEDDPICC-native roll-up (VP-007) — CFO mentioned forecast accuracy in pain;
        this is a direct match; Workday requires custom config per win/loss WL-2026-08
-    3. Customer proof at comparable size (PP-044, Acme-comparable account)
+    3. Customer proof at comparable size (PP-044, Example Co-comparable account)
 
   Traps for Thursday:
     Q1: "How are you thinking about the implementation timeline? What's your

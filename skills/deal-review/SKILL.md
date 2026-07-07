@@ -28,7 +28,7 @@ data; `forecast-rollup` and `forecast-analyst` pull the scored output downstream
 Activate this skill when:
 
 - A rep or manager wants to **score a specific deal** against MEDDPICC —
-  "where are we on Acme?", "is this deal clean?", "what's missing?"
+  "where are we on Example Co?", "is this deal clean?", "what's missing?"
 - **Forecast preparation:** checking whether a deal is commit-ready or should
   be downgraded before the roll-up.
 - **Pipeline prioritization:** comparing several deals to decide where to spend
@@ -283,7 +283,7 @@ FORECAST CALL: Proposal holds in best-case; committee gaps must close before com
 rep: "which of my three Q3 deals should I work hardest this week?"
 
 deal-review summary:
-  Acme ($120k): HEALTH GREEN — all elements amber-or-better, mutual plan in place, two
+  Example Co ($120k): HEALTH GREEN — all elements amber-or-better, mutual plan in place, two
     weeks to close. Minor: re-confirm paper with procurement. Focus: close mechanics.
   BetaCo ($75k): HEALTH AMBER — champion not tested, economic buyer unconfirmed.
     Spend most time here; the deal can still be saved or must be re-qualified.

@@ -160,9 +160,9 @@ const WIIFM_BAD_OPENERS = [
 // separately (an opener that STARTS on the recipient).
 const WIIFM_BENEFIT_SIGNALS = [
   'save', 'saving', 'cut', 'reduce', 'reducing', 'increase', 'grow', 'avoid',
-  'stop losing', 'win back', 'fewer', 'faster', 'less time', 'overtime',
-  'compliance', 'roster', 'payroll', 'staff cost', 'cost', 'risk', 'fine',
-  'penalt', 'hours back', 'save you', 'help you',
+  'stop losing', 'win back', 'fewer', 'faster', 'less time', 'rework',
+  'manual work', 'compliance', 'margin', 'revenue', 'churn', 'cost', 'risk',
+  'fine', 'penalt', 'hours back', 'save you', 'help you',
 ];
 
 /** Does the opener LEAD on the recipient (starts with you/your)? */

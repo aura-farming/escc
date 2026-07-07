@@ -250,7 +250,7 @@ Attainment
   conversion, down 6pp -- coaching in progress).
 
 Key Wins (Closed Won, verified HubSpot tool-result)
-- Acme Corp: $210,000 ACV, enterprise, closed 2026-06-14
+- Example Co Corp: $210,000 ACV, enterprise, closed 2026-06-14
 - BetaInc: $88,000 ACV, mid-market, closed 2026-06-28
 - [Third win pending -- tool-result shows no other deal >$50k closed this
   quarter. Do not fabricate a third example.]

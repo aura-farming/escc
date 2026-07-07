@@ -195,7 +195,7 @@ Sources gathered: 22
 **Labelled findings block:**
 
 ```text
-[FACT | source: https://momentumanalytics.io/blog/series-b, retrieved: 2026-06-15]
+[FACT | source: https://momentumanalytics.test/blog/series-b, retrieved: 2026-06-15]
 "We're investing the $18M in expanding our real-time pipeline capabilities and doubling
 our enterprise GTM team."
 

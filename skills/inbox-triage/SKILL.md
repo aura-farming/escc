@@ -195,18 +195,18 @@ Inbox: 8 unread
 
 1. noreply@hubspot.com — "Deal stage updated" → skip
 2. alerts@linkedin.com — "New connection" → skip
-3. sarah@acme.com (CC) — "FYI: Legal signed off" → info_only
-   Summary: Acme legal approved vendor terms. No action needed.
-4. tom@bigco.com — "Re: our call Thursday" — calendar invite .ics → meeting_info
+3. sarah@acme.example (CC) — "FYI: Legal signed off" → info_only
+   Summary: Example Co legal approved vendor terms. No action needed.
+4. tom@bigco.example — "Re: our call Thursday" — calendar invite .ics → meeting_info
    Meeting: Discovery call | Thu 2026-06-18 10:00 AEDT | Zoom: present | No conflict.
-5. priya@globex.com — "Following up on our proposal" — open deal found → deal_action
+5. priya@globex.example — "Following up on our proposal" — open deal found → deal_action
    Deal: Globex Q3 Expansion | Stage: Proposal Sent | MEDDPICC: Champion = Priya,
    Economic Buyer = unknown (gap). Draft: [reply addressing proposal status].
-6. marcus@newco.com — "Question about your pricing" — no open deal → action_required
+6. marcus@newco.example — "Question about your pricing" — no open deal → action_required
    Draft: [reply with one CTA — 15-min call to discuss].
-7. lisa@startup.io — "Please remove me from your list" → opt_out_request
-   Routed to opt-out-handling: lisa@startup.io — do not draft sales reply.
-8. dana@co.com — "Re: intro" — no ask, FYI only → info_only
+7. lisa@startup.test — "Please remove me from your list" → opt_out_request
+   Routed to opt-out-handling: lisa@startup.test — do not draft sales reply.
+8. dana@co.example — "Re: intro" — no ask, FYI only → info_only
    Summary: Dana acknowledged intro email. No reply needed yet.
 
 All drafts are DRAFT. outbound-send-gate controls delivery.
@@ -215,7 +215,7 @@ All drafts are DRAFT. outbound-send-gate controls delivery.
 **Opt-out inside a deal thread:**
 
 ```text
-Email from priya@globex.com — open deal thread — message body:
+Email from priya@globex.example — open deal thread — message body:
 "Actually, please take me off your list."
 
 Classification: opt_out_request (overrides deal_action — suppression priority).
@@ -227,7 +227,7 @@ with manager before any further contact."
 **deal_action draft with MEDDPICC context:**
 
 ```text
-Email: marcus@bigco.com — "Re: proposal — two questions"
+Email: marcus@bigco.example — "Re: proposal — two questions"
 Open deal found: BigCo AE Tooling | Stage: Proposal Sent
 account-memory: Champion = Marcus (strong), Economic Buyer = CFO (not engaged),
 MEDDPICC gap: M (Metrics — no ROI case built yet).

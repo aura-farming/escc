@@ -37,8 +37,8 @@ function withEnv(overrides, fn) {
 
 test('workspace is keyed by rep identity, not git remote (I1)', () => {
   const home = freshHome();
-  const dirA = withEnv({ ESCC_INSTINCT_HOME: home, ESCC_REP_IDENTITY: 'rep-a@acme.com' }, () => store.resolveWorkspaceDir());
-  const dirB = withEnv({ ESCC_INSTINCT_HOME: home, ESCC_REP_IDENTITY: 'rep-b@acme.com' }, () => store.resolveWorkspaceDir());
+  const dirA = withEnv({ ESCC_INSTINCT_HOME: home, ESCC_REP_IDENTITY: 'rep-a@acme.example' }, () => store.resolveWorkspaceDir());
+  const dirB = withEnv({ ESCC_INSTINCT_HOME: home, ESCC_REP_IDENTITY: 'rep-b@acme.example' }, () => store.resolveWorkspaceDir());
   assert.notEqual(dirA, dirB, 'different reps get different workspaces');
   assert.ok(dirA.startsWith(home), 'workspace lives under the configured root');
 });

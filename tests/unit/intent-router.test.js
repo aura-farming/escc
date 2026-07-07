@@ -62,10 +62,10 @@ test('FOLLOW-UP cluster: replied vs no-reply vs recap route distinctly', () => {
 });
 
 test('CALL cluster: prep vs review vs dial vs notes route distinctly', () => {
-  assert.equal(routedSkill('prep for my call with Acme tomorrow'), 'call-prep');
+  assert.equal(routedSkill('prep for my call with Example Co tomorrow'), 'call-prep');
   assert.equal(routedSkill('review this call and give me coaching notes from it'), 'call-review');
   assert.equal(routedSkill('I have a call block this afternoon, need a voicemail script'), 'cold-calling');
-  assert.equal(routedSkill('process my call notes from the Acme discovery'), 'discovery-notes');
+  assert.equal(routedSkill('process my call notes from the Example Co discovery'), 'discovery-notes');
 });
 
 test('PIPELINE cluster: hygiene vs prospecting route distinctly', () => {
@@ -97,7 +97,7 @@ test('skips prompts that are already routed', () => {
 });
 
 test('returns undefined when nothing matches', () => {
-  assert.equal(router.run(promptInput('what is the weather like in Brisbane today?')), undefined);
+  assert.equal(router.run(promptInput('what is the weather like in Springfield today?')), undefined);
 });
 
 test('only ONE hint is injected (first match wins)', () => {

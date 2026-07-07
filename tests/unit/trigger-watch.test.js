@@ -47,7 +47,7 @@ const NOW = '2026-06-16T12:00:00.000Z';
 
 function seedSignals() {
   // A deal closing inside the 14-day horizon, and one far outside it.
-  accountMemory.appendEvent('acme', { type: 'note', deal_id: 'd1', name: 'Acme', stage: 'negotiation', close_date: '2026-06-20', status: 'open' });
+  accountMemory.appendEvent('acme', { type: 'note', deal_id: 'd1', name: 'Example Co', stage: 'negotiation', close_date: '2026-06-20', status: 'open' });
   accountMemory.appendEvent('zeta', { type: 'note', deal_id: 'd9', name: 'Zeta', stage: 'discovery', close_date: '2026-12-01', status: 'open' });
 
   // An overdue open promise, and an open-but-not-yet-due one.

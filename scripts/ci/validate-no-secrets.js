@@ -25,7 +25,6 @@ const ROOT = path.join(__dirname, '..', '..');
 const SCAN_EXTS = new Set([
   '.md', '.mdx', '.txt', '.js', '.cjs', '.mjs', '.json', '.jsonl', '.yml', '.yaml', '.sh', '.toml', '.example', '.env',
 ]);
-const EXEMPT_PREFIXES = ['docs/superpowers/', 'docs/fixes/'];
 const EXEMPT_FILES = new Set([
   'scripts/ci/lib/text-scan.js',        // defines the signatures
   'scripts/ci/validate-no-secrets.js',  // this file
@@ -50,7 +49,6 @@ function main() {
   let scanned = 0;
   for (const rel of files) {
     if (EXEMPT_FILES.has(rel)) continue;
-    if (EXEMPT_PREFIXES.some(prefix => rel.startsWith(prefix))) continue;
     const ext = path.extname(rel).toLowerCase();
     const base = path.basename(rel);
     if (!SCAN_EXTS.has(ext) && base !== '.env.example') continue;

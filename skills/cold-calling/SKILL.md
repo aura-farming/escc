@@ -260,8 +260,8 @@ without a `crm-operator` tool-result confirming the write.
 
 ```text
 Example CRM log after a connected call:
-  contact: Jane Smith (Acme Corp)
-  deal: Acme — Revenue Intelligence — New
+  contact: Jane Smith (Example Co Corp)
+  deal: Example Co — Revenue Intelligence — New
   disposition: connected
   duration: 4 min
   notes: "Confirmed VP Sales is the right buyer. Current state: manual
@@ -277,9 +277,9 @@ Example CRM log after a connected call:
 ```text
 Block: Tuesday 9–10:30 AM — 3 priority accounts, ~12 dials
 
-Account 1: Acme Corp — Jane Smith (VP RevOps)
-  Trigger (verified): Acme posted a RevOps Analyst role on LinkedIn (2026-06-14)
-  Opener: Frame 2 (trigger-event) — "I saw Acme is building out the RevOps function…"
+Account 1: Example Co Corp — Jane Smith (VP RevOps)
+  Trigger (verified): Example Co posted a RevOps Analyst role on LinkedIn (2026-06-14)
+  Opener: Frame 2 (trigger-event) — "I saw Example Co is building out the RevOps function…"
   Talk-track: playbook-library/revops-forecast-accuracy
   Voicemail: trigger-event template (last voicemail: none — clear to leave)
 
@@ -298,7 +298,7 @@ Account 3: Initech — Priya Kapoor (RevOps Manager)
 **Worked disposition → log for one dial (Workflow steps 5–6):**
 
 ```text
-Dial: Jane Smith, Acme Corp — Tuesday 9:04 AM
+Dial: Jane Smith, Example Co Corp — Tuesday 9:04 AM
 
 Outcome: Connected — 5-minute conversation.
   Jane confirmed she owns the forecast process. Current state: weekly manual
@@ -314,7 +314,7 @@ Call notes: "Confirmed owner of forecast. Pain = manual Salesforce export,
 Next action: send proof point one-pager referencing product-knowledge PP-031
   (approved) via cold-outreach; book demo for week of 2026-07-14 via meeting-booking.
 
-→ crm-operator write: contact Jane Smith, deal Acme — Revenue Intelligence,
+→ crm-operator write: contact Jane Smith, deal Example Co — Revenue Intelligence,
   disposition connected, notes as above, task: send case study today,
   follow-up task: book demo 2026-07-14.
 → crm-operator tool-result confirms write before asserting log is complete.

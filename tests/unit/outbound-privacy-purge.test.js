@@ -33,23 +33,23 @@ function withEnv(overrides, fn) {
 
 test('privacy-purge erases the subject\'s do-not-contact + outbound approval rows', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshDir('escc-purge-'), ESCC_INSTINCT_HOME: freshDir('escc-purge-inst-') }, () => {
-    const key = review.outboundContentKey({ to: 'sam@acme.com', subject: 'Hi', body: 'B' });
-    review.recordApproval({ key, recipient: 'sam@acme.com', confidence: 1 });
-    dnc.recordDoNotContact({ key: 'sam@acme.com', reason: 'asked us to stop' });
+    const key = review.outboundContentKey({ to: 'sam@acme.example', subject: 'Hi', body: 'B' });
+    review.recordApproval({ key, recipient: 'sam@acme.example', confidence: 1 });
+    dnc.recordDoNotContact({ key: 'sam@acme.example', reason: 'asked us to stop' });
 
-    const r = purgeLib.purge({ identifier: 'sam@acme.com', confirm: true });
+    const r = purgeLib.purge({ identifier: 'sam@acme.example', confirm: true });
     assert.ok(r.erased.doNotContactRemoved >= 1, 'the blocklist row is erased');
     assert.ok(r.erased.governanceRemoved >= 1, 'the approval row (recipient PII) is erased');
-    assert.equal(dnc.findActiveBlock({ key: 'sam@acme.com' }), null, 'no block remains after erasure');
+    assert.equal(dnc.findActiveBlock({ key: 'sam@acme.example' }), null, 'no block remains after erasure');
     assert.equal(review.findValidApproval({ key }), null, 'no approval remains after erasure');
   });
 });
 
 test('privacy-purge leaves an unrelated subject\'s outbound rows intact', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshDir('escc-purge2-'), ESCC_INSTINCT_HOME: freshDir('escc-purge2-inst-') }, () => {
-    dnc.recordDoNotContact({ key: 'keep@other.com', reason: 'declined' });
-    const r = purgeLib.purge({ identifier: 'sam@acme.com', confirm: true });
+    dnc.recordDoNotContact({ key: 'keep@other.example', reason: 'declined' });
+    const r = purgeLib.purge({ identifier: 'sam@acme.example', confirm: true });
     assert.equal(r.erased.doNotContactRemoved, 0, 'unrelated block is untouched');
-    assert.ok(dnc.findActiveBlock({ key: 'keep@other.com' }), 'unrelated block still active');
+    assert.ok(dnc.findActiveBlock({ key: 'keep@other.example' }), 'unrelated block still active');
   });
 });

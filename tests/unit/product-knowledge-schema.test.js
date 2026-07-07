@@ -41,7 +41,7 @@ function entryOk(v, entry) {
 // A legacy entry exactly as the live store shapes them today (no new fields).
 const LEGACY = {
   id: 'PK-99', type: 'value-prop',
-  text: 'Acme builds a compliant draft schedule for a manager to review before publishing.',
+  text: 'Example Co builds a compliant draft schedule for a manager to review before publishing.',
   segment: 'manufacturing, wholesale',
   source_title: 'Product Overview', source_url: 'https://example.com/',
   source_type: 'public', approved: true, approved_by: 'Example Operator', last_verified: '2026-06-24',

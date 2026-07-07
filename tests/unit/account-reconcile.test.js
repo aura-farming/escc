@@ -96,10 +96,10 @@ test('--apply syncs memory to CRM, closes ONLY deal-status loops, with provenanc
 test('memory-only deals are reported for review, never auto-closed', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
-    mem.appendEvent('globex.com', { type: 'deal', deal_id: 'dx', stage: 'proposal', ts: '2026-06-01T00:00:00Z' });
-    const r = reconcileLib.reconcile('globex.com', { deals: [] }, { apply: true });
+    mem.appendEvent('globex.example', { type: 'deal', deal_id: 'dx', stage: 'proposal', ts: '2026-06-01T00:00:00Z' });
+    const r = reconcileLib.reconcile('globex.example', { deals: [] }, { apply: true });
     assert.deepEqual(r.unknownInCrm, ['dx']);
-    assert.equal(mem.hydrate('globex.com').deals.dx.stage, 'proposal', 'memory-only deal untouched');
+    assert.equal(mem.hydrate('globex.example').deals.dx.stage, 'proposal', 'memory-only deal untouched');
     assert.match(reconcileLib.formatReport(r), /REVIEW MANUALLY/);
   });
 });
@@ -108,9 +108,9 @@ test('reconcile resolves the account canonically (alias input joins the same sto
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
     const identity = require('../../scripts/lib/account-identity');
-    identity.linkAlias('Acme Pty Ltd', 'company:12345');
+    identity.linkAlias('Example Co Pty Ltd', 'company:12345');
     seedAcme();
-    const r = reconcileLib.reconcile('Acme Pty Ltd', SNAPSHOT, { apply: false });
+    const r = reconcileLib.reconcile('Example Co Pty Ltd', SNAPSHOT, { apply: false });
     assert.equal(r.canonical, 'company_12345');
     assert.ok(r.drift.length > 0, 'joined the canonical store through the alias');
   });

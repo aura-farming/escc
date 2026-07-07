@@ -69,7 +69,7 @@ ICP SCORES · <date> · ICP version: <version or "unknown">
 
 | Rank | Account | Score | Tier | Top Drivers | Missing Data |
 |------|---------|-------|------|-------------|--------------|
-|  1   | Acme Co |  84   |  A   | Headcount (24), Segment (20), Tech fit (18) | Revenue unconfirmed |
+|  1   | Example Co Co |  84   |  A   | Headcount (24), Segment (20), Tech fit (18) | Revenue unconfirmed |
 |  2   | ...     |       |      |             |              |
 
 DISQUALIFIED

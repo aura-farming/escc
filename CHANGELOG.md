@@ -10,6 +10,53 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.8.1] - 2026-07-07
+
+Public-source hygiene release: a full-repo sensitivity audit (tree, docs,
+tests, release bodies, git history) plus the guards that make every finding
+class un-regressable. No behavior surface changes. See
+[docs/releases/v1.8.1.md](docs/releases/v1.8.1.md).
+
+### Security
+
+- **Every example identity is now impossible-by-construction.** All fixture
+  domains and email addresses across docs, skills, examples, and tests moved
+  to IANA-reserved TLDs (`.example` / `.test` — e.g. `acme.example`,
+  `jane@example-co.example`) that cannot belong to any real company or
+  mailbox; example CRM ids are abstract (`company:<hubspot-id>`); the
+  fictional example company is `Example Co`. Nothing committed can be
+  mistaken for — or collide with — real customer data.
+- **Scan validators now cover EVERY git-tracked file.** The personal-path,
+  secret, and company-token scanners previously skipped root-level files and
+  exempted internal scaffolding directories; a personal path had shipped in a
+  root doc as a result (removed here, with the internal research doc it rode
+  in on). All directory exemptions are gone, and a scope-pin test fails the
+  build if any scanner ever grows a directory carve-out again.
+- **New `validate-committed-emails.js` guard.** Any email address in a
+  committed file must use a reserved-TLD fixture domain (or a subdomain), or
+  a config-listed vendor notification address — a real prospect, customer, or
+  colleague address can never ship. Allowlist:
+  `config/committed-email-domains.json`.
+- **The banned-company-token list is now hashed.** The public config carries
+  `sha256` token hashes instead of plaintext, so the source no longer
+  discloses the very name the guard exists to keep out; the scanner hashes
+  every word- and host-shaped candidate (boundary-safe, covers email hosts).
+  Plaintext `tokens` remain supported for forks.
+- **Vocabulary and provenance neutralized.** Residual origin-identifying
+  vocabulary in generic machinery, fixtures, and seeds (WIIFM benefit
+  signals, outbound/voice test fixtures, example knowledge entries, a release
+  doc) replaced with industry-neutral equivalents; a live-workspace incident
+  count and a real-session provenance note removed from historical notes,
+  config, and test comments; maintainer references outside the MIT license
+  surface replaced with fixture personas. Public GitHub release bodies
+  (v1.8.0, v1.3.0) re-edited to the same standard.
+
+### Changed
+
+- Version metadata 1.8.1 across `package.json`, plugin/marketplace manifests,
+  `CLAUDE.md`, `SOUL.md`, `AGENTS.md`, `agent.yaml`.
+- Catalog unchanged: 68 skills, 18 agents, 70 commands, 30 hook matchers.
+
 ## [1.8.0] - 2026-07-07
 
 The source-of-truth release. Three structural fixes from the v1.7.1 strategic
@@ -26,8 +73,8 @@ and [docs/releases/v1.8.0.md](docs/releases/v1.8.0.md).
 - **Canonical account identity (ADR-0018).** `scripts/lib/account-identity.js`
   + `escc identity resolve|link|list|backfill`: `company:<hubspot-id>` is the
   tier-1 key, domains/emails collapse to `domain_<x>`, and an append-only
-  alias index joins names to CRM identity ("Acme" = "acme.com" =
-  "company:12345" = ONE store). account-memory, voice overlays, promise rows,
+  alias index joins names to CRM identity ("Example Co" = "example-co.example" =
+  "company:<hubspot-id>" = ONE store). account-memory, voice overlays, promise rows,
   and governance events all key through it. `backfill` merges historical
   fragments (dry-run default, timestamped backup, provenance event,
   idempotent); `privacy-purge` now erases the whole equivalence cluster
@@ -407,7 +454,7 @@ impossible to commit. See [ADR-0013](docs/DECISIONS.md).
 - **Company-neutral defaults.** `config/knowledge-vocab.json` ships as a generic
   cross-industry template (`competitors: []`, `segments: ["general"]`,
   cross-industry roles + title map); all committed example / seed / test data is
-  genericized (`Acme` / `competitor-x` / `Example Operator`). Legitimate
+  genericized (`Example Co` / `competitor-x` / `Example Operator`). Legitimate
   authorship (the MIT `LICENSE` / `plugin.json` author) is unchanged.
 - `.gitignore` now also excludes runtime `voice/`, `patterns/`, and
   learned/pending instinct stores.
@@ -540,15 +587,15 @@ skill was deliberately invoked.
 ### Fixed
 
 - Outbound safeguards now enforce at the tool boundary, not just advise at the
-  skill boundary — closing the gap where direct MCP calls (e.g. ~40 unreviewed
-  Gmail drafts + HubSpot writes) bypassed the reviewer and the send-gate.
+  skill boundary — closing the gap where direct MCP calls (unreviewed drafts
+  and CRM writes) bypassed the reviewer and the send-gate.
 
 ### Notes
 
 - Behavioural change: a draft now fails closed (blocked until it passes the gates
   and a token is recorded). HubSpot tasks/notes/deals/reads are unaffected — only
   outbound email is gated. Override with a logged reason.
-- Versioning: a deliberate `0.1.0 → 1.1.0` jump (Lucas's call). Under strict
+- Versioning: a deliberate `0.1.0 → 1.1.0` jump (maintainer's call). Under strict
   semver this feature release (new capability, no breaking API) would be `0.2.0`.
 
 ## [0.1.0] - 2026-06-17

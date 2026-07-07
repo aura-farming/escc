@@ -62,15 +62,15 @@ test('classify: a deal-stage write maps to advanced/won/lost by stage value', ()
 });
 
 test('classify: non-deal writes and stage-less deal edits are NOT outcomes', () => {
-  assert.equal(capture.classify(capture.HUBSPOT_MANAGE, { objectType: 'contacts', properties: { email: 'a@b.com' } }), null);
+  assert.equal(capture.classify(capture.HUBSPOT_MANAGE, { objectType: 'contacts', properties: { email: 'a@b.example' } }), null);
   assert.equal(capture.classify(capture.HUBSPOT_MANAGE, { objectType: 'deals', objectId: '1', properties: { amount: 5 } }), null);
-  assert.equal(capture.classify('mcp__claude_ai_Gmail__create_draft', { to: 'a@b.com' }), null);
+  assert.equal(capture.classify('mcp__claude_ai_Gmail__create_draft', { to: 'a@b.example' }), null);
 });
 
 test('classify: a calendar event is meeting_booked, account resolved from the attendee', () => {
-  const r = capture.classify(capture.CALENDAR_CREATE, { title: 'Demo', attendees: [{ email: 'jane@acme.com' }] });
+  const r = capture.classify(capture.CALENDAR_CREATE, { title: 'Demo', attendees: [{ email: 'jane@acme.example' }] });
   assert.equal(r.type, 'meeting_booked');
-  assert.equal(r.account_id, 'domain_acme.com');
+  assert.equal(r.account_id, 'domain_acme.example');
 });
 
 test('payloads are sanitized: whitelisted structured fields only, never free text', () => {
@@ -90,7 +90,7 @@ test('the post hook inserts into the ledger; errored/truncated calls are skipped
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
     outcomeHook.run(hookInput(capture.HUBSPOT_MANAGE, { objectType: 'deals', objectId: '7', properties: { dealstage: 'closedwon' } }));
     outcomeHook.run(hookInput(capture.HUBSPOT_MANAGE, { objectType: 'deals', objectId: '8', properties: { dealstage: 'closedlost' } }, { is_error: true }));
-    outcomeHook.run(hookInput(capture.CALENDAR_CREATE, { attendees: ['ops@globex.io'] }), { truncated: true });
+    outcomeHook.run(hookInput(capture.CALENDAR_CREATE, { attendees: ['ops@globex.test'] }), { truncated: true });
     outcomeHook.run('garbage'); // fail open
 
     const store = createStateStoreSync();
@@ -187,15 +187,15 @@ test('escc outcome CLI: record (canonical account), list, summary', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
     const cli = require('../../scripts/escc.js');
     assert.equal(cli.run(['outcome', 'record']).code, 1, 'record requires --type');
-    const rec = cli.run(['outcome', 'record', '--type', 'reply_received', '--account', 'jane@acme.com', '--note', 'replied to the pricing thread']);
+    const rec = cli.run(['outcome', 'record', '--type', 'reply_received', '--account', 'jane@acme.example', '--note', 'replied to the pricing thread']);
     assert.equal(rec.code, 0);
-    assert.equal(rec.data.account_id, 'domain_acme.com', 'account canonicalized');
+    assert.equal(rec.data.account_id, 'domain_acme.example', 'account canonicalized');
 
     const bad = cli.run(['outcome', 'record', '--type', 'not_a_type']);
     assert.equal(bad.code, 1, 'schema rejects an unknown outcome type');
 
-    const list = cli.run(['outcome', 'list', '--account', 'acme.com']);
-    assert.match(list.text, /reply_received \[domain_acme.com\]/);
+    const list = cli.run(['outcome', 'list', '--account', 'acme.example']);
+    assert.match(list.text, /reply_received \[domain_acme.example\]/);
     const summary = cli.run(['outcome', 'summary']);
     assert.match(summary.text, /reply_received: 1/);
   });
@@ -209,7 +209,7 @@ test('escc truth joins every store with provenance labels; drift shows with a CR
     const cli = require('../../scripts/escc.js');
     const mem = require('../../scripts/lib/account-memory');
     const identity = require('../../scripts/lib/account-identity');
-    identity.linkAlias('Acme Pty Ltd', 'company:12345');
+    identity.linkAlias('Example Co Pty Ltd', 'company:12345');
     mem.appendEvent('company:12345', { type: 'deal', deal_id: 'd1', stage: 'proposal', amount: 100000, ts: '2026-06-01T00:00:00Z' });
     mem.appendEvent('company:12345', { id: 'L1', type: 'promise', text: 'Send the deck', status: 'open', ts: '2026-07-01T00:00:00Z' });
     const store = createStateStoreSync();
@@ -220,7 +220,7 @@ test('escc truth joins every store with provenance labels; drift shows with a CR
     assert.equal(cli.run(['truth']).code, 1, 'account required');
 
     // Without a CRM snapshot: honesty banner.
-    const bare = cli.run(['truth', 'Acme Pty Ltd']);
+    const bare = cli.run(['truth', 'Example Co Pty Ltd']);
     assert.equal(bare.code, 0);
     assert.match(bare.text, /-> company_12345/);
     assert.match(bare.text, /NOT SUPPLIED — deal fields below are MEMORY values/);
@@ -243,13 +243,13 @@ test('escc audit filters the governance ledger and refuses a typo eventType', ()
     const cli = require('../../scripts/escc.js');
     const approve = require('../../scripts/lib/outbound-approve');
     approve.approveOutbound({
-      draft: { to: 'jane@acme.com', subject: 'Hi', body: 'Quick look?' },
+      draft: { to: 'jane@acme.example', subject: 'Hi', body: 'Quick look?' },
       records: { notes: [], open_deals: [] },
       now: new Date().toISOString(),
     });
     approve.approveOutbound({
-      draft: { to: 'sam@globex.io', subject: 'Yo', body: 'Quick look?' },
-      records: { open_deals: [{ id: 'd1' }], account_id: 'globex.io' },
+      draft: { to: 'sam@globex.test', subject: 'Yo', body: 'Quick look?' },
+      records: { open_deals: [{ id: 'd1' }], account_id: 'globex.test' },
       override: 'manager approved — strategic account',
     });
 
@@ -258,10 +258,10 @@ test('escc audit filters the governance ledger and refuses a typo eventType', ()
     assert.match(all.text, /outbound_approval: 2/);
     assert.match(all.text, /OVERRIDE: manager approved/);
 
-    const byRecipient = cli.run(['audit', '--recipient', 'jane@acme.com']);
+    const byRecipient = cli.run(['audit', '--recipient', 'jane@acme.example']);
     assert.match(byRecipient.text, /1 row\(s\)/);
-    const byAccount = cli.run(['audit', '--account', 'globex.io']);
-    assert.match(byAccount.text, /domain_globex.io/);
+    const byAccount = cli.run(['audit', '--account', 'globex.test']);
+    assert.match(byAccount.text, /domain_globex.test/);
     assert.equal(cli.run(['audit', '--event-type', 'outbund_approvl']).code, 1, 'typo refused, not silently empty');
     const json = cli.run(['audit', '--json']);
     assert.ok(JSON.parse(json.text).length === 2, 'json export parses');

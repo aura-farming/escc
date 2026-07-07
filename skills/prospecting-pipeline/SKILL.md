@@ -135,7 +135,7 @@ Where:
   commented on content from the rep or team in the past 90 days) receive a
   lift multiplier **β = 0.2** added to w(t)
 
-#### Worked example (three candidate paths to a VP RevOps at Acme)
+#### Worked example (three candidate paths to a VP RevOps at Example Co)
 
 | Path | Touchpoint | w(t) | d | λ^(d−1) | α/β adj | B(m) |
 |---|---|---|---|---|---|---|
@@ -262,37 +262,37 @@ a review pack first.
 
 ```text
 SDR: Run prospecting-pipeline on the mid-market RevOps ICP segment.
-     I have five accounts: Globex, Initech, Umbrella Corp, Acme, Dynacorp.
+     I have five accounts: Globex, Initech, Umbrella Corp, Example Co, Dynacorp.
 
 Pipeline →
-  Step 0: account-memory — Acme brief fresh (8 days); reuse. Others: cold.
+  Step 0: account-memory — Example Co brief fresh (8 days); reuse. Others: cold.
   Step 1: account-researcher (4 new + 1 refresh)
     - Globex: TRIGGER — new VP RevOps hired 3 weeks ago (LinkedIn). FACT.
     - Initech: TRIGGER — Series B announced 10 days ago (Crunchbase). FACT.
     - Umbrella: No trigger found in 90-day window → deprioritized.
-    - Acme (refresh): existing HubSpot deal (Stage 2, stalled 45 days). FACT.
+    - Example Co (refresh): existing HubSpot deal (Stage 2, stalled 45 days). FACT.
     - Dynacorp: TRIGGER — 3 open RevOps roles (job board). INFERENCE (growth signal).
   Step 2: prospect-researcher → primary contacts identified per account.
   Step 3: signal-scorer
-    - Globex: 81 (High) · Initech: 76 (High) · Acme: 68 (Medium, stalled deal)
+    - Globex: 81 (High) · Initech: 76 (High) · Example Co: 68 (Medium, stalled deal)
     - Dynacorp: 55 (Medium) · Umbrella: 38 (Low — deprioritized)
   Step 4: warm-path-mapper
     - Globex: Tier 1 (B=0.95 — mutual board advisor, engaged last 30 days)
     - Initech: Tier 2 (B=0.45 — second-degree via customer intro)
-    - Acme: Tier 1 (B=0.88 — existing champion in HubSpot; ping them first)
+    - Example Co: Tier 1 (B=0.88 — existing champion in HubSpot; ping them first)
     - Dynacorp: Tier 3 — cold; trigger-hook only
   Step 5: outreach-drafter → 4 drafts created (Umbrella skipped, no trigger)
     - Globex: "Saw you just brought on <Name> as VP RevOps — timing felt right…"
       Proof: PP-031 (1-day onboarding metric, approved) · 1 CTA: 15-min call
     - Initech: "Congrats on the Series B — scaling RevOps ops is typically the
       first friction point…" · awaiting CS intro; cold fallback ready
-    - Acme: "Checking in on the pipeline visibility piece — noticed it's been
+    - Example Co: "Checking in on the pipeline visibility piece — noticed it's been
       quiet on our end. Happy to share what's moved for similar teams." · no
       new proof claim (stalled deal context only)
     - Dynacorp: "Three open RevOps roles usually signals a forecasting crunch…"
       Proof: VP-009 (retention visibility value-prop, approved) · 1 CTA
   Step 6: outbound-reviewer
-    - Globex: 88 PASS · Initech: 82 PASS · Acme: 77 PASS · Dynacorp: 71 PASS
+    - Globex: 88 PASS · Initech: 82 PASS · Example Co: 77 PASS · Dynacorp: 71 PASS
 
 OUTPUT: 4 drafts surfaced · 1 deprioritized (Umbrella, no trigger)
         All in Gmail draft folder — nothing sent.

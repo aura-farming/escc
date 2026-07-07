@@ -32,7 +32,7 @@ Activate this skill when:
 - A manager wants **fleet-level patterns**: "why are we losing to Competitor X",
   "what's our win rate in enterprise vs. mid-market", "which sources produce the
   best win rate".
-- A rep or manager wants a **single-deal debrief**: "debrief the Acme loss",
+- A rep or manager wants a **single-deal debrief**: "debrief the Example Co loss",
   "why did we win GlobalBank", "run a post-mortem on <deal>". This is the mode
   that powers `/deal-debrief`.
 - **QBR prep**: summarizing the quarter's win/loss story before `qbr-builder`

@@ -74,25 +74,25 @@ These are AE skills installed by your profile (`skills-ae` plus the shared
 - **`call-prep`** — use it before any customer conversation to get a brief: confirmed
   attendees and roles, account and deal history from HubSpot, the MEDDPICC gaps to probe,
   a stated goal, and a talk track.
-  - `Use escc:call-prep to get me ready for tomorrow's discovery call with Acme.`
+  - `Use escc:call-prep to get me ready for tomorrow's discovery call with Example Co.`
 - **`demo-prep`** — use it to build a demo storyline tied to discovered pain, with
   stakeholder-specific moments and proof sourced from product-knowledge.
-  - `Use escc:demo-prep to tailor the demo for the CFO and the end-user team at Acme.`
+  - `Use escc:demo-prep to tailor the demo for the CFO and the end-user team at Example Co.`
 - **`discovery-notes`** — use it after a call to turn a transcript or your notes into a
   structured MEDDPICC capture, a proposed HubSpot update, and a recap draft.
-  - `Use escc:discovery-notes to process my Fireflies transcript from the Acme call.`
+  - `Use escc:discovery-notes to process my Fireflies transcript from the Example Co call.`
 - **`deal-review`** — use it for a structured MEDDPICC health check: each element scored
   red/amber/green with evidence, gaps turned into dated next actions.
-  - `Run escc:deal-review on the Acme opportunity -- is it commit-able?`
+  - `Run escc:deal-review on the Example Co opportunity -- is it commit-able?`
 - **`stakeholder-mapping`** — use it to build or update the buying-committee map: economic
   authority, champion, evaluators, blockers, and how each is engaged.
-  - `Use escc:stakeholder-mapping to map the committee at Acme and build a champion plan.`
+  - `Use escc:stakeholder-mapping to map the committee at Example Co and build a champion plan.`
 - **`mutual-action-plan`** — use it to build the shared, buyer-and-seller milestone plan
   both sides agree to and maintain together.
-  - `Use escc:mutual-action-plan to build a MAP with Acme through to signature.`
+  - `Use escc:mutual-action-plan to build a MAP with Example Co through to signature.`
 - **`proposal-builder`** — use it to turn a qualified deal into a structured proposal or
   business case, with proof matched to the buyer's decision criteria.
-  - `Use escc:proposal-builder to draft the proposal for Acme.`
+  - `Use escc:proposal-builder to draft the proposal for Example Co.`
 - **`quote-desk`** — use it for any pricing, packaging, discount, or approval-routing
   question. It is the single pricing-math owner; every number defers here.
   - `Use escc:quote-desk -- can I give 12% off on a two-year ramp, and what needs approval?`
@@ -101,7 +101,7 @@ These are AE skills installed by your profile (`skills-ae` plus the shared
   - `Use escc:negotiation-prep -- procurement is pushing on price, what's my give-get plan?`
 - **`renewal-playbook`** — use it to run a renewal as a deal: re-qualify, triage churn or
   contraction risk, and build an expansion hypothesis.
-  - `Use escc:renewal-playbook to run a renewal review on Acme.`
+  - `Use escc:renewal-playbook to run a renewal review on Example Co.`
 
 Your AE module also carries the deal-maturity set — **`competitor-battlecards`**
 (`/battlecard`), **`rfp-response`** (`/rfp`), **`business-case`** (`/roi`),
@@ -116,14 +116,14 @@ deals, plus the shared **`inbox-triage`** and **`daily-brief`** (`/daily`) for y
 A realistic first run, end to end:
 
 1. **Prep the meeting.** Launch `claude-ae`, then `Use escc:call-prep to get me ready for
-   my discovery call with Acme.` Never meet unprepared.
+   my discovery call with Example Co.` Never meet unprepared.
 2. **Capture discovery.** After the call, `Use escc:discovery-notes to process the
    transcript.` It extracts MEDDPICC from real evidence and proposes a HubSpot update —
    which is applied through `crm-operator`, the only write path.
-3. **Map the committee.** `Use escc:stakeholder-mapping to map Acme` and identify the
+3. **Map the committee.** `Use escc:stakeholder-mapping to map Example Co` and identify the
    economic buyer and a developable champion. Single-threaded late-stage deals get
    multi-threaded or downgraded.
-4. **Review honestly.** `Run escc:deal-review on Acme.` Each MEDDPICC element is scored
+4. **Review honestly.** `Run escc:deal-review on Example Co.` Each MEDDPICC element is scored
    with evidence; a field is "known" only with evidence, and every gap becomes a dated action.
 5. **Plan the close.** `Use escc:mutual-action-plan to build the MAP` and pull pricing or
    approvals through `escc:quote-desk`. Non-standard terms route through the approval

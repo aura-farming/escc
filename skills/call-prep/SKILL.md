@@ -132,12 +132,12 @@ tracks; SMB prep is a tighter one-page brief.
 **Discovery call — new prospect, minimal history:**
 
 ```text
-/call-prep Acme Corp, 30-min discovery with Sarah Chen (VP RevOps), tomorrow
+/call-prep Example Co Corp, 30-min discovery with Sarah Chen (VP RevOps), tomorrow
 
 call-prep output:
 MEETING: 2026-06-17 10:00 — Discovery / 30 min
 ATTENDEES:
-  - Sarah Chen, VP RevOps, Acme Corp [role in committee: likely economic
+  - Sarah Chen, VP RevOps, Example Co Corp [role in committee: likely economic
     buyer or key influencer — confirm in call]
   - [Your name], AE
 

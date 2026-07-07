@@ -1,4 +1,4 @@
-# Workspace — Acme Co (Sales Manager / RevOps)
+# Workspace — Example Co Co (Sales Manager / RevOps)
 
 <!-- Example workspace CLAUDE.md for a manager / RevOps seat. Copy + replace placeholders. -->
 

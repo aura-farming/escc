@@ -237,7 +237,7 @@ test('PreToolUse-hook additionalContext still stamps PreToolUse (no regression)'
 // script. Belt-and-suspenders behind the optional-ajv runtime fix.
 
 const GATE = 'pre:outbound-send-gate';
-const gatePayload = JSON.stringify({ tool_name: 'mcp__claude_ai_Gmail__create_draft', tool_input: { to: 'x@y.com', body: 'hi' } });
+const gatePayload = JSON.stringify({ tool_name: 'mcp__claude_ai_Gmail__create_draft', tool_input: { to: 'x@y.example', body: 'hi' } });
 
 test('fail-closed hook BLOCKS (exit 2) when its module fails to require', () => {
   const result = runRunner([GATE, 'crash-on-require-hook.js', 'minimal,standard,strict'], gatePayload);

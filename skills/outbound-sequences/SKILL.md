@@ -279,7 +279,7 @@ Engage with a recent post (like or comment) or send a final InMail:
 **Suppression block example:**
 
 ```text
-Requested: enroll contact@prospect.com in RevOps Mid-Market sequence.
+Requested: enroll contact@prospect.example in RevOps Mid-Market sequence.
 
 Suppression check → BLOCKED.
 Reason: prior opt-out logged 2026-04-12 via email unsubscribe.

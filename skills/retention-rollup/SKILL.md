@@ -271,7 +271,7 @@ account-health scale -- not the MEDDPICC deal-scoring rubric.
 
 Account          | ACV      | Renewal    | Forecast   | Last eng.  | Health
 -----------------|----------|------------|------------|------------|-------
-Acme Corp        | $210,000 | 2026-07-05 | Pipeline   | 2026-05-12 | Unreviewed
+Example Co Corp        | $210,000 | 2026-07-05 | Pipeline   | 2026-05-12 | Unreviewed
 BetaInc          | $ 88,000 | 2026-07-14 | Commit     | 2026-06-28 | Green (renewal-playbook run 2026-06-20)
 GammaCorp        | $145,000 | 2026-07-22 | Best case  | 2026-06-01 | Unreviewed
 DeltaSys         | $ 62,000 | 2026-08-03 | Best case  | 2026-06-15 | Amber (renewal-playbook run 2026-06-10)
@@ -279,7 +279,7 @@ EpsilonLtd       | $ 38,000 | 2026-08-18 | Commit     | 2026-06-25 | Green (rene
 
 Risk segmentation:
   HIGH RISK (renewal <30 days, Pipeline or unreviewed):
-    Acme Corp: $210,000 -- renewal 2026-07-05, forecast Pipeline,
+    Example Co Corp: $210,000 -- renewal 2026-07-05, forecast Pipeline,
       last engaged 2026-05-12 (35 days ago), no renewal-playbook run.
       ACTION: run renewal-playbook health-check immediately; 19 days to
       renewal.
