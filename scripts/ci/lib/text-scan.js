@@ -12,6 +12,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 /**
  * True for invisible / format-control / smuggling codepoints that no legitimate
@@ -117,6 +118,85 @@ function findBannedTokens(content, tokens) {
   return hits;
 }
 
+// Hashed banned tokens: the public config stores sha256(lowercase(token)) so the
+// repo never discloses the name it bans. Candidates are every word-shaped run
+// ([a-z0-9]+, preserving the old word-boundary semantics — a word token still
+// matches inside an email or domain because labels split on '.') and every
+// label-aligned dotted-host substring (covering banned domains/email hosts).
+const WORD_RUN_RE = /[a-z0-9]+/g;
+const HOST_RUN_RE = /[a-z0-9-]+(?:\.[a-z0-9-]+)+/g;
+
+/**
+ * Find banned tokens by hash. Returns the offending candidate substrings.
+ * @param {string} content
+ * @param {Iterable<string>} hashes lowercase sha256 hex digests
+ * @returns {string[]}
+ */
+function findBannedTokenHashes(content, hashes) {
+  const banned = new Set([...(hashes || [])].map(h => String(h).toLowerCase()));
+  if (!banned.size) return [];
+  const crypto = require('crypto');
+  const sha = s => crypto.createHash('sha256').update(s).digest('hex');
+  const text = content.toLowerCase();
+  const candidates = new Set(text.match(WORD_RUN_RE) || []);
+  for (const host of text.match(HOST_RUN_RE) || []) {
+    const labels = host.split('.');
+    for (let i = 0; i < labels.length; i += 1) {
+      for (let j = i + 1; j <= labels.length; j += 1) {
+        candidates.add(labels.slice(i, j).join('.'));
+      }
+    }
+  }
+  const hits = [];
+  for (const candidate of candidates) {
+    if (banned.has(sha(candidate))) hits.push(candidate);
+  }
+  return hits;
+}
+
+// Email addresses in committed files must belong to fixture/placeholder domains
+// (config/committed-email-domains.json) or an RFC 2606 reserved TLD. A real
+// prospect/customer/colleague address can never ship in the public source.
+const EMAIL_RE = /\b[A-Za-z0-9._%+-]+@([A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?\.[A-Za-z]{2,})\b/g;
+const RESERVED_TLD_RE = /\.(?:example|test|invalid|localhost)$/i;
+
+/**
+ * Find email addresses whose domain is neither an allowed fixture domain (or a
+ * subdomain of one) nor an RFC 2606 reserved TLD (.example/.test/.invalid/
+ * .localhost). Returns the offending full addresses, verbatim.
+ * @param {string} content
+ * @param {Iterable<string>} allowedDomains lowercase fixture domains
+ * @returns {string[]}
+ */
+function findForeignEmails(content, allowedDomains) {
+  const allowed = new Set([...(allowedDomains || [])].map(d => String(d).toLowerCase()));
+  const leaks = [];
+  EMAIL_RE.lastIndex = 0;
+  let m;
+  while ((m = EMAIL_RE.exec(content)) !== null) {
+    const domain = m[1].toLowerCase();
+    const ok =
+      RESERVED_TLD_RE.test(domain) ||
+      allowed.has(domain) ||
+      [...allowed].some(d => domain.endsWith(`.${d}`));
+    if (!ok) leaks.push(m[0]);
+  }
+  return leaks;
+}
+
+/**
+ * List git-TRACKED repo-relative file paths — the canonical scan scope for the
+ * public-source guards. Gitignored runtime data (a private workspace's real
+ * org/customer data) is legitimately absent. Throws when git is unavailable;
+ * callers decide whether to skip or fall back to a filesystem walk.
+ * @param {string} root repo root
+ * @returns {string[]}
+ */
+function listTrackedFiles(root) {
+  const out = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' });
+  return out.split('\n').map(s => s.trim()).filter(Boolean);
+}
+
 // High-confidence committed-secret signatures (near-zero false positives). The
 // generic key=value rule (last) is the only one that captures a value group, so
 // it alone is filtered against obvious placeholders.
@@ -216,7 +296,10 @@ module.exports = {
   findPersonalPaths,
   escapeRegExp,
   findBannedTokens,
+  findBannedTokenHashes,
+  findForeignEmails,
   findSecrets,
+  listTrackedFiles,
   lineAndColumn,
   walkFiles,
   DEFAULT_IGNORE_DIRS,

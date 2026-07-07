@@ -52,7 +52,7 @@ const BLOCKED_RECORDS = { open_deals: [{ id: 'd1' }], account_id: 'acme-sod' };
 
 test('SoD: strict profile refuses a rep-role override at APPROVE time (no token, no blocklist writes)', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome(), ESCC_HOOK_PROFILE: 'strict', ESCC_ROLE: undefined, ESCC_REP_ROLE: undefined, ESCC_OVERRIDE_REQUIRES_MANAGER: undefined }, () => {
-    const draft = { to: 'x@y.com', subject: 'Hi', body: 'Cut overtime?' };
+    const draft = { to: 'x@y.example', subject: 'Hi', body: 'Cut rework?' };
     const r = approve.approveOutbound({ draft, records: BLOCKED_RECORDS, override: 'urgent' });
     assert.equal(r.approved, false);
     assert.equal(r.sodRefused, true);
@@ -65,7 +65,7 @@ test('SoD: strict profile refuses a rep-role override at APPROVE time (no token,
 
 test('SoD: a manager-signed override approves under strict, and the gate admits it', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome(), ESCC_HOOK_PROFILE: 'strict', ESCC_OVERRIDE_REQUIRES_MANAGER: undefined }, () => {
-    const draft = { to: 'x@y.com', subject: 'Hi', body: 'Cut overtime?' };
+    const draft = { to: 'x@y.example', subject: 'Hi', body: 'Cut rework?' };
     const r = approve.approveOutbound({ draft, records: BLOCKED_RECORDS, override: 'manager approved — strategic', approver: 'Dana Lee', approverRole: 'manager' });
     assert.equal(r.approved, true);
     assert.equal(gate.run(draftCall(draft)), undefined, 'manager-signed override token passes the strict gate');
@@ -74,7 +74,7 @@ test('SoD: a manager-signed override approves under strict, and the gate admits 
 
 test('SoD gate branch ONLY TIGHTENS: standard profile behaves exactly as before', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome(), ESCC_HOOK_PROFILE: undefined, ESCC_OVERRIDE_REQUIRES_MANAGER: undefined, ESCC_ROLE: undefined, ESCC_REP_ROLE: undefined }, () => {
-    const draft = { to: 'x@y.com', subject: 'Hi', body: 'Cut overtime?' };
+    const draft = { to: 'x@y.example', subject: 'Hi', body: 'Cut rework?' };
     const r = approve.approveOutbound({ draft, records: BLOCKED_RECORDS, override: 'rep override, standard profile' });
     assert.equal(r.approved, true, 'standard profile: rep overrides still work (v1.1.0 behavior)');
     assert.equal(gate.run(draftCall(draft)), undefined, 'gate admits it exactly as before');
@@ -85,15 +85,15 @@ test('SoD gate branch blocks a REP-signed override token under strict — but ne
   const home = freshHome();
   // Token minted under STANDARD by a rep override…
   withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_HOOK_PROFILE: undefined, ESCC_ROLE: undefined, ESCC_REP_ROLE: undefined }, () => {
-    approve.approveOutbound({ draft: { to: 'x@y.com', subject: 'Hi', body: 'Cut overtime?' }, records: BLOCKED_RECORDS, override: 'rep override' });
-    approve.approveOutbound({ draft: { to: 'clean@ok.com', subject: 'Yo', body: 'Worth a look at rostering?' }, records: { notes: [], open_deals: [] }, now: new Date().toISOString() });
+    approve.approveOutbound({ draft: { to: 'x@y.example', subject: 'Hi', body: 'Cut rework?' }, records: BLOCKED_RECORDS, override: 'rep override' });
+    approve.approveOutbound({ draft: { to: 'clean@ok.example', subject: 'Yo', body: 'Worth a look at reporting?' }, records: { notes: [], open_deals: [] }, now: new Date().toISOString() });
   });
   // …then the workspace tightens to strict:
   withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_HOOK_PROFILE: 'strict' }, () => {
-    const blocked = gate.run(draftCall({ to: 'x@y.com', subject: 'Hi', body: 'Cut overtime?' }));
+    const blocked = gate.run(draftCall({ to: 'x@y.example', subject: 'Hi', body: 'Cut rework?' }));
     assert.equal(blocked.exitCode, 2, 'rep-signed override token no longer passes under strict');
     assert.match(blocked.stderr, /separation of duties/);
-    assert.equal(gate.run(draftCall({ to: 'clean@ok.com', subject: 'Yo', body: 'Worth a look at rostering?' })), undefined, 'clean four-gates token is untouched by the SoD branch');
+    assert.equal(gate.run(draftCall({ to: 'clean@ok.example', subject: 'Yo', body: 'Worth a look at reporting?' })), undefined, 'clean four-gates token is untouched by the SoD branch');
   });
 });
 
@@ -128,22 +128,22 @@ test('notify drain prints the queue; --approve-self mints a token the gate admit
   withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_NOTIFY_NO_DESKTOP: '1', ESCC_HOOK_PROFILE: undefined }, () => {
     const cli = require('../../scripts/escc.js');
     const notifyLib = require('../../scripts/lib/notify');
-    notifyLib.notify({ severity: 'medium', title: 'Renewal window', message: 'Acme renewal enters the 90-day window', account: 'company_12345' });
+    notifyLib.notify({ severity: 'medium', title: 'Renewal window', message: 'Example Co renewal enters the 90-day window', account: 'company_12345' });
 
     const emptyOk = cli.run(['notify', 'bogus']);
     assert.equal(emptyOk.code, 1, 'unknown action refused');
 
-    const drained = cli.run(['notify', 'drain', '--approve-self', 'me@myco.com']);
+    const drained = cli.run(['notify', 'drain', '--approve-self', 'me@myco.example']);
     assert.equal(drained.code, 0);
-    assert.match(drained.text, /Acme renewal/);
+    assert.match(drained.text, /Example Co renewal/);
     assert.match(drained.text, /Self-digest approval token minted/);
 
     // The gate must admit a Gmail draft to SELF with EXACTLY the printed content…
-    const admitted = gate.run(draftCall({ to: 'me@myco.com', subject: drained.data.subject, body: drained.data.body }));
+    const admitted = gate.run(draftCall({ to: 'me@myco.example', subject: drained.data.subject, body: drained.data.body }));
     assert.equal(admitted, undefined, 'self-digest draft passes the fail-closed gate');
 
     // …and the token must be USELESS for any other recipient or content.
-    assert.equal(gate.run(draftCall({ to: 'prospect@acme.com', subject: drained.data.subject, body: drained.data.body })).exitCode, 2, 'token cannot launder a prospect draft');
-    assert.equal(gate.run(draftCall({ to: 'me@myco.com', subject: drained.data.subject, body: `${drained.data.body}\nP.S. buy now` })).exitCode, 2, 'token is bound to the exact content');
+    assert.equal(gate.run(draftCall({ to: 'prospect@acme.example', subject: drained.data.subject, body: drained.data.body })).exitCode, 2, 'token cannot launder a prospect draft');
+    assert.equal(gate.run(draftCall({ to: 'me@myco.example', subject: drained.data.subject, body: `${drained.data.body}\nP.S. buy now` })).exitCode, 2, 'token is bound to the exact content');
   });
 });

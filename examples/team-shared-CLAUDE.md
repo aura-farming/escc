@@ -1,10 +1,10 @@
-# Team-Shared Config — Acme Co Sales
+# Team-Shared Config — Example Co Co Sales
 
 <!-- Example team-shared CLAUDE.md: the settings every persona inherits. Keep
      workspace-specific identity in the per-seat files; keep shared policy here. -->
 
 ## Shared identity
-- Company: Acme Co. Product/value-prop source of truth: the `product-knowledge` skill.
+- Company: Example Co Co. Product/value-prop source of truth: the `product-knowledge` skill.
 - Brand voice: defined by the `brand-voice` skill from approved samples — all drafting inherits it.
 
 ## Shared ICP & segments

@@ -40,18 +40,18 @@ function withEnv(overrides, fn) {
 // --- content key ---
 
 test('outboundContentKey is stable and ignores recipient/field aliases + case', () => {
-  const a = review.outboundContentKey({ to: 'Sam@Acme.com', subject: 'Rostering', body: 'Hi Sam' });
-  const b = review.outboundContentKey({ recipient: 'sam@acme.com', subject: 'Rostering', body: 'Hi Sam' });
+  const a = review.outboundContentKey({ to: 'Sam@acme.example', subject: 'Reporting', body: 'Hi Sam' });
+  const b = review.outboundContentKey({ recipient: 'sam@acme.example', subject: 'Reporting', body: 'Hi Sam' });
   assert.equal(a, b, 'recipient alias + case must not change the key');
-  const c = review.outboundContentKey({ to: 'sam@acme.com', subject: 'Rostering', body: 'Hi Sam!!' });
+  const c = review.outboundContentKey({ to: 'sam@acme.example', subject: 'Reporting', body: 'Hi Sam!!' });
   assert.notEqual(a, c, 'different body changes the key');
 });
 
 test('the SAME content via a Gmail draft and a HubSpot email yields the SAME key (tool-agnostic)', () => {
-  const draftPayload = review.extractOutboundPayload(DRAFT_TOOL, { to: 'sam@acme.com', subject: 'Rostering', body: 'Hi Sam' });
+  const draftPayload = review.extractOutboundPayload(DRAFT_TOOL, { to: 'sam@acme.example', subject: 'Reporting', body: 'Hi Sam' });
   const crmPayload = review.extractOutboundPayload(HUBSPOT, {
     objectType: 'emails',
-    properties: { hs_email_to_email: 'sam@acme.com', hs_email_subject: 'Rostering', hs_email_html: 'Hi Sam' },
+    properties: { hs_email_to_email: 'sam@acme.example', hs_email_subject: 'Reporting', hs_email_html: 'Hi Sam' },
   });
   assert.equal(review.outboundContentKey(draftPayload), review.outboundContentKey(crmPayload),
     'one approval must cover the draft and the later send of the same content');
@@ -61,20 +61,20 @@ test('the SAME content via a Gmail draft and a HubSpot email yields the SAME key
 
 test('recordApproval then findValidApproval round-trips for the same key', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
-    const key = review.outboundContentKey({ to: 'a@b.com', subject: 'S', body: 'B' });
-    review.recordApproval({ sessionId: 's1', key, recipient: 'a@b.com', confidence: 0.95 });
+    const key = review.outboundContentKey({ to: 'a@b.example', subject: 'S', body: 'B' });
+    review.recordApproval({ sessionId: 's1', key, recipient: 'a@b.example', confidence: 0.95 });
     assert.ok(review.findValidApproval({ key }), 'a recorded approval is found');
   });
 });
 
 test('findValidApproval rejects below-confidence and expired approvals', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
-    const key = review.outboundContentKey({ to: 'a@b.com', subject: 'S', body: 'B' });
+    const key = review.outboundContentKey({ to: 'a@b.example', subject: 'S', body: 'B' });
     review.recordApproval({ key, confidence: 0.4 });
     assert.equal(review.findValidApproval({ key, minConfidence: 0.8 }), null, 'low-confidence approval is not valid');
   });
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
-    const key = review.outboundContentKey({ to: 'a@b.com', subject: 'S', body: 'B2' });
+    const key = review.outboundContentKey({ to: 'a@b.example', subject: 'S', body: 'B2' });
     // approved a while ago with a 60-minute TTL → expired by now
     review.recordApproval({ key, confidence: 0.99, now: '2026-01-01T00:00:00Z', ttlMinutes: 60 });
     assert.equal(review.findValidApproval({ key, now: '2026-01-01T02:00:00Z' }), null, 'expired approval is not valid');
@@ -85,18 +85,18 @@ test('findValidApproval rejects below-confidence and expired approvals', () => {
 // --- classification: the over-block firewall ---
 
 test('classifyOutbound gates a Gmail draft and extracts its payload', () => {
-  const c = review.classifyOutbound(DRAFT_TOOL, { to: 'a@b.com', subject: 'S', body: 'B' });
+  const c = review.classifyOutbound(DRAFT_TOOL, { to: 'a@b.example', subject: 'S', body: 'B' });
   assert.equal(c.kind, 'draft');
-  assert.equal(c.recipient, 'a@b.com');
+  assert.equal(c.recipient, 'a@b.example');
 });
 
 test('classifyOutbound gates a HubSpot OUTBOUND email engagement', () => {
   const c = review.classifyOutbound(HUBSPOT, {
     objectType: 'emails',
-    properties: { hs_email_direction: 'EMAIL', hs_email_to_email: 'a@b.com', hs_email_subject: 'S', hs_email_html: 'B' },
+    properties: { hs_email_direction: 'EMAIL', hs_email_to_email: 'a@b.example', hs_email_subject: 'S', hs_email_html: 'B' },
   });
   assert.equal(c.kind, 'crm-email');
-  assert.equal(c.recipient, 'a@b.com');
+  assert.equal(c.recipient, 'a@b.example');
 });
 
 test('classifyOutbound does NOT gate HubSpot tasks / notes / deals (the hard constraint)', () => {
@@ -114,7 +114,7 @@ test('classifyOutbound does NOT gate an INCOMING (logged) email engagement', () 
 });
 
 test('classifyOutbound still recognizes legacy sends, reads, and unrelated tools', () => {
-  assert.equal(review.classifyOutbound(SEND_TOOL, { to: 'a@b.com' }).kind, 'send');
+  assert.equal(review.classifyOutbound(SEND_TOOL, { to: 'a@b.example' }).kind, 'send');
   assert.equal(review.classifyOutbound('mcp__hubspot__search_crm_objects', {}).kind, 'allow');
   assert.equal(review.classifyOutbound('Read', {}).kind, 'other');
 });

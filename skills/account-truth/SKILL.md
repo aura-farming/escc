@@ -31,7 +31,7 @@ the governance trail, and the voice overlay. The engine is
 
 ## When to Activate
 
-- "What do we actually know about Acme?" / "give me the account truth".
+- "What do we actually know about Example Co?" / "give me the account truth".
 - Before a QBR, handoff, or exec touch where the data MUST be current.
 - "Is our data on X up to date?" — run with a live CRM read to get drift.
 - A rep suspects memory and HubSpot disagree.
@@ -64,7 +64,7 @@ memory-derived and say a live read is missing.
 ### 3. Assemble
 
 ```bash
-escc truth "company:12345" --input /tmp/crm-snapshot.json
+escc truth "company:<hubspot-id>" --input /tmp/crm-snapshot.json
 ```
 
 ### 4. Present with provenance — and route the follow-ups
@@ -78,11 +78,11 @@ Keep the source labels when summarizing. Then:
 ## Examples
 
 ```text
-rep: what do we actually know about Acme — is it current?
+rep: what do we actually know about Example Co — is it current?
 account-truth:
-  1. escc identity resolve "Acme"  -> company_12345 (via alias)
-  2. [HubSpot read-only: 1 open deal] -> /tmp/acme-crm.json
-  3. escc truth company:12345 --input /tmp/acme-crm.json
+  1. escc identity resolve "Example Co"  -> company_12345 (via alias)
+  2. [HubSpot read-only: 1 open deal] -> /tmp/crm-snapshot.json
+  3. escc truth company:<hubspot-id> --input /tmp/crm-snapshot.json
   4. Presents: [crm-live] d881 negotiation · 120k · close 2026-08-01
                [memory · last event 2026-07-02] d881 proposal · 100k  <- DRIFT
                [promise ledger] 2 open · [outcome ledger] meeting_booked: 2

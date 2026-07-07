@@ -60,8 +60,7 @@ failure mode automated. The `resonance` field ships human-write-only and unwired
 
 Additive and backward compatible — no migration required. To start using roles,
 add a role-tagged entry with `escc product add --approved-by "<name>"`, or re-tag an
-existing entry. The full design rationale is in `docs/DECISIONS.md` (ADR-0012) and the
-Phase-0 research in `FINDINGS.md`.
+existing entry. The full design rationale is in `docs/DECISIONS.md` (ADR-0012).
 
 ---
 

@@ -27,11 +27,11 @@ const ROOT = path.join(__dirname, '..', '..');
 // Buyer text laced with claims/metrics the overlay must refuse to carry, plus
 // recurring neutral vocabulary it SHOULD mirror.
 const BUYER_TEXTS = [
-  'We will cut payroll costs by 47% and save $2.3M next year.',
-  'Payroll runs across 1,200 employees and 14 sites; payroll accuracy is the priority.',
-  'The scheduling rollout matters more than the price. Scheduling and payroll must align.',
+  'We will cut invoicing costs by 47% and save $2.3M next year.',
+  'Invoicing runs across 1,200 employees and 14 sites; invoicing accuracy is the priority.',
+  'The reporting rollout matters more than the price. Reporting and invoicing must align.',
 ];
-const PLANTED = ['47%', '$2.3M', '2.3', '1,200', 'cut payroll costs by 47'];
+const PLANTED = ['47%', '$2.3M', '2.3', '1,200', 'cut invoicing costs by 47'];
 
 function freshHome() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'escc-lexleak-'));
@@ -43,14 +43,14 @@ test('leak guard: a planted buyer claim/number never reaches the rendered overla
   process.env.ESCC_AGENT_DATA_HOME = home;
   try {
     const register = reg.extractRegister(BUYER_TEXTS);
-    const file = overlay.writeOverlay('domain:acme.io', register);
+    const file = overlay.writeOverlay('domain:acme.test', register);
     const md = fs.readFileSync(file, 'utf8');
 
     for (const claim of PLANTED) {
       assert.ok(!md.includes(claim), `overlay must not carry the buyer claim/number "${claim}"`);
     }
     // The buyer's neutral vocabulary IS mirrored — that is the whole point.
-    assert.ok(md.includes('payroll'), 'a neutral recurring buyer term is mirrored');
+    assert.ok(md.includes('invoicing'), 'a neutral recurring buyer term is mirrored');
     assert.ok(/STYLE OVERLAY ONLY/.test(md), 'overlay declares itself style-only');
   } finally {
     if (prev === undefined) delete process.env.ESCC_AGENT_DATA_HOME;

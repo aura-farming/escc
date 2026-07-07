@@ -46,16 +46,16 @@ test('voice account builds an overlay from buyer texts via --input', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
     const input = writeInput(home, {
       texts: [
-        'Payroll accuracy is our priority. Payroll drives the rollout.',
-        'We need scheduling and payroll aligned before go-live.',
+        'Invoicing accuracy is our priority. Invoicing drives the rollout.',
+        'We need reporting and invoicing aligned before go-live.',
       ],
     });
-    const res = cli.run(['voice', 'account', 'domain:acme.io', '--input', input]);
+    const res = cli.run(['voice', 'account', 'domain:acme.test', '--input', input]);
     assert.equal(res.code, 0);
-    assert.ok(/voice overlay for domain:acme.io/i.test(res.text));
-    assert.ok(res.data.register.lexicon.includes('payroll'));
+    assert.ok(/voice overlay for domain:acme.test/i.test(res.text));
+    assert.ok(res.data.register.lexicon.includes('invoicing'));
 
-    const file = path.join(home, 'escc', 'voice', 'account', 'domain_acme.io.md');
+    const file = path.join(home, 'escc', 'voice', 'account', 'domain_acme.test.md');
     assert.ok(fs.existsSync(file), 'overlay written at the sanitized account path');
     assert.ok(fs.readFileSync(file, 'utf8').includes('STYLE OVERLAY ONLY'));
   });
@@ -64,7 +64,7 @@ test('voice account builds an overlay from buyer texts via --input', () => {
 test('voice account never lets a buyer claim/number into the overlay', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
-    const input = writeInput(home, { texts: ['We will cut payroll costs by 47% and save $2.3M.'] });
+    const input = writeInput(home, { texts: ['We will cut invoicing costs by 47% and save $2.3M.'] });
     const res = cli.run(['voice', 'account', 'acme', '--input', input]);
     assert.equal(res.code, 0);
     const md = fs.readFileSync(path.join(home, 'escc', 'voice', 'account', 'acme.md'), 'utf8');
@@ -77,7 +77,7 @@ test('voice show prints the overlay, or a hint when none exists', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
     assert.ok(/no voice overlay/i.test(cli.run(['voice', 'show', 'ghost']).text));
 
-    const input = writeInput(home, { texts: ['Hi there. Scheduling matters to us.'] });
+    const input = writeInput(home, { texts: ['Hi there. Reporting matters to us.'] });
     cli.run(['voice', 'account', 'acme', '--input', input]);
     const shown = cli.run(['voice', 'show', 'acme']);
     assert.equal(shown.code, 0);

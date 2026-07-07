@@ -32,13 +32,13 @@ function withEnv(overrides, fn) {
 }
 
 test('normalizeContactKey lowercases and trims', () => {
-  assert.equal(dnc.normalizeContactKey('  Sam@Acme.com '), 'sam@acme.com');
+  assert.equal(dnc.normalizeContactKey('  Sam@acme.example '), 'sam@acme.example');
 });
 
 test('an indefinite block is active forever', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
-    dnc.recordDoNotContact({ key: 'sam@acme.com', scope: 'contact', reason: 'said do not contact' });
-    const hit = dnc.findActiveBlock({ key: 'Sam@Acme.com', now: '2030-01-01' });
+    dnc.recordDoNotContact({ key: 'sam@acme.example', scope: 'contact', reason: 'said do not contact' });
+    const hit = dnc.findActiveBlock({ key: 'Sam@acme.example', now: '2030-01-01' });
     assert.ok(hit, 'indefinite block is still active years later');
     assert.equal(hit.not_before, null);
   });
@@ -46,18 +46,18 @@ test('an indefinite block is active forever', () => {
 
 test('a not-before block is active before the date and clears after it', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
-    dnc.recordDoNotContact({ key: 'a@b.com', reason: 'call back in six weeks', notBefore: '2026-07-13T00:00:00Z' });
-    assert.ok(dnc.findActiveBlock({ key: 'a@b.com', now: '2026-06-23' }), 'blocked before the window elapses');
-    assert.equal(dnc.findActiveBlock({ key: 'a@b.com', now: '2026-08-01' }), null, 'unblocked after the window');
+    dnc.recordDoNotContact({ key: 'a@b.example', reason: 'call back in six weeks', notBefore: '2026-07-13T00:00:00Z' });
+    assert.ok(dnc.findActiveBlock({ key: 'a@b.example', now: '2026-06-23' }), 'blocked before the window elapses');
+    assert.equal(dnc.findActiveBlock({ key: 'a@b.example', now: '2026-08-01' }), null, 'unblocked after the window');
   });
 });
 
 test('clearing a block lifts it (last-write-wins by key)', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
-    dnc.recordDoNotContact({ key: 'a@b.com', reason: 'declined' });
-    assert.ok(dnc.findActiveBlock({ key: 'a@b.com' }), 'blocked after record');
-    dnc.clearDoNotContact({ key: 'a@b.com', sessionId: 's2' });
-    assert.equal(dnc.findActiveBlock({ key: 'a@b.com' }), null, 'cleared block is no longer active');
+    dnc.recordDoNotContact({ key: 'a@b.example', reason: 'declined' });
+    assert.ok(dnc.findActiveBlock({ key: 'a@b.example' }), 'blocked after record');
+    dnc.clearDoNotContact({ key: 'a@b.example', sessionId: 's2' });
+    assert.equal(dnc.findActiveBlock({ key: 'a@b.example' }), null, 'cleared block is no longer active');
   });
 });
 
@@ -73,6 +73,6 @@ test('account-scoped blocks are stored and listed', () => {
 
 test('findActiveBlock returns null for an unknown contact', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
-    assert.equal(dnc.findActiveBlock({ key: 'nobody@nowhere.com' }), null);
+    assert.equal(dnc.findActiveBlock({ key: 'nobody@nowhere.example' }), null);
   });
 });

@@ -44,7 +44,7 @@ function writeTranscript(home, lines) {
 }
 
 const LINES = [
-  { type: 'user', message: { role: 'user', content: 'Build the close plan for the Acme deal.' } },
+  { type: 'user', message: { role: 'user', content: 'Build the close plan for the Example Co deal.' } },
   {
     type: 'assistant',
     message: {

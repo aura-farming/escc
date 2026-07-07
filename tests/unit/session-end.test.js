@@ -59,7 +59,7 @@ function seedActivity(home, sessionId, accounts) {
 }
 
 const TRANSCRIPT_LINES = [
-  { type: 'user', message: { role: 'user', content: 'Prep outreach for Acme and follow up on the deal.' } },
+  { type: 'user', message: { role: 'user', content: 'Prep outreach for Example Co and follow up on the deal.' } },
   {
     type: 'assistant',
     message: {
@@ -84,7 +84,7 @@ test('writes a markdown session summary with paired markers', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined }, () => {
     const tp = writeTranscript(home, 'sess-end-1', TRANSCRIPT_LINES);
-    seedActivity(home, 'sess-end-1', ['company:acme', 'deal:deal-1', 'domain:acme.io']);
+    seedActivity(home, 'sess-end-1', ['company:acme', 'deal:deal-1', 'domain:acme.test']);
     hook.run(endInput('sess-end-1', tp));
 
     const sessionDir = path.join(home, 'session-data');

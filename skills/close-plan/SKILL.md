@@ -158,7 +158,7 @@ Work the dates backward:
 **Enterprise deal — close plan built from signature date:**
 
 ```text
-Deal: Acme Corp, $180k ARR, target signature 2026-09-30 (EB-acknowledged: board
+Deal: Example Co Corp, $180k ARR, target signature 2026-09-30 (EB-acknowledged: board
   budget cycle closes Sept).
 Segment: enterprise (rules/segments/enterprise.md).
 MEDDPICC check: E GREEN (CFO named), D AMBER (multi-step process known but

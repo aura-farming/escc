@@ -2,7 +2,7 @@
 name: account-memory
 description: >-
   Durable per-account working memory — history, open loops, promises. Trigger:
-  'what do we know about Acme', 'load deal context', 'remember this'.
+  'what do we know about Example Co', 'load deal context', 'remember this'.
   Auto-hydrates at session start/end.
 origin: ECC-adapted
 ---
@@ -178,14 +178,14 @@ before quarter close. Output is sorted by `close_date`.
 **Load context at session start:**
 
 ```text
-Session starts for deal "Acme Corp — Forecast Module — New".
+Session starts for deal "Example Co Corp — Forecast Module — New".
 resolveActiveAccount() -> accountId: "deal:7788"
 hydrate("deal:7788") ->
   Open loops:
     - Send ROI model (due 2026-06-18) (deal 7788)
     - Confirm security review timeline (due 2026-06-20) (deal 7788)
   Deals:
-    - Acme Corp — Forecast Module [Validation] — close 2026-06-30
+    - Example Co Corp — Forecast Module [Validation] — close 2026-06-30
   Recent activity:
     - 2026-06-12 [note] (deal 7788) Champion confirmed: Dana Lee, VP RevOps
     - 2026-06-10 [intel] Competitor: LegacyCRM still in POC; prospect cautious
@@ -235,7 +235,7 @@ Account memory — deal:7788 · segment: mid-market:
 Open loops:
 - Confirm security review timeline (due 2026-06-20)
 Deals:
-- Acme Corp — Forecast Module [Validation] — close 2026-06-30
+- Example Co Corp — Forecast Module [Validation] — close 2026-06-30
 Recent activity:
 - 2026-06-16 [note] (deal 7788) ROI model sent to Dana Lee
 - 2026-06-15 [intel] (deal 7788) Prospect evaluating ForecastPro ...

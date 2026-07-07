@@ -11,17 +11,17 @@ function toolInput(name, input) {
 }
 
 test('nudges to log a HubSpot email activity after a Gmail draft', () => {
-  const result = hook.run(toolInput('mcp__claude_ai_Gmail__create_draft', { to: 'cfo@acme.com', subject: 'Pricing' }));
+  const result = hook.run(toolInput('mcp__claude_ai_Gmail__create_draft', { to: 'cfo@acme.example', subject: 'Pricing' }));
   assert.ok(result && typeof result.additionalContext === 'string');
   assert.match(result.additionalContext, /HubSpot email activity/i);
-  assert.match(result.additionalContext, /cfo@acme\.com/);
+  assert.match(result.additionalContext, /cfo@acme\.example/);
 });
 
 test('nudges to log a HubSpot meeting after a Calendar event', () => {
-  const result = hook.run(toolInput('mcp__claude_ai_Google_Calendar__create_event', { summary: 'Acme demo' }));
+  const result = hook.run(toolInput('mcp__claude_ai_Google_Calendar__create_event', { summary: 'Example Co demo' }));
   assert.ok(result && result.additionalContext);
   assert.match(result.additionalContext, /HubSpot meeting/i);
-  assert.match(result.additionalContext, /Acme demo/);
+  assert.match(result.additionalContext, /Example Co demo/);
 });
 
 test('nudges to log a call after a Fireflies transcript fetch', () => {
@@ -37,17 +37,17 @@ test('returns undefined for an unrelated tool', () => {
 });
 
 test('still emits a (generic) nudge on a truncated payload', () => {
-  const result = hook.run(toolInput('mcp__claude_ai_Gmail__create_draft', { to: 'x@y.com' }), { truncated: true });
+  const result = hook.run(toolInput('mcp__claude_ai_Gmail__create_draft', { to: 'x@y.example' }), { truncated: true });
   assert.ok(result && result.additionalContext);
   assert.match(result.additionalContext, /email/i);
   // recipient detail is intentionally NOT mined from a truncated body
-  assert.ok(!/x@y\.com/.test(result.additionalContext));
+  assert.ok(!/x@y\.example/.test(result.additionalContext));
 });
 
 test('handles a comma-separated recipient list (takes the first address)', () => {
-  const result = hook.run(toolInput('mcp__claude_ai_Gmail__create_draft', { to: 'a@b.com, c@d.com' }));
-  assert.match(result.additionalContext, /a@b\.com/);
-  assert.ok(!/c@d\.com/.test(result.additionalContext));
+  const result = hook.run(toolInput('mcp__claude_ai_Gmail__create_draft', { to: 'a@b.example, c@d.example' }));
+  assert.match(result.additionalContext, /a@b\.example/);
+  assert.ok(!/c@d\.example/.test(result.additionalContext));
 });
 
 test('matchReminder maps each tool name to the right rule', () => {

@@ -224,7 +224,7 @@ Return:
 **Mid-stage discovery call review:**
 
 ```text
-/call-review [Fireflies transcript: Acme Corp discovery call, 2026-06-18, 38 min]
+/call-review [Fireflies transcript: Example Co Corp discovery call, 2026-06-18, 38 min]
 
 Step 1: transcript-analyzer returns structured summary.
   Speakers: Rep (Alex), Buyer (Maya, VP Finance), Observer (unknown, spoke once)

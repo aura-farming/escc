@@ -41,7 +41,7 @@ function withEnv(overrides, fn) {
 
 test('extractRegister classifies a formal register', () => {
   const r = reg.extractRegister(
-    'Dear Lucas, Thank you for your email. I would be grateful if you could send the proposal. Kind regards, Morgan.'
+    'Dear Jordan, Thank you for your email. I would be grateful if you could send the proposal. Kind regards, Morgan.'
   );
   assert.equal(r.formality, 'formal');
   assert.equal(r.greeting, 'dear');
@@ -56,7 +56,7 @@ test('extractRegister classifies a casual register', () => {
 });
 
 test('extractRegister falls to neutral when there are no formal or casual cues', () => {
-  const r = reg.extractRegister('We reviewed the document. The integration covers payroll and scheduling.');
+  const r = reg.extractRegister('We reviewed the document. The integration covers invoicing and reporting.');
   assert.equal(r.formality, 'neutral');
 });
 
@@ -75,11 +75,11 @@ test('extractRegister computes question rate over sentences', () => {
 
 test('lexicon surfaces recurring content terms and drops stopwords', () => {
   const r = reg.extractRegister([
-    'Payroll accuracy is the priority. Payroll drives everything.',
-    'The rollout of payroll and scheduling starts soon.',
+    'Invoicing accuracy is the priority. Invoicing drives everything.',
+    'The rollout of invoicing and reporting starts soon.',
   ]);
-  assert.ok(r.lexicon.includes('payroll'), 'recurring buyer term surfaces');
-  assert.equal(r.lexicon[0], 'payroll', 'most frequent term ranks first');
+  assert.ok(r.lexicon.includes('invoicing'), 'recurring buyer term surfaces');
+  assert.equal(r.lexicon[0], 'invoicing', 'most frequent term ranks first');
   assert.ok(!r.lexicon.includes('the'), 'stopwords excluded');
   assert.ok(!r.lexicon.includes('is'), 'stopwords excluded');
 });
@@ -87,14 +87,14 @@ test('lexicon surfaces recurring content terms and drops stopwords', () => {
 test('lexicon can NEVER contain a number, percentage, or currency figure', () => {
   const r = reg.extractRegister([
     'We must cut costs by 47% this year.',
-    'We want to save $2.3M on payroll and scheduling.',
+    'We want to save $2.3M on invoicing and reporting.',
     'Headcount is 1200 people across 14 sites.',
   ]);
   for (const term of r.lexicon) {
     assert.ok(!/\d/.test(term), `lexicon term "${term}" must carry no digit`);
   }
   assert.ok(!r.lexicon.includes('47'), 'a percentage figure is not a term');
-  assert.ok(r.lexicon.includes('payroll'), 'the surrounding buyer vocabulary still surfaces');
+  assert.ok(r.lexicon.includes('invoicing'), 'the surrounding buyer vocabulary still surfaces');
 });
 
 test('maxTerms caps the lexicon length', () => {
@@ -105,7 +105,7 @@ test('maxTerms caps the lexicon length', () => {
 // --- input shapes + confidence ---------------------------------------------
 
 test('extractRegister accepts a string, a string[], and a {text}[]', () => {
-  assert.equal(reg.extractRegister('Hello there. We love payroll.').sampleCount, 1);
+  assert.equal(reg.extractRegister('Hello there. We love invoicing.').sampleCount, 1);
   assert.equal(reg.extractRegister(['a one.', 'b two.']).sampleCount, 2);
   assert.equal(reg.extractRegister([{ text: 'a.' }, { text: 'b.' }, { no: 'text' }]).sampleCount, 2);
 });
@@ -121,15 +121,15 @@ test('confidence scales with sample count; empty input is safe', () => {
 test('writeOverlay then readOverlay round-trips at the sanitized account path', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
-    const r = reg.extractRegister(['Payroll matters. Payroll again.', 'Scheduling and payroll.']);
-    const file = overlay.writeOverlay('domain:Acme.IO', r);
-    assert.ok(file.endsWith(path.join('escc', 'voice', 'account', 'domain_acme.io.md')), `overlay at sanitized path (was ${file})`);
+    const r = reg.extractRegister(['Invoicing matters. Invoicing again.', 'Reporting and invoicing.']);
+    const file = overlay.writeOverlay('domain:acme.test', r);
+    assert.ok(file.endsWith(path.join('escc', 'voice', 'account', 'domain_acme.test.md')), `overlay at sanitized path (was ${file})`);
     assert.ok(fs.existsSync(file), 'overlay file written');
 
-    const md = overlay.readOverlay('domain:Acme.IO');
-    assert.ok(md.includes('# Account voice overlay: domain:Acme.IO'));
+    const md = overlay.readOverlay('domain:acme.test');
+    assert.ok(md.includes('# Account voice overlay: domain:acme.test'));
     assert.ok(md.includes('Formality:'));
-    assert.ok(md.includes('payroll'), 'mirrored lexicon term present');
+    assert.ok(md.includes('invoicing'), 'mirrored lexicon term present');
     assert.ok(/STYLE OVERLAY ONLY/.test(md), 'overlay states the style-only rule');
   });
 });

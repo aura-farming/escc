@@ -1,0 +1,7 @@
+{
+  "note": "Email domains allowed in COMMITTED files beyond the RFC 2606 reserved TLDs (.example / .test / .invalid / .localhost). Every fixture/persona address in this repo uses a reserved TLD, so it can never be a real mailbox; the only exceptions listed here are real vendor notification addresses that docs/examples legitimately reference (e.g. noreply@hubspot.com). Any other address in a git-tracked file fails CI — that is the anti-leak tripwire for real prospect, customer, or colleague addresses. Real recipient data belongs ONLY in your gitignored workspace (~/.claude/escc/...), never here. CI: scripts/ci/validate-committed-emails.js.",
+  "allowed_domains": [
+    "hubspot.com",
+    "linkedin.com"
+  ]
+}

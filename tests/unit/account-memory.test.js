@@ -38,7 +38,7 @@ function withEnv(overrides, fn) {
 
 test('sanitizeAccountId maps typed keys to safe filename stems', () => {
   assert.equal(mem.sanitizeAccountId('deal:7788'), 'deal_7788');
-  assert.equal(mem.sanitizeAccountId('domain:Acme.IO'), 'domain_acme.io');
+  assert.equal(mem.sanitizeAccountId('domain:acme.test'), 'domain_acme.test');
   assert.equal(mem.sanitizeAccountId('company:42'), 'company_42');
 });
 

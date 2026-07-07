@@ -99,7 +99,7 @@ operator edit.
 
 - Take the file path(s) or pasted content the user provides, plus their one-line
   description ("this is our case study", "a competitor one-pager", "a call with
-  Acme").
+  Example Co").
 - **Classify from the filename + the user's description -- not by reading raw
   bytes.** If the type is ambiguous, ask the user; do not open the file in the
   privileged context to find out.
@@ -240,7 +240,7 @@ Auto-applied (style + account context):
 
 Candidates awaiting your approval (run `escc product candidates`, then
 `escc product approve --id <id> --approved-by "<you>"`):
-  - 2 objections + 1 pain from the Acme transcript.
+  - 2 objections + 1 pain from the Example Co transcript.
   - 1 proof-point from case-study-retail.
   - 1 battlecard vs competitor-x.
 
@@ -256,11 +256,11 @@ Nothing was approved or sent. Claims are quotable only after you approve them.
 **Seed everything from a folder after install:**
 
 ```text
-User: "ingest these -- our case study, a pricing sheet, and last week's Acme call"
+User: "ingest these -- our case study, a pricing sheet, and last week's Example Co call"
 knowledge-intake:
   Step 0: classifies 3 files from names + the user's note (no raw read).
   Step 1: shows the routing plan; user approves.
-  Step 2: Acme call -> transcript-analyzer (quarantine) returns a clean summary;
+  Step 2: Example Co call -> transcript-analyzer (quarantine) returns a clean summary;
           case study + pricing are first-party, read with prompt-defense baseline.
   Step 3: case study + 2 pricing claims -> `escc product add` (3 candidates);
           transcript -> discovery-notes (CRM proposal) + 2 objection candidates

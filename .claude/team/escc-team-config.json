@@ -1,6 +1,6 @@
 {
   "_readme": "Dogfood scaffold for a shared sales-team config. Calibrate to your team; this file is the team-shared source of truth that per-seat workspace CLAUDE.md files reference. No secrets here — placeholders only.",
-  "team": "Acme Co Sales",
+  "team": "Example Co Co Sales",
   "systemOfRecord": "hubspot",
   "defaultProfile": "full",
   "personas": ["sdr", "ae", "sales-manager", "revops"],

@@ -66,9 +66,9 @@ function contextOf(result) {
 test('A. a promise + account context written at session end resurfaces at the next session start', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'company:acme', ESCC_INSTINCTS_DIR: undefined }, () => {
-    // Session 1 ends: rep promised to send the proposal and worked the Acme deal.
+    // Session 1 ends: rep promised to send the proposal and worked the Example Co deal.
     const tp = writeTranscript(home, 's1', [
-      { type: 'user', message: { role: 'user', content: 'Move the Acme deal forward.' } },
+      { type: 'user', message: { role: 'user', content: 'Move the Example Co deal forward.' } },
       { type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: "Logged discovery. I'll send the proposal by 2099-01-01." }] } },
     ]);
     seedActivity(home, 's1', ['company:acme', 'deal:deal-1']);
@@ -140,7 +140,7 @@ test('D. promises are attributed per account and recalled per account', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'acme', ESCC_INSTINCTS_DIR: undefined }, () => {
     const store = createStateStoreSync();
     try {
-      store.upsertPromise({ id: 'pa', account_id: 'acme', text: 'Acme: send the SOW', due_date: '2020-01-01' });
+      store.upsertPromise({ id: 'pa', account_id: 'acme', text: 'Example Co: send the SOW', due_date: '2020-01-01' });
       store.upsertPromise({ id: 'pg', account_id: 'globex', text: 'Globex: book the exec sync', due_date: '2020-01-01' });
     } finally {
       store.close();
@@ -151,7 +151,7 @@ test('D. promises are attributed per account and recalled per account', () => {
       const acme = store2.getPromisesByAccount('acme');
       const globex = store2.getPromisesByAccount('globex');
       assert.equal(acme.length, 1);
-      assert.equal(acme[0].text, 'Acme: send the SOW');
+      assert.equal(acme[0].text, 'Example Co: send the SOW');
       assert.equal(globex.length, 1);
       assert.equal(globex[0].account_id, 'globex');
     } finally {
@@ -159,7 +159,7 @@ test('D. promises are attributed per account and recalled per account', () => {
     }
 
     // Active-account context hydrates ONLY the active account; overdue list spans all.
-    accountMemory.appendEvent('acme', { type: 'note', text: 'Acme champion: VP Sales' });
+    accountMemory.appendEvent('acme', { type: 'note', text: 'Example Co champion: VP Sales' });
     const ctx = contextOf(sessionStart.run(JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', session_id: 'sd' })));
     assert.ok(/VP Sales/i.test(ctx), 'active account (acme) memory is hydrated');
     assert.ok(/send the SOW/i.test(ctx) && /book the exec sync/i.test(ctx), 'overdue list spans all accounts');

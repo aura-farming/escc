@@ -79,7 +79,7 @@ REVIEW-PACK: <object type> · <n> record(s) · source: <what grounds this>
 APPROVAL REQUIRED before apply.
 
 # | record (name/id)        | field            | from        → to            | grounding
-1 | Acme Corp (12345)       | dealstage        | qualification → validation  | POC agreed (call 2026-06-15)
+1 | Example Co Corp (12345)       | dealstage        | qualification → validation  | POC agreed (call 2026-06-15)
 2 | Initech (67890)         | next_step        | (empty)     → "send MSA"     | paper-process kickoff
 ...
 GUARDS: stage-advance rows checked vs lifecycle-stages exit criteria · 0 deletes · merges list survivor+associations

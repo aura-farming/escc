@@ -90,7 +90,7 @@ Per-account voice overlay (ADR-0015):
 
 Canonical account identity (ADR-0018):
   identity resolve <id>            show the canonical key for any name/domain/email/id
-  identity link <alias> <canon>    link an alias to its canonical id (e.g. "Acme" company:12345)
+  identity link <alias> <canon>    link an alias to its canonical id (e.g. "Example Co" company:<hubspot-id>)
   identity list                    list all alias links
   identity backfill [--apply]      merge legacy store fragments into canonical keys (DRY-RUN default; --apply backs up first)
   reconcile <account> [--apply]    diff account-memory vs a live CRM snapshot (--input '{"deals":[...]}'); --apply syncs memory to CRM
@@ -524,7 +524,7 @@ function handleIdentity(positional, flags) {
       const alias = positional[1];
       const canonical = positional[2];
       if (!alias || !canonical) {
-        return { code: 1, text: 'identity link requires <alias> <canonical> (e.g. escc identity link "Acme Pty Ltd" company:12345).', data: null };
+        return { code: 1, text: 'identity link requires <alias> <canonical> (e.g. escc identity link "Example Co Pty Ltd" company:<hubspot-id>).', data: null };
       }
       const r = accountIdentity.linkAlias(alias, canonical);
       const warn = r.tier === 'name'

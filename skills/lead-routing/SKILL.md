@@ -153,7 +153,7 @@ recycled lead is a status + reason, never a silent deletion.
 **Inbound MQL: named-account match**
 
 ```text
-Inbound: sarah@globex.com fills out a demo form.
+Inbound: sarah@globex.example fills out a demo form.
 Step 2: Globex Corp is on the named-account list -> owner: Jane Kim (Enterprise AE).
 Step 6: Routed at 09:14; SLA requires first touch by 09:44 (30-min SLA, routing-rules.md).
 Step 7: crm-operator writes hubspot_owner_id = Jane Kim. Activity log: "Inbound MQL routed
@@ -164,7 +164,7 @@ Output: Routed to Jane Kim (named-account rule). Speed-to-lead SLA: touch by 09:
 **Inbound MQL: open-opportunity match**
 
 ```text
-Inbound: tom@initech.com signs up for a trial.
+Inbound: tom@initech.example signs up for a trial.
 Named-account check: Initech not on named list.
 Open-opp check: Initech has an open deal (stage: Qualification) owned by Marcus Patel.
 Step 7: crm-operator writes owner = Marcus Patel. Log: "Inbound routed to open-opp owner.
@@ -176,7 +176,7 @@ Output: Routed to Marcus Patel (open-opportunity match). Marcus should reach out
 **Inbound MQL: territory routing (no named account, no open opp)**
 
 ```text
-Inbound: cfo@midwest-co.com fills a form.
+Inbound: cfo@midwest-co.example fills a form.
 Named-account: no match.
 Open-opp: no match.
 Territory: rules/segments/mid-market.md + geo = Midwest territory -> owner: Dana Lee.

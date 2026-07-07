@@ -76,19 +76,19 @@ These are the SDR skills installed by your profile (`skills-sdr` plus the shared
   - `Use escc:prospecting-pipeline to build me a prioritized prospect list for mid-market accounts in ANZ.`
 - **`account-research`** — use it when you need a deep, sourced brief on an account
   before outreach or a first meeting.
-  - `Use escc:account-research to build a brief on Acme Pty Ltd.`
+  - `Use escc:account-research to build a brief on Example Co Pty Ltd.`
 - **`trigger-detection`** — use it when you want the reason to reach out now: job changes,
   funding, tech adoption, news, or an engagement spike, each mapped to a play.
   - `Run escc:trigger-detection across my accounts and tell me what to act on this week.`
 - **`cold-outreach`** — use it when writing or pressure-testing a first-touch message
   (email, LinkedIn InMail, or a call opener) against the personalization bar.
-  - `Use escc:cold-outreach to draft a first touch to the VP Ops at Acme.`
+  - `Use escc:cold-outreach to draft a first touch to the VP Ops at Example Co.`
 - **`outbound-sequences`** — use it when you need a compliant multi-touch cadence with
   new value at each step.
   - `Use escc:outbound-sequences to build a 5-touch email + LinkedIn cadence for the ops persona.`
 - **`cold-calling`** — use it when prepping a call block: openers, talk tracks, gatekeeper
   handling, voicemail scripts, and logging every dial disposition.
-  - `Use escc:cold-calling to prep an opener and voicemail for my dial session on Acme.`
+  - `Use escc:cold-calling to prep an opener and voicemail for my dial session on Example Co.`
 - **`follow-up-ops`** — use it when a prospect has gone quiet and you need the next value-add
   touch, a breakup, or a snooze-and-resurface schedule. It always reads the thread first.
   - `Use escc:follow-up-ops -- they haven't replied in eight days, what should I send next?`

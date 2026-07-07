@@ -90,7 +90,7 @@ test('records policy_violation for a write to a sensitive path', () => {
 test('records bulk_send_attempt for a send tool over the recipient threshold', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_GOVERNANCE_CAPTURE: '1' }, () => {
-    const recipients = ['a@x.com', 'b@x.com', 'c@x.com', 'd@x.com', 'e@x.com', 'f@x.com'];
+    const recipients = ['a@x.example', 'b@x.example', 'c@x.example', 'd@x.example', 'e@x.example', 'f@x.example'];
     hook.run(input('mcp__test__send_email', { to: recipients }));
     const events = readEvents(home);
     assert.ok(events.some(e => e.event_type === 'bulk_send_attempt'));

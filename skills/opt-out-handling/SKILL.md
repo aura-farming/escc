@@ -175,11 +175,11 @@ No further outbound contact is permitted for this contact.
 
 ```text
 Routed from inbox-triage: opt_out_request
-Sender: lisa@startup.io
+Sender: lisa@startup.test
 Message: "Hi, please remove me from your mailing list. Thanks."
 Trigger phrase: "remove me from your mailing list"
 
-Step 1: Contact confirmed — lisa@startup.io, Lisa Chen, Startup.io.
+Step 1: Contact confirmed — lisa@startup.test, Lisa Chen, startup.test.
          No sales reply drafted.
 
 Step 2: crm-operator write:
@@ -189,7 +189,7 @@ Step 2: crm-operator write:
   - No open deals.
 
 Step 3: Provenance record logged:
-  contact_email: lisa@startup.io
+  contact_email: lisa@startup.test
   opt_out_date: 2026-06-16T09:14:00+10:00
   trigger: "remove me from your mailing list"
   processed_by: opt-out-handling
@@ -199,18 +199,18 @@ Step 4: Deadline per rules/jurisdictions/au.md. Suppression write confirmed.
   Compliance reply: not required for AU (suppression is sufficient; confirm
   with rules/jurisdictions/au.md if in doubt).
 
-Close-out: complete. No further contact permitted for lisa@startup.io.
+Close-out: complete. No further contact permitted for lisa@startup.test.
 ```
 
 **Reply opt-out routed from reply-handling:**
 
 ```text
 Routed from reply-handling: disposition = unsubscribe
-Sender: marcus@bigco.com — open deal: BigCo AE Tooling
+Sender: marcus@bigco.example — open deal: BigCo AE Tooling
 Message: "Thanks but I think we're going to pass. Please stop the emails."
 Trigger phrase: "please stop the emails"
 
-Step 1: Contact confirmed — marcus@bigco.com, Marcus Webb, BigCo.
+Step 1: Contact confirmed — marcus@bigco.example, Marcus Webb, BigCo.
          No sales reply drafted. Open deal flagged.
 
 Step 2: crm-operator write:
@@ -232,10 +232,10 @@ with Marcus without fresh, documented consent. Discuss with manager."
 **Verbal opt-out reported by rep:**
 
 ```text
-Rep reports: "I was on the phone with Dana at Co.com — she said 'don't contact
+Rep reports: "I was on the phone with Dana at co.example — she said 'don't contact
 me again, I'm not interested.'"
 
-Step 1: Contact: dana@co.com (rep confirms email address).
+Step 1: Contact: dana@co.example (rep confirms email address).
   Source: verbal / phone. Trigger: "don't contact me again."
   No sales reply (no channel to send one via — verbal channel).
 
