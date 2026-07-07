@@ -1,0 +1,18 @@
+{
+  "$comment": "capture-correction patterns (v1.8.0 learning loop). Case-insensitive regex sources matched against a rep's own prompt to detect an explicit CORRECTION worth learning (distill THRESHOLDS.user_correction = 1: ONE match drafts a pending instinct behind the human review gate, so precision beats recall — keep this list conservative). Prompts shorter than min_chars or longer than max_chars are skipped (a very long prompt is likely pasted third-party content, which must never become a learned behavior).",
+  "version": 1,
+  "min_chars": 12,
+  "max_chars": 600,
+  "patterns": [
+    "^no[,.\\s]+(?:that|you|use|don'?t|it)",
+    "\\bthat'?s (?:wrong|incorrect|not right|not what i)\\b",
+    "\\byou (?:should|must) (?:always|never)\\b",
+    "\\b(?:please\\s+)?always (?:use|include|check|write|put|log)\\b",
+    "\\bnever (?:use|send|include|write|put|add)\\b",
+    "\\bdon'?t ever\\b",
+    "\\bstop (?:doing|using|adding|putting)\\b",
+    "\\bi (?:told|asked) you (?:to|not)\\b",
+    "\\bfrom now on\\b",
+    "\\bnot like that\\b"
+  ]
+}

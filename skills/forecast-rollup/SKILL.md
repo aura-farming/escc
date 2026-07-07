@@ -59,6 +59,13 @@ Define the scope before retrieving data:
 - **Close-date floor:** exclude deals whose close date is past (already
   Closed Won / Closed Lost -- these are Omitted/Closed per
   `rules/common/forecasting-definitions.md`).
+- **Currency (v1.8.0, blocker rule):** note each deal's currency. If more
+  than one currency appears, NEVER sum raw amounts — normalize through the
+  workspace locale config per the Currency-correctness clause in
+  `rules/common/forecasting-definitions.md` (`scripts/lib/currency.js`
+  refuses what it cannot convert), and state the FX rates + as-of dates used.
+  If no locale config exists, report per-currency subtotals and say a
+  combined total is unavailable — a mixed-unit total is a wrong number.
 
 ### Step 2: Run the forecast-analyst agent
 

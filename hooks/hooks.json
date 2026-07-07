@@ -136,6 +136,18 @@
         "id": "post:chaining-hints"
       },
       {
+        "matcher": "mcp__hubspot__manage_crm_objects|mcp__claude_ai_Google_Calendar__create_event",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js post:outcome-capture scripts/hooks/outcome-capture.js minimal,standard,strict",
+            "timeout": 10
+          }
+        ],
+        "description": "Learning-loop keystone (v1.8.0): a successful HubSpot deal-STAGE write or Calendar event creation lands as an outcome in the state-store ledger, which SessionEnd distillation reads to move instinct confidence on real results (I2). Sanitized structured payloads only; skips errored calls; silent observer, never blocks.",
+        "id": "post:outcome-capture"
+      },
+      {
         "matcher": "Edit|Write",
         "hooks": [
           {
@@ -234,6 +246,18 @@
         ],
         "description": "Deterministic skill-routing hint: keyword-match the prompt against config/skill-keywords.json and inject ONE one-line escc:<skill> suggestion (ADR-0016). Budget-independent auto-invocation layer; pure hint, never blocks.",
         "id": "prompt:intent-router"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hooks/run-with-flags.js prompt:capture-correction scripts/hooks/capture-correction.js standard,strict",
+            "timeout": 5
+          }
+        ],
+        "description": "Learning-loop capture (v1.8.0): detect an explicit rep CORRECTION in the prompt (config/correction-patterns.json, conservative) and append a user_correction observation for the instinct engine. Drafts still pass the I7 human review gate. Silent observer; never blocks.",
+        "id": "prompt:capture-correction"
       }
     ],
     "Stop": [
