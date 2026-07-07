@@ -357,7 +357,7 @@ general-only fallback), seeded by `escc product vocab init` and extended by
 `escc product vocab suggest`. No company data is migrated into the repo — the
 maintainer re-feeds their own data into their gitignored workspace. (2) All
 company-identifying tokens are removed from committed example/seed/test data and
-replaced with neutral placeholders (`Acme` / `competitor-x` / `Example Operator`).
+replaced with neutral placeholders (`Example Co` / `competitor-x` / `Example Operator`).
 Legitimate authorship (the MIT `LICENSE` / `plugin.json` author) is **kept** — it
 is not a company token. (3) Two CI validators make it un-regressable:
 `validate-no-company-tokens.js` (a banned-brand list in
@@ -621,8 +621,8 @@ v1.7.0.
 but ESCC keeps parallel local stores — account-memory, voice overlays,
 promises/outcomes/governance in the state store, instincts — and two
 structural problems had grown underneath them. (1) **No canonical account
-identity:** `sanitizeAccountId` mapped a company *name* ("Acme"), its
-*domain* ("acme.com"), and its *HubSpot id* ("12345") to three different
+identity:** `sanitizeAccountId` mapped a company *name* ("Example Co"), its
+*domain* ("example-co.example"), and its *HubSpot id* ("12345") to three different
 filename stems, so one real-world account fragmented into disjoint
 account-memory files, voice overlays, and promise keys that never joined —
 the root cause under the v1.7.1 review's three separate source-of-truth gaps
@@ -664,11 +664,11 @@ events = true-sidecar (governance is local evidence of local enforcement).
 The doctrine, not reviewer taste, decides where a future feature's state
 belongs — "why isn't this a HubSpot object?" must have a written answer.
 
-**Consequence.** "Acme", "acme.com", "jane@acme.com", and "company:12345"
+**Consequence.** "Example Co", "example-co.example", "jane@example-co.example", and "company:<hubspot-id>"
 now name ONE store, which makes cross-store joins, the reconcile pass, the
 account-truth resolver, and any future team-shared layer trustworthy instead
-of silently under-matched — and the historical `acme.com` vs
-`domain:acme.com` split heals itself at backfill. Costs accepted: a one-time
+of silently under-matched — and the historical `example-co.example` vs
+`domain:example-co.example` split heals itself at backfill. Costs accepted: a one-time
 migration step for existing workspaces (`escc identity backfill`, reversible
 via the timestamped backup dir); bare all-digit identifiers are now read as
 HubSpot company ids (documented; legacy bare-digit stems merge at backfill);

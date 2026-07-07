@@ -1,4 +1,4 @@
-# Workspace — Acme Co (SDR)
+# Workspace — Example Co Co (SDR)
 
 <!-- Example workspace CLAUDE.md, the kind the `team-init` skill (`/team-init`) writes. Copy
      into your sales workspace and replace the placeholders. This is a TEMPLATE, not live config. -->

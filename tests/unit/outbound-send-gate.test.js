@@ -60,13 +60,13 @@ test('classification: sends gated, drafts now gated (v1.1.0), reads allow-listed
   assert.equal(review.classifyTool(SEARCH_TOOL, config), 'allow');
   assert.equal(review.classifyTool('Read', config), 'other');
   // v1.1.0: a draft is no longer plain-allow — classifyOutbound gates it.
-  assert.equal(review.classifyOutbound(DRAFT_TOOL, { to: 'a@b.com', subject: 'S', body: 'B' }, config).kind, 'draft');
+  assert.equal(review.classifyOutbound(DRAFT_TOOL, { to: 'a@b.example', subject: 'S', body: 'B' }, config).kind, 'draft');
 });
 
 test('fingerprintOutbound is stable for same content and differs for different content', () => {
-  const a = review.fingerprintOutbound(SEND_TOOL, { to: 'x@y.com', subject: 'Hi', body: 'Hello' });
-  const b = review.fingerprintOutbound(SEND_TOOL, { to: 'x@y.com', subject: 'Hi', body: 'Hello' });
-  const c = review.fingerprintOutbound(SEND_TOOL, { to: 'x@y.com', subject: 'Hi', body: 'Different' });
+  const a = review.fingerprintOutbound(SEND_TOOL, { to: 'x@y.example', subject: 'Hi', body: 'Hello' });
+  const b = review.fingerprintOutbound(SEND_TOOL, { to: 'x@y.example', subject: 'Hi', body: 'Hello' });
+  const c = review.fingerprintOutbound(SEND_TOOL, { to: 'x@y.example', subject: 'Hi', body: 'Different' });
   assert.equal(a, b);
   assert.notEqual(a, c);
 });
@@ -77,7 +77,7 @@ test('fingerprintOutbound is stable for same content and differs for different c
 
 test('ROGUE AGENT: an unreviewed Gmail draft is BLOCKED (the v1.1.0 fix)', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
-    const result = gate.run(gateInput(DRAFT_TOOL, { to: 'a@b.com', subject: 'Hi', body: 'Hello Sam' }));
+    const result = gate.run(gateInput(DRAFT_TOOL, { to: 'a@b.example', subject: 'Hi', body: 'Hello Sam' }));
     assert.ok(result && result.exitCode === 2, 'a direct, unreviewed draft must block');
     assert.match(result.stderr, /has not passed escc review/i);
   });
@@ -85,9 +85,9 @@ test('ROGUE AGENT: an unreviewed Gmail draft is BLOCKED (the v1.1.0 fix)', () =>
 
 test('BLESSED PATH: a Gmail draft passes once an approval token is recorded', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
-    const toolInput = { to: 'a@b.com', subject: 'Thursday', body: 'Hi Sam, looking forward to Thursday.' };
+    const toolInput = { to: 'a@b.example', subject: 'Thursday', body: 'Hi Sam, looking forward to Thursday.' };
     const key = review.outboundContentKey(review.extractOutboundPayload(DRAFT_TOOL, toolInput));
-    review.recordApproval({ sessionId: 'sess-1', key, recipient: 'a@b.com', confidence: 0.95 });
+    review.recordApproval({ sessionId: 'sess-1', key, recipient: 'a@b.example', confidence: 0.95 });
     const result = gate.run(gateInput(DRAFT_TOOL, toolInput));
     assert.equal(result, undefined, 'an approved draft should pass through');
   });
@@ -112,23 +112,23 @@ test('a HubSpot OUTBOUND email engagement is gated, and passes once approved', (
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
     const toolInput = {
       objectType: 'emails',
-      properties: { hs_email_direction: 'EMAIL', hs_email_to_email: 'a@b.com', hs_email_subject: 'Hi', hs_email_html: 'Hi Sam, a quick note on rostering.' },
+      properties: { hs_email_direction: 'EMAIL', hs_email_to_email: 'a@b.example', hs_email_subject: 'Hi', hs_email_html: 'Hi Sam, a quick note on reporting.' },
     };
     const blocked = gate.run(gateInput(HUBSPOT_TOOL, toolInput));
     assert.ok(blocked && blocked.exitCode === 2, 'an unreviewed outbound email must block');
 
     const key = review.outboundContentKey(review.extractOutboundPayload(HUBSPOT_TOOL, toolInput));
-    review.recordApproval({ key, recipient: 'a@b.com', confidence: 0.95 });
+    review.recordApproval({ key, recipient: 'a@b.example', confidence: 0.95 });
     assert.equal(gate.run(gateInput(HUBSPOT_TOOL, toolInput)), undefined, 'an approved outbound email should pass');
   });
 });
 
 test('an approved draft to a do-not-contact recipient is STILL blocked', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
-    const toolInput = { to: 'sam@acme.com', subject: 'Hi', body: 'Hi Sam' };
+    const toolInput = { to: 'sam@acme.example', subject: 'Hi', body: 'Hi Sam' };
     const key = review.outboundContentKey(review.extractOutboundPayload(DRAFT_TOOL, toolInput));
-    review.recordApproval({ key, recipient: 'sam@acme.com', confidence: 0.95 });
-    dnc.recordDoNotContact({ key: 'sam@acme.com', scope: 'contact', reason: 'asked us to stop' });
+    review.recordApproval({ key, recipient: 'sam@acme.example', confidence: 0.95 });
+    dnc.recordDoNotContact({ key: 'sam@acme.example', scope: 'contact', reason: 'asked us to stop' });
     const result = gate.run(gateInput(DRAFT_TOOL, toolInput));
     assert.ok(result && result.exitCode === 2, 'blocklist beats an approval token');
     assert.match(result.stderr, /do-not-contact/i);
@@ -137,7 +137,7 @@ test('an approved draft to a do-not-contact recipient is STILL blocked', () => {
 
 test('gate BLOCKS a live send with no review-evidence marker (fail-closed)', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
-    const result = gate.run(gateInput(SEND_TOOL, { to: 'a@b.com', subject: 'S', body: 'B' }));
+    const result = gate.run(gateInput(SEND_TOOL, { to: 'a@b.example', subject: 'S', body: 'B' }));
     assert.ok(result && result.exitCode === 2, 'unreviewed send must block');
     assert.match(result.stderr, /no review-evidence marker/i);
   });
@@ -145,7 +145,7 @@ test('gate BLOCKS a live send with no review-evidence marker (fail-closed)', () 
 
 test('gate ALLOWS a live send once a valid review marker is recorded', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
-    const toolInput = { to: 'a@b.com', subject: 'S', body: 'B' };
+    const toolInput = { to: 'a@b.example', subject: 'S', body: 'B' };
     const fingerprint = review.fingerprintOutbound(SEND_TOOL, toolInput);
     review.recordReview({ sessionId: 'sess-1', fingerprint, confidence: 0.95, verdict: 'approved' });
     const result = gate.run(gateInput(SEND_TOOL, toolInput));
@@ -157,7 +157,7 @@ test('gate ALLOWS a live send once a valid review marker is recorded', () => {
 
 test('gate BLOCKS when the review confidence is below the gate (>80%)', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
-    const toolInput = { to: 'a@b.com', subject: 'S', body: 'B' };
+    const toolInput = { to: 'a@b.example', subject: 'S', body: 'B' };
     const fingerprint = review.fingerprintOutbound(SEND_TOOL, toolInput);
     review.recordReview({ sessionId: 'sess-1', fingerprint, confidence: 0.5, verdict: 'approved' });
     const result = gate.run(gateInput(SEND_TOOL, toolInput));
@@ -171,7 +171,7 @@ test('gate enforces the bulk send cap (ESCC_BULK_SEND_MAX)', () => {
     // seed the cap with two recorded allows for this session
     review.recordSendDecision({ sessionId: 'bulk', fingerprint: 'f1', decision: 'allow' });
     review.recordSendDecision({ sessionId: 'bulk', fingerprint: 'f2', decision: 'allow' });
-    const toolInput = { to: 'a@b.com', subject: 'S', body: 'B' };
+    const toolInput = { to: 'a@b.example', subject: 'S', body: 'B' };
     const fingerprint = review.fingerprintOutbound(SEND_TOOL, toolInput);
     review.recordReview({ sessionId: 'bulk', fingerprint, confidence: 0.99, verdict: 'approved' });
     const result = gate.run(gateInput(SEND_TOOL, toolInput, 'bulk'));
@@ -182,7 +182,7 @@ test('gate enforces the bulk send cap (ESCC_BULK_SEND_MAX)', () => {
 
 test('gate BLOCKS on a truncated payload', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
-    const result = gate.run(gateInput(SEND_TOOL, { to: 'a@b.com' }), { truncated: true });
+    const result = gate.run(gateInput(SEND_TOOL, { to: 'a@b.example' }), { truncated: true });
     assert.ok(result && result.exitCode === 2, 'truncated payload must block (fail-closed)');
     assert.match(result.stderr, /truncated/i);
   });
@@ -197,7 +197,7 @@ test('gate BLOCKS when the tool cannot be identified (fail-closed)', () => {
 
 test('gate passes through when ESCC_OUTBOUND_GATE=off (documented escape hatch)', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome(), ESCC_OUTBOUND_GATE: 'off' }, () => {
-    const result = gate.run(gateInput(SEND_TOOL, { to: 'a@b.com', body: 'B' }));
+    const result = gate.run(gateInput(SEND_TOOL, { to: 'a@b.example', body: 'B' }));
     assert.equal(result, undefined, 'gate off should pass through');
   });
 });
@@ -205,7 +205,7 @@ test('gate passes through when ESCC_OUTBOUND_GATE=off (documented escape hatch)'
 test('gate fails CLOSED when the state store cannot be written (internal error)', () => {
   // An unwritable data home makes recordSendDecision throw → caught → block.
   withEnv({ ESCC_AGENT_DATA_HOME: '/dev/null/nope' }, () => {
-    const result = gate.run(gateInput(SEND_TOOL, { to: 'a@b.com', body: 'B' }));
+    const result = gate.run(gateInput(SEND_TOOL, { to: 'a@b.example', body: 'B' }));
     assert.ok(result && result.exitCode === 2, 'state-store failure must block, not open');
   });
 });

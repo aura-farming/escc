@@ -75,7 +75,7 @@ test('returns a SessionStart-shaped payload even with no data', () => {
 test('injects overdue promises ahead of everything (C2/C3)', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined }, () => {
-    seedOverduePromise('Send Acme the renewal quote');
+    seedOverduePromise('Send Example Co the renewal quote');
     const ctx = contextOf(hook.run(startInput('startup')));
     assert.ok(/overdue/i.test(ctx), 'overdue section present');
     assert.ok(/renewal quote/i.test(ctx), 'the overdue promise text is surfaced');
@@ -90,7 +90,7 @@ test('resume-from-compaction block is injected when a scratch file exists (C4)',
     fs.mkdirSync(tdir, { recursive: true });
     const tp = path.join(tdir, 'tx.jsonl');
     fs.writeFileSync(tp, [
-      JSON.stringify({ type: 'user', message: { role: 'user', content: 'Finish the Acme close plan.' } }),
+      JSON.stringify({ type: 'user', message: { role: 'user', content: 'Finish the Example Co close plan.' } }),
       JSON.stringify({ type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: 'Next step: get pricing sign-off.' }] } }),
     ].join('\n'));
     preCompact.run(JSON.stringify({ hook_event_name: 'PreCompact', session_id: 'sess-resume', transcript_path: tp, trigger: 'auto' }));
@@ -178,7 +178,7 @@ test('resume block is one-shot — not re-injected on a second SessionStart (C4)
     fs.mkdirSync(tdir, { recursive: true });
     const tp = path.join(tdir, 'tx.jsonl');
     fs.writeFileSync(tp, [
-      JSON.stringify({ type: 'user', message: { role: 'user', content: 'Finish the Acme close plan.' } }),
+      JSON.stringify({ type: 'user', message: { role: 'user', content: 'Finish the Example Co close plan.' } }),
       JSON.stringify({ type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: 'Next step: pricing sign-off.' }] } }),
     ].join('\n'));
     preCompact.run(JSON.stringify({ hook_event_name: 'PreCompact', session_id: 'one-shot', transcript_path: tp, trigger: 'auto' }));

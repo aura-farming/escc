@@ -174,7 +174,7 @@ Subject: Quick question
 
 Hi Sarah,
 
-Love what you're building at Acme. Your product is really impressive.
+Love what you're building at Example Co. Your product is really impressive.
 
 I'm reaching out because we work with a lot of companies like yours and
 I thought there might be some synergies worth exploring.
@@ -196,7 +196,7 @@ D — "I thought there might be some synergies" and "let me know your thoughts"
 
 ```text
 GOOD:
-Subject: Acme's Series B and pipeline visibility
+Subject: Example Co's Series B and pipeline visibility
 
 Hi Sarah,
 

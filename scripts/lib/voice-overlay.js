@@ -23,8 +23,8 @@ const path = require('path');
 
 const { resolveAgentDataHome } = require('./agent-data-home');
 const { atomicWriteFile, getDateString } = require('./utils');
-// Canonical identity resolution (ADR-0018): the overlay for "Acme" and for
-// "company:12345" must be the SAME file once the alias is linked.
+// Canonical identity resolution (ADR-0018): the overlay for "Example Co" and for
+// "company:<hubspot-id>" must be the SAME file once the alias is linked.
 const { accountKey } = require('./account-identity');
 
 const VOICE_ACCOUNT_SUBDIR = path.join('escc', 'voice', 'account');

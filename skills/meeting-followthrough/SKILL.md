@@ -202,7 +202,7 @@ Step 2 — crm-operator:
   Applied. Verified via read-back. Activity logged: "Discovery call 2026-06-15".
 
 Step 3 — Recap draft (applying [VOICE PROFILE]):
-  Subject: Acme Corp — Discovery call follow-up · 2026-06-15
+  Subject: Example Co Corp — Discovery call follow-up · 2026-06-15
 
   Hi Dana,
   Great conversation today — the 4-hour forecast process detail was exactly

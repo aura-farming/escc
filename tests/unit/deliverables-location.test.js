@@ -58,14 +58,14 @@ test('isStrayDoc ignores non-doc extensions', () => {
 // ---- run behavior ----------------------------------------------------------
 
 test('run nudges a stray generated doc toward deliverables/', () => {
-  const result = hook.run(writeInput('account-research.md', '# Acme research'));
+  const result = hook.run(writeInput('account-research.md', '# Example Co research'));
   assert.ok(result && typeof result.additionalContext === 'string');
   assert.match(result.additionalContext, /deliverables\//);
   assert.match(result.additionalContext, /account-research\.md/);
 });
 
 test('run passes through a file already under deliverables/', () => {
-  const result = hook.run(writeInput('deliverables/research/acme.md', '# Acme research'));
+  const result = hook.run(writeInput('deliverables/research/acme.md', '# Example Co research'));
   assert.equal(result, undefined);
 });
 

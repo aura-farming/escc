@@ -151,14 +151,14 @@ visibility layer over the intake/decide/audit flow above:
 **Intake: discount requiring Sales Manager approval**
 
 ```text
-Rep: "Can I offer Acme 18% off at $49k net ACV?"
+Rep: "Can I offer Example Co 18% off at $49k net ACV?"
 Step 1: quote-desk confirms: list ACV $60k, discount 18%, net ACV $49,200.
 Step 2: no non-standard escalators (standard annual-upfront, no ramp).
 Step 3: rules/approval-matrix.md: 10-20% discount, ACV < $50k -> Sales Manager.
 Step 4: crm-operator writes approval_requested on deal 12345, logs term + tier.
 Output to rep:
   Approval required: Sales Manager (18% discount, $49,200 net ACV).
-  Term NOT offered to Acme until approval is on-record.
+  Term NOT offered to Example Co until approval is on-record.
   Pending approval written to HubSpot deal record (crm-operator confirmed write).
   Next step: Sales Manager reviews by [date].
 ```

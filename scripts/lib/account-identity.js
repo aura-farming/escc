@@ -2,7 +2,7 @@
  * ESCC canonical account identity (NEW for ESCC; ADR-0018).
  *
  * THE join key for every per-account store. Before this module, an account's
- * name ("Acme"), its domain ("acme.com"), and its HubSpot company id ("12345")
+ * name ("Example Co"), its domain ("acme.example"), and its HubSpot company id ("12345")
  * each sanitized to a DIFFERENT filename stem — three disjoint account-memory
  * files, voice overlays, and promise keys that never joined. This module gives
  * every store one canonical key:
@@ -82,8 +82,8 @@ function canonicalizeInput(raw) {
   m = trimmed.match(/^domain[:_]\s*(.+)$/);
   if (m) return { key: `domain_${sanitizeStem(stripWww(m[1]))}`, tier: 'domain' };
 
-  // A bare domain ("acme.com", "www.acme.com.au"). Legacy stores keyed this as
-  // plain "acme.com"; canonicalizing to domain_* heals that split via backfill.
+  // A bare domain ("acme.example", "www.acme.example.au"). Legacy stores keyed this as
+  // plain "acme.example"; canonicalizing to domain_* heals that split via backfill.
   if (/^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(trimmed)) {
     return { key: `domain_${sanitizeStem(stripWww(trimmed))}`, tier: 'domain' };
   }
@@ -187,7 +187,7 @@ function resolveAccountKey(raw, options = {}) {
 
   const canon = canonicalizeInput(raw);
   if (canon.key && aliases.has(canon.key)) {
-    // e.g. domain_acme.com itself linked forward to company_12345.
+    // e.g. domain_acme.example itself linked forward to company_12345.
     return { key: aliases.get(canon.key), tier: 'alias', via: canon.key };
   }
   return { key: canon.key, tier: canon.tier, via: null };

@@ -102,11 +102,11 @@ WORKLIST REVIEW PACK  (owner: <rep>, <date>)
   In: 40 · worked: 31 · dropped in triage: 9
 
 SENDABLE (24)
-  - acme.com / Sam Lee <sam@acme.com> — first-touch, gates clear, reviewer clean
+  - acme.example / Sam Lee <sam@acme.example> — first-touch, gates clear, reviewer clean
   ...
 EXCLUDED (7)
-  - globex.com / Priya <priya@globex.com> — timing: "call back in six weeks" (not before 2026-07-13)
-  - initech.com / open deal — contactability: account has an open deal (handed to AE)
+  - globex.example / Priya <priya@globex.example> — timing: "call back in six weeks" (not before 2026-07-13)
+  - initech.example / open deal — contactability: account has an open deal (handed to AE)
   ...
 NEXT: approve the sendable set to send via the gated path, or override an exclusion with a reason.
 ```

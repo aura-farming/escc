@@ -140,7 +140,7 @@ the plain discount% would suggest, per the matrix non-standard-terms rule.
 **Standard quote, Tier 1 approval required:**
 
 ```text
-Deal: Acme Corp, 50 seats, Professional tier, 12-month term.
+Deal: Example Co Corp, 50 seats, Professional tier, 12-month term.
 List price (from product-knowledge, SKU PRO-50): $1,200/seat/year
 List ACV: 50 x $1,200 = $60,000
 Requested discount: 18%
@@ -149,7 +149,7 @@ Approval tier (rules/approval-matrix.md):
   Discount 18% (10-20 band), Net ACV $49,200 (< $50k band) -> Sales Manager approval.
 Non-standard escalators: none (standard annual-upfront, no ramp).
 Required approver: Sales Manager.
-Next action: Rep submits approval request via deal-desk before sharing pricing with Acme.
+Next action: Rep submits approval request via deal-desk before sharing pricing with Example Co.
 CRM log: routed to crm-operator — deal record updated, governance-capture records
   approval_requested.
 ```

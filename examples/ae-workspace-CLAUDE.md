@@ -1,4 +1,4 @@
-# Workspace — Acme Co (AE)
+# Workspace — Example Co Co (AE)
 
 <!-- Example workspace CLAUDE.md for an Account Executive. Copy + replace placeholders. -->
 

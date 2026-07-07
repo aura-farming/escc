@@ -160,7 +160,7 @@ After the execution step is complete:
 **Interested — high intent, meeting needed:**
 
 ```text
-Prospect reply (marcus@bigco.com):
+Prospect reply (marcus@bigco.example):
 "This looks relevant. Can we get 30 minutes on the calendar next week?"
 
 Thread read: touch 2 of a cold sequence. Prior touch: pipeline visibility for
@@ -182,7 +182,7 @@ crm-operator:
 **Not-now — snooze with resurface trigger:**
 
 ```text
-Prospect reply (priya@globex.com):
+Prospect reply (priya@globex.example):
 "We're mid-renewal with our current vendor. Come back in September."
 
 Thread read: touch 1, cold outreach. No open deal. Priya is VP RevOps.
@@ -211,7 +211,7 @@ crm-operator:
 **Out-of-office — no action needed:**
 
 ```text
-Reply from dana@co.com:
+Reply from dana@co.example:
 "I am out of office until 23 June. I will respond when I return."
 
 Disposition: out-of-office.
@@ -225,13 +225,13 @@ Action:
 **Wrong-person — warm referral path:**
 
 ```text
-Reply from tom@startup.io:
+Reply from tom@startup.test:
 "You should actually be talking to our Head of Sales Ops, Lena — she owns this."
 
-Disposition: wrong-person. Referral: Lena, Head of Sales Ops at startup.io.
+Disposition: wrong-person. Referral: Lena, Head of Sales Ops at startup.test.
 
 Email draft (warm referral ask, via email-outbound-ops):
-  Subject: Re: Sales Ops at Startup.io
+  Subject: Re: Sales Ops at startup.test
 
   Hi Tom,
 
@@ -243,14 +243,14 @@ Email draft (warm referral ask, via email-outbound-ops):
 
   STATUS: DRAFT — not sent.
 
-Parallel: research Lena (Head of Sales Ops, startup.io) via account-memory /
+Parallel: research Lena (Head of Sales Ops, startup.test) via account-memory /
 crm-operator. If found and not suppressed, prepare cold-outreach brief.
 ```
 
 **Unsubscribe — inside a deal thread:**
 
 ```text
-Reply from marcus@bigco.com (open deal — BigCo AE Tooling):
+Reply from marcus@bigco.example (open deal — BigCo AE Tooling):
 "Thanks but we've decided to go with someone else. Please stop the emails."
 
 Disposition: unsubscribe (contains explicit stop signal — overrides all other context).
@@ -267,14 +267,14 @@ No sales reply drafted. No deal advancement. Suppression first.
 **Objection — price:**
 
 ```text
-Reply from sarah@acme.com:
+Reply from sarah@acme.example:
 "Looks interesting but we're worried about cost — it feels expensive for our stage."
 
 Disposition: objection (price / stage).
 
 Action:
   -> objection-handling: hand off with full thread + context:
-     "Sarah, Acme. Objection: price / company stage. Prior thread: pipeline
+     "Sarah, Example Co. Objection: price / company stage. Prior thread: pipeline
       visibility angle, touch 1. MEDDPICC: no M (metrics) established —
       no ROI case built yet. Recommend building a concrete ROI framing first."
 
@@ -285,7 +285,7 @@ crm-operator: log "Reply received. Disposition: objection (price). Routed to
 **Mixed signal — interest + unsubscribe language:**
 
 ```text
-Reply from james@corp.com:
+Reply from james@corp.example:
 "This is interesting actually, but my boss said we should stop taking vendor
 calls for now. Please don't contact us again."
 

@@ -1,6 +1,6 @@
 ---
 description: Drag-and-drop intake — route a dropped file (emails, transcript, case study, pricing, competitor doc, ICP list) into the right ESCC layer.
-argument-hint: "[file path or pasted content] [what it is, e.g. \"our case study\" | \"Acme call transcript\"]"
+argument-hint: "[file path or pasted content] [what it is, e.g. \"our case study\" | \"Example Co call transcript\"]"
 ---
 
 Apply the `knowledge-intake` skill to: $ARGUMENTS

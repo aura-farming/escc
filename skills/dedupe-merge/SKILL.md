@@ -216,13 +216,13 @@ APPLY ONLY AFTER EXPLICIT APPROVAL.
 **Pre-creation dedup: company match found**
 
 ```text
-Rep attempts to create "Acme Corp" (acme.com).
-crm-hygiene check: search by domain acme.com.
-Found: existing company "Acme Corporation" (ID: 11111), created 2025-03-01,
+Rep attempts to create "Example Co Corp" (acme.example).
+crm-hygiene check: search by domain acme.example.
+Found: existing company "Example Co Corporation" (ID: 11111), created 2025-03-01,
   3 contacts, 1 open deal, 12 activities.
-Rep's new record would be: "Acme Corp", no associations yet.
+Rep's new record would be: "Example Co Corp", no associations yet.
 Survivorship rule: existing record has more associations -> existing is survivor.
-Action: do not create a new record. Use existing "Acme Corporation" (ID: 11111).
+Action: do not create a new record. Use existing "Example Co Corporation" (ID: 11111).
   Rep's new contact is associated to the existing company.
 No merge write required — creation was blocked. crm-operator logs the dedup event.
 ```

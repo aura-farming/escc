@@ -45,7 +45,7 @@ test('product add: a candidate by default, an approved entry with --approved-by'
     assert.match(a.text, /candidate/i);
     assert.equal(run(['product', 'candidates']).data.candidates.length, 1);
 
-    const appr = writeJson(home, 'a.json', { id: 'CLI-A1', type: 'claim', text: 'Acme is SOC 2 Type II certified.', segment: 'general', source_type: 'public' });
+    const appr = writeJson(home, 'a.json', { id: 'CLI-A1', type: 'claim', text: 'Example Co is SOC 2 Type II certified.', segment: 'general', source_type: 'public' });
     const r = run(['product', 'add', '--input', appr, '--approved-by', 'Example Operator']);
     assert.equal(r.code, 0, r.text);
     assert.match(r.text, /approved/i);

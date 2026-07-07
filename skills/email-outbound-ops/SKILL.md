@@ -61,7 +61,7 @@ Selection logic (apply in order):
 2. **Match the context.** AE-to-economic-buyer threads use the AE's account.
    SDR prospecting sequences use the SDR's account (or the sequence alias
    configured in the sequence tool).
-3. **Match the domain.** Company domain (`@company.com`) for all prospect-facing
+3. **Match the domain.** Company domain (`@company.example`) for all prospect-facing
    outbound. Personal or alias domains are not permitted for commercial outreach.
 4. **No ambiguity.** If the correct account cannot be determined from the above,
    stop and surface the question to the rep rather than guessing.
@@ -127,14 +127,14 @@ Produce the draft with explicit labeling:
 
 ```text
 MAIL SURFACE
-  Account: [rep@company.com]
-  Recipient: [prospect@company.com]
+  Account: [rep@company.example]
+  Recipient: [prospect@company.example]
   Thread: [new / reply to: <subject>]
   Action: draft
 
 DRAFT
-  From: [rep@company.com]
-  To: [prospect@company.com]
+  From: [rep@company.example]
+  To: [prospect@company.example]
   Subject: [subject line]
   Body:
     [message body — voice profile applied]
@@ -228,15 +228,15 @@ NEXT STEP
 
 ```text
 Task: SDR needs to send a follow-up to booked meeting confirmation.
-Account: sdr@company.com (SDR's own mailbox — new outbound, not a reply).
-Recipient: marcus@bigco.com — not suppressed (crm-operator check: clean).
+Account: sdr@company.example (SDR's own mailbox — new outbound, not a reply).
+Recipient: marcus@bigco.example — not suppressed (crm-operator check: clean).
 
-Thread read: no prior thread from this account with marcus@bigco.com.
+Thread read: no prior thread from this account with marcus@bigco.example.
 Voice profile: loaded from brand-voice.
 
 DRAFT
-  From: sdr@company.com
-  To: marcus@bigco.com
+  From: sdr@company.example
+  To: marcus@bigco.example
   Subject: Thursday's call — agenda and dial-in
 
   Hi Marcus,
@@ -260,7 +260,7 @@ crm-operator: propose activity log "Meeting confirmation sent to Marcus, BigCo".
 ```text
 Rep asks: "Did the Globex proposal email go out yesterday?"
 
-Sent-folder query: search sender=ae@company.com, to=priya@globex.com,
+Sent-folder query: search sender=ae@company.example, to=priya@globex.example,
 subject contains "proposal", date=2026-06-15.
 
 Tool result: message found in Sent, timestamp 2026-06-15 14:32 AEDT.
@@ -271,7 +271,7 @@ STATUS: sent — confirmed in Sent folder by tool result (2026-06-15 14:32 AEDT)
 **Send verification — not found:**
 
 ```text
-Rep asks: "Did the breakup email to lisa@startup.io send?"
+Rep asks: "Did the breakup email to lisa@startup.test send?"
 
 Sent-folder query: no message found matching that recipient in Sent.
 Drafts query: message found in Drafts.
@@ -284,11 +284,11 @@ NEXT STEP: rep to review draft and approve via send gate, or discard.
 **Sender account ambiguity — stop and surface:**
 
 ```text
-Task: reply to priya@globex.com — thread started by previous SDR (former employee).
-Problem: the thread account (former.sdr@company.com) no longer exists.
+Task: reply to priya@globex.example — thread started by previous SDR (former employee).
+Problem: the thread account (former.sdr@company.example) no longer exists.
 
 Stop: cannot reply from a decommissioned account. Surfacing to rep:
-"The prior thread used former.sdr@company.com which is inactive. Options:
+"The prior thread used former.sdr@company.example which is inactive. Options:
   (a) Start a fresh thread from your account, referencing the prior conversation.
   (b) Ask your manager whether the contact should be re-assigned.
 Do not proceed until account is resolved."

@@ -118,7 +118,7 @@ ENRICHMENT REVIEW-PACK — <record> — <date>
 Field            Current      Proposed         Source (retrieved)         Confidence
 title            (empty)      VP Operations    apollo (2026-07-06)        reported
 company_size     (empty)      850              apollo (2026-07-06)        reported
-email            (empty)      j.doe@acme.com   apollo verified (07-06)    verified
+email            (empty)      j.doe@acme.example   apollo verified (07-06)    verified
 tech_stack       (empty)      <list>           account-researcher (web)   inferred
 
 Unfilled: phone (no source), linkedin_url (ambiguous match — two candidates, listed below)
@@ -145,13 +145,13 @@ new tech), suggest a `signal-scorer` re-score.
 **Form fill with only an email:**
 
 ```text
-rep: enrich this inbound — all we have is j.doe@acme.com
+rep: enrich this inbound — all we have is j.doe@acme.example
 enrichment-ops:
   Step 1: HubSpot record: email only; name/title/company fields empty.
   Step 2: Apollo wired (mcp__apollo__* tools present).
   Step 3: Apollo person-match on the email domain + mailbox.
   Step 4: review-pack — name (reported), title VP Ops (reported),
-          company Acme 850 FTE hospitality (reported), email verified.
+          company Example Co 850 FTE manufacturing (reported), email verified.
   rep: apply all
   Step 5: crm-operator applies; fields land with source + date noted.
   Step 6: suggests signal-scorer re-score (now scoreable: 78 / Tier B).
@@ -160,7 +160,7 @@ enrichment-ops:
 **No provider wired:**
 
 ```text
-rep: find the ops lead's email at globex.com
+rep: find the ops lead's email at globex.example
 enrichment-ops:
   Step 2: no enrichment MCP wired — falling back to prospect-researcher (web).
   Step 3: public signals name an Operations Director; no published email.
