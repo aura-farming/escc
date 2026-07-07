@@ -18,6 +18,7 @@
 const review = require('./outbound-review');
 const gates = require('./outbound-gates');
 const dnc = require('./do-not-contact');
+const identity = require('./account-identity');
 
 /** Compact per-gate status map for the approval record. */
 function summarizeGates(result) {
@@ -40,20 +41,56 @@ function approveOutbound(args = {}) {
   const now = args.now || null;
   const override = args.override ? String(args.override) : null;
   const stateDir = args.stateDir;
+  // Separation of duties (v1.8.0): who is approving, in what role. Defaults
+  // come from the rep-identity env surface; recorded on every token.
+  const approver = args.approver || process.env.ESCC_REP_IDENTITY || null;
+  const approverRole = args.approverRole
+    || process.env.ESCC_ROLE || process.env.ESCC_REP_ROLE || 'rep';
 
   const recipient = String(draft.recipient || draft.to || '').trim();
   const key = review.outboundContentKey({ recipient, subject: draft.subject, body: draft.body });
+  // Canonical account key (ADR-0018): the supplied account id when present,
+  // else the recipient's email resolves to its domain/company identity.
+  const accountId = identity.accountKey(records.account_id || records.accountId || recipient) || null;
   const result = gates.evaluateGates({ draft, records, now });
 
   if (result.pass) {
-    review.recordApproval({ sessionId, key, recipient, confidence: 1, gates: summarizeGates(result), now, stateDir });
+    review.recordApproval({ sessionId, key, recipient, accountId, approver, approverRole, confidence: 1, gates: summarizeGates(result), now, stateDir });
     return { approved: true, key, recipient, blocks: [], warnings: result.warnings, override: false };
   }
 
   if (override) {
+    // Separation of duties (v1.8.0, opt-in tightening): under strict profile —
+    // or ESCC_OVERRIDE_REQUIRES_MANAGER=1 — an override must come from a
+    // manager role. Refused overrides record NO token and write NO blocklist
+    // rows (a human is mid-decision; re-run with a manager to proceed).
+    const requiresManager = String(process.env.ESCC_HOOK_PROFILE || 'standard').trim().toLowerCase() === 'strict'
+      || /^(1|true|on)$/i.test(String(process.env.ESCC_OVERRIDE_REQUIRES_MANAGER || ''));
+    if (requiresManager && !require('../instincts/lifecycle').isManagerRole(approverRole)) {
+      return {
+        approved: false,
+        key,
+        recipient,
+        blocks: [...result.blocks, { gate: 'override-sod', reason: `override requires a manager role under the strict profile (approver_role=${approverRole}). Re-run with --approver-role <manager|revops|vp|cro> as the approving manager.` }],
+        warnings: result.warnings,
+        override: false,
+        sodRefused: true,
+      };
+    }
     // Logged human override: approve despite the blocks, record the reason, and
     // do NOT persist the blocklist writes (the human is choosing to proceed).
-    review.recordApproval({ sessionId, key, recipient, confidence: 1, gates: summarizeGates(result), overrideReason: override, now, stateDir });
+    review.recordApproval({ sessionId, key, recipient, accountId, approver, approverRole, confidence: 1, gates: summarizeGates(result), overrideReason: override, now, stateDir });
+    try {
+      // Escalation visibility: every override lands in the notify queue.
+      require('./notify').notify({
+        severity: 'high',
+        title: 'ESCC outbound override',
+        message: `Override by ${approver || '(unattributed)'} (${approverRole}) for ${recipient}: ${override}`,
+        account: accountId,
+      });
+    } catch (_err) {
+      /* notification is best-effort; the governance row is the record */
+    }
     return { approved: true, key, recipient, blocks: result.blocks, warnings: result.warnings, override: true, overrideReason: override };
   }
 

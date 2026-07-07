@@ -31,6 +31,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const accountMemory = require('./account-memory');
+const identity = require('./account-identity');
 const session = require('./session-manager');
 const store = require('../instincts/instinct-store');
 
@@ -110,24 +111,49 @@ function purge(args = {}) {
   const confirm = !!args.confirm;
   const idLower = id.toLowerCase();
 
-  // --- account-memory: the subject's own files (entity-scoped, erasable) ------
+  // --- account-memory + voice: the subject's own files across the WHOLE
+  // identity cluster (ADR-0018) — the canonical key, every alias pointing at
+  // it, and the raw legacy stems. Purging "acme.com" must also reach the
+  // company_12345 store it was linked to, and vice versa.
   const accountFiles = [];
-  const stem = id ? accountMemory.sanitizeAccountId(id) : null;
-  let ownJsonl = null;
-  if (stem) {
-    ownJsonl = accountMemory.accountFile(id);
-    for (const p of [ownJsonl, accountMemory.markdownFile(id)]) {
-      if (fs.existsSync(p)) accountFiles.push(p);
+  const ownPaths = new Set();
+  const accDir = accountMemory.resolveAccountsDir();
+  const voiceDir = path.join(path.dirname(path.dirname(accDir)), 'escc', 'voice', 'account');
+  const stems = id ? identity.equivalentStems(id) : [];
+  for (const s of stems) {
+    for (const p of [
+      path.join(accDir, `${s}.jsonl`),
+      path.join(accDir, `${s}.md`),
+      path.join(voiceDir, `${s}.md`),
+    ]) {
+      if (fs.existsSync(p) && !ownPaths.has(p)) {
+        ownPaths.add(p);
+        accountFiles.push(p);
+      }
+    }
+  }
+
+  // --- alias index: rows naming the subject (their alias/canonical stems ARE
+  // identifying data) — filtered rewrite, like observations.
+  const aliasFile = identity.aliasesFile();
+  const aliasKept = [];
+  let aliasRowsRemoved = 0;
+  if (idLower) {
+    const stemSet = new Set(stems);
+    for (const r of readJsonl(aliasFile)) {
+      const hit = (r && (stemSet.has(r.alias) || stemSet.has(r.canonical)))
+        || matches(JSON.stringify(r), idLower);
+      if (hit) aliasRowsRemoved += 1;
+      else aliasKept.push(r);
     }
   }
 
   // --- account-memory: OTHER accounts that merely mention the subject (manual) -
   const accountReferences = [];
-  const accDir = accountMemory.resolveAccountsDir();
   for (const name of safeReaddir(accDir)) {
     if (!name.endsWith('.jsonl')) continue;
     const full = path.join(accDir, name);
-    if (full === ownJsonl) continue;
+    if (ownPaths.has(full)) continue;
     if (idLower && matches(safeRead(full), idLower)) accountReferences.push(full);
   }
 
@@ -222,12 +248,13 @@ function purge(args = {}) {
     for (const { inst, scope, evidKept } of toScrub) store.writeInstinct({ ...inst, evidence: evidKept }, scope);
     if (doNotContactRemoved > 0) atomicRewrite(dncFile, dncKept.map(r => JSON.stringify(r)).join('\n') + (dncKept.length ? '\n' : ''));
     if (governanceRemoved > 0) atomicRewrite(govFile, govKept.map(r => JSON.stringify(r)).join('\n') + (govKept.length ? '\n' : ''));
+    if (aliasRowsRemoved > 0) atomicRewrite(aliasFile, aliasKept.map(r => JSON.stringify(r)).join('\n') + (aliasKept.length ? '\n' : ''));
   }
 
   return {
     identifier: id,
     confirmed: confirm,
-    erased: { accountFiles, observationsRemoved, instinctsRemoved, instinctsScrubbed, doNotContactRemoved, governanceRemoved },
+    erased: { accountFiles, observationsRemoved, instinctsRemoved, instinctsScrubbed, doNotContactRemoved, governanceRemoved, aliasRowsRemoved },
     manualReview: {
       hubspot: `Erase the HubSpot record(s) for "${id}" via crm-operator — ESCC cannot delete CRM rows directly.`,
       sessionFiles,
@@ -249,6 +276,7 @@ function formatManifest(m) {
     `  instincts scrubbed:   ${e.instinctsScrubbed.length}${e.instinctsScrubbed.length ? ` (${e.instinctsScrubbed.join(', ')})` : ''}`,
     `  do-not-contact rows:  ${e.doNotContactRemoved || 0}`,
     `  outbound gov rows:    ${e.governanceRemoved || 0}`,
+    `  identity alias rows:  ${e.aliasRowsRemoved || 0}`,
     'Manual follow-up required (NOT auto-erased):',
     `  - ${m.manualReview.hubspot}`,
     `  - session-data references: ${m.manualReview.sessionFiles.length}`,

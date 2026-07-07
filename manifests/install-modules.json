@@ -214,8 +214,9 @@
     {
       "id": "skills-cross",
       "kind": "skills",
-      "description": "Cross-cutting skills (12): daily brief, inbox triage, email outbound ops, brand voice, CRM hygiene, sales handoffs, account memory, opt-out handling, meeting followthrough, trigger detection, reply handling, knowledge intake (/ingest).",
+      "description": "Cross-cutting skills (13): daily brief, inbox triage, email outbound ops, brand voice, CRM hygiene, sales handoffs, account memory, account truth (/truth), opt-out handling, meeting followthrough, trigger detection, reply handling, knowledge intake (/ingest).",
       "paths": [
+        "skills/account-truth",
         "skills/daily-brief",
         "skills/inbox-triage",
         "skills/email-outbound-ops",

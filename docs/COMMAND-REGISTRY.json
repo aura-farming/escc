@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "totalCommands": 69,
+  "totalCommands": 70,
   "commands": [
     {
       "command": "activity",
@@ -792,6 +792,17 @@
       "path": "commands/triggers.md"
     },
     {
+      "command": "truth",
+      "description": "THE reconciled account picture — live CRM vs memory vs ledgers, every section labeled source + last-verified; drift routes to escc reconcile.",
+      "type": "general",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "account-truth"
+      ],
+      "path": "commands/truth.md"
+    },
+    {
       "command": "win-loss",
       "description": "Analyze a set of closed deals for win/loss patterns across segment, persona, and competitive dimension.",
       "type": "review",
@@ -805,7 +816,7 @@
   ],
   "statistics": {
     "byType": {
-      "general": 11,
+      "general": 12,
       "orchestration": 2,
       "outreach": 9,
       "planning": 10,

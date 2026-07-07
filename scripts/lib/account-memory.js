@@ -24,6 +24,7 @@ const crypto = require('crypto');
 
 const { resolveAgentDataHome } = require('./agent-data-home');
 const { atomicWriteFile } = require('./utils');
+const identity = require('./account-identity');
 
 const ACCOUNTS_SUBDIR = path.join('escc', 'accounts');
 const MAX_ID_LENGTH = 80;
@@ -36,39 +37,38 @@ const CLOSED_STATUSES = new Set(['done', 'closed', 'cancelled', 'won', 'lost', '
 const LOOP_TYPES = new Set(['loop', 'promise', 'inbound', 'follow_up', 'next_step']);
 
 /**
- * Map an arbitrary account identifier (e.g. "deal:7788", "domain:Acme.IO",
- * a HubSpot id, an email domain) to a safe filename stem. Lowercases, replaces
- * any unsafe run with "_", neutralizes traversal, caps length.
+ * Map an arbitrary account identifier to a safe filename stem. Now owned by
+ * scripts/lib/account-identity.js (ADR-0018) and re-exported here for the
+ * existing callers; identity is the leaf module so no require cycle forms.
  * @param {string} raw
  * @returns {string|null} safe stem, or null if unusable
  */
-function sanitizeAccountId(raw) {
-  if (!raw || typeof raw !== 'string') return null;
-  const lowered = raw.trim().toLowerCase();
-  if (!lowered) return null;
-  const safe = lowered
-    .replace(/[^a-z0-9._-]+/g, '_')
-    .replace(/\.{2,}/g, '_')
-    .replace(/^[._-]+/, '')
-    .slice(0, MAX_ID_LENGTH);
-  return safe || null;
-}
+const sanitizeAccountId = identity.sanitizeStem;
 
 /** Absolute path to the accounts directory under the agent data home. */
 function resolveAccountsDir(options = {}) {
   return path.join(resolveAgentDataHome(options), ACCOUNTS_SUBDIR);
 }
 
+/**
+ * The CANONICAL stem for an account id (ADR-0018): alias index first, then
+ * grammar canonicalization — so "Acme" (once linked), "acme.com", and
+ * "company:12345" all land in ONE store.
+ */
+function canonicalStem(accountId) {
+  return identity.accountKey(accountId);
+}
+
 /** Absolute path to an account's JSONL event log (throws on unusable id). */
 function accountFile(accountId, options = {}) {
-  const stem = sanitizeAccountId(accountId);
+  const stem = canonicalStem(accountId);
   if (!stem) throw new TypeError(`account-memory: unusable account id: ${accountId}`);
   return path.join(resolveAccountsDir(options), `${stem}.jsonl`);
 }
 
 /** Absolute path to an account's markdown handoff view. */
 function markdownFile(accountId, options = {}) {
-  const stem = sanitizeAccountId(accountId);
+  const stem = canonicalStem(accountId);
   if (!stem) throw new TypeError(`account-memory: unusable account id: ${accountId}`);
   return path.join(resolveAccountsDir(options), `${stem}.md`);
 }
@@ -239,23 +239,55 @@ function eventLine(ev) {
   return `- ${day ? `${day} ` : ''}[${ev.type}]${dealTag} ${text}`.trimEnd();
 }
 
+// Open loops older than this many days are flagged "stale — reverify" in the
+// digest (ADR-0018: a months-old loop must never inject as if current). They
+// are NEVER dropped — a real open promise must not silently vanish.
+const DEFAULT_LOOP_STALE_DAYS = 21;
+
+function loopStaleDays() {
+  const n = Number.parseInt(String(process.env.ESCC_LOOP_STALE_DAYS ?? '').trim(), 10);
+  return Number.isInteger(n) && n > 0 ? n : DEFAULT_LOOP_STALE_DAYS;
+}
+
+function isStaleLoop(loop, nowMs, staleDays) {
+  if (!loop || !loop.ts) return false; // no timestamp -> cannot age; show as live
+  const t = Date.parse(loop.ts);
+  if (Number.isNaN(t)) return false;
+  return nowMs - t > staleDays * 24 * 60 * 60 * 1000;
+}
+
 /**
  * Render a hydrated digest into markdown, capped to `maxChars` (hard cap that
  * never overruns; lower-value lines drop first).
  * @param {object} hydrated result of hydrate()
  * @param {number} [maxChars]
+ * @param {{now?: string|number}} [options] injectable clock for tests
  * @returns {string}
  */
-function renderDigest(hydrated, maxChars = DEFAULT_DIGEST_MAX_CHARS) {
+function renderDigest(hydrated, maxChars = DEFAULT_DIGEST_MAX_CHARS, options = {}) {
   if (!hydrated) return '';
   const header = `Account memory — ${hydrated.accountId}${hydrated.segment ? ` · segment: ${hydrated.segment}` : ''}:`;
   const lines = [header];
 
   if (hydrated.openLoops && hydrated.openLoops.length) {
-    lines.push('Open loops:');
+    const staleDays = loopStaleDays();
+    const nowMs = toMs(options.now);
+    const live = [];
+    const stale = [];
     for (const loop of hydrated.openLoops) {
+      (isStaleLoop(loop, nowMs, staleDays) ? stale : live).push(loop);
+    }
+    const loopLine = loop => {
       const due = loop.due_date ? ` (due ${loop.due_date})` : '';
-      lines.push(`- ${loop.text || loop.type}${due}`);
+      return `- ${loop.text || loop.type}${due}`;
+    };
+    if (live.length) {
+      lines.push('Open loops:');
+      for (const loop of live) lines.push(loopLine(loop));
+    }
+    if (stale.length) {
+      lines.push(`Stale open loops (>${staleDays}d old — reverify before acting):`);
+      for (const loop of stale) lines.push(loopLine(loop));
     }
   }
 
@@ -398,6 +430,8 @@ module.exports = {
   resolveActiveAccount,
   listNearCloseDeals,
   pickPrimaryDealId,
+  loopStaleDays,
+  DEFAULT_LOOP_STALE_DAYS,
   CLOSED_STATUSES,
   LOOP_TYPES,
 };

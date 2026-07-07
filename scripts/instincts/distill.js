@@ -51,6 +51,8 @@ const OUTCOME_DOMAIN = {
   sequence_step_engaged: 'outreach',
   meeting_booked: 'outreach',
   deal_stage_advanced: 'deals',
+  closed_won: 'deals',
+  closed_lost: 'deals',
 };
 
 // Keyword → domain inference for free-text corrections (first match wins).

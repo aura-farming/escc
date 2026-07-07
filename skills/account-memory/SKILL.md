@@ -49,6 +49,25 @@ or for live HubSpot writes (those route through `crm-operator`).
 The engine lives in `scripts/lib/account-memory.js`. Two files per account,
 stored under `<ESCC_AGENT_DATA_HOME>/escc/accounts/`:
 
+> **Canonical identity (ADR-0018).** Every store keys through
+> `scripts/lib/account-identity.js`: `company:<hubspot-id>` is the tier-1 key,
+> a domain/email is the pre-CRM fallback, and a bare company NAME is lossy
+> until linked. When you first resolve an account's HubSpot company id (via a
+> CRM search), record it once — `escc identity link "<name>" company:<id>` —
+> and every past and future store joins on it. If a rep refers to an account
+> ambiguously, check `escc identity resolve "<input>"` before assuming a new
+> account. After new links, `escc identity backfill` (dry-run first) merges
+> any legacy fragments.
+>
+> **Write-back doctrine (ADR-0018).** Deal fields folded here
+> (stage/amount/close-date) are a DERIVED CACHE of HubSpot — never quote them
+> against a fresher CRM read; `escc reconcile` re-syncs them. Open loops that
+> represent real commitments SHOULD also exist as HubSpot tasks: when
+> capturing a loop with a due date, propose the matching task to
+> `crm-operator` so the CRM stays the canonical to-do surface. Narrative
+> color, stakeholder intel, and competitor mentions are TRUE-SIDECAR — they
+> live here by design.
+
 | File | Role | Mutated by |
 |---|---|---|
 | `<id>.jsonl` | Append-only tagged event log — canonical record | `appendEvent` (atomic append) |

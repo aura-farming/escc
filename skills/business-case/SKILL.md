@@ -19,7 +19,11 @@ the gap rather than assuming a benchmark the buyer has not validated.
 > **Governing rules:** `rules/common/selling-principles.md` (never fabricate
 > claims; no invented benchmarks); `rules/meddpicc/qualification.md` (M evidence is
 > the input; the deal-review M score gates whether a business case can be built
-> rigorously); `rules/meddpicc/deal-review.md` (M scoring discipline).
+> rigorously); `rules/meddpicc/deal-review.md` (M scoring discipline);
+> `rules/common/forecasting-definitions.md` Currency-correctness clause
+> (v1.8.0) — every ROI figure carries a currency code; buyer-stated metrics in
+> one currency are never mixed with costs in another without normalizing
+> through the workspace locale config and stating the rate + as-of date.
 
 ## When to Activate
 

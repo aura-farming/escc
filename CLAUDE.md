@@ -12,7 +12,7 @@ Sales Managers, and RevOps. It is adapted (MIT, with attribution) from Everythin
 re-namespaced; ECC's engineering content is replaced with sales content.
 
 - Plugin id / namespace: `escc` — skills invoke as `escc:<name>`.
-- Version `1.7.1` · License MIT (Copyright (c) 2026 Lucas) · Repo placeholder `https://github.com/aura-farming/escc`.
+- Version `1.8.0` · License MIT (Copyright (c) 2026 Lucas) · Repo placeholder `https://github.com/aura-farming/escc`.
 - It is **skills-first**: skills are the canonical workflow surface; commands are thin shims; agents are
   least-privilege; rules are layered.
 
