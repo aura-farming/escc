@@ -610,3 +610,69 @@ which source it used, so a weak answer is at least an honest one). LinkedIn
 send-automation, eSignature, comp modeling, and win-loss interview automation
 remain out of scope (no official API / no MCP / design non-goals). Ships as
 v1.7.0.
+
+---
+
+## ADR-0018: One canonical account identity, and a write-back doctrine for every local store
+
+**Status:** Accepted
+
+**Context.** HubSpot is ESCC's declared system of record (ADR-0002 lineage),
+but ESCC keeps parallel local stores — account-memory, voice overlays,
+promises/outcomes/governance in the state store, instincts — and two
+structural problems had grown underneath them. (1) **No canonical account
+identity:** `sanitizeAccountId` mapped a company *name* ("Acme"), its
+*domain* ("acme.com"), and its *HubSpot id* ("12345") to three different
+filename stems, so one real-world account fragmented into disjoint
+account-memory files, voice overlays, and promise keys that never joined —
+the root cause under the v1.7.1 review's three separate source-of-truth gaps
+(lossy keys, no unified resolver, no reconcile). (2) **No doctrine for which
+truth lives where:** each new feature reflexively added another local JSONL
+store, deepening a shadow-CRM in which the more ESCC remembered, the more
+truth lived outside the declared system of record, with nothing closing the
+loop back to HubSpot.
+
+**Decision.** (1) **Canonical identity is a first-class module**
+(`scripts/lib/account-identity.js`), and every per-account store keys through
+it. The key grammar is tiered by authority: `company_<hubspot-company-id>`
+(tier 1 — HubSpot is the identity authority), `domain_<email-domain>` (tier 2
+— pre-CRM prospecting fallback; bare domains, `www.`, and email addresses all
+collapse to it), and legacy `deal_<id>` / sanitized-name stems (lossy tiers).
+Anything the grammar cannot canonicalize resolves through an **alias index**
+(`<data-home>/escc/identity/aliases.jsonl`, append-only, last-write-wins,
+mtime-cached): a skill discovers the identity once via a HubSpot search and
+records it with `escc identity link "<alias>" company:<id>`; every store
+joins forever after. Resolution is deterministic Node — no MCP call on the
+hot path. `escc identity backfill` (dry-run by default) merges historical
+fragments into their canonical stores, backing up every touched file first
+(reversible), appending an `identity_backfill` provenance event, and
+re-keying open promises; it is idempotent. `privacy-purge` expands an
+identifier to its full **equivalence cluster** (canonical + every alias +
+legacy stems + the voice overlay) so the right to erasure reaches
+pre-migration fragments. (2) **Every local store is classified** and must
+declare its class when introduced: a **DERIVED-CACHE** (reconstructable from
+HubSpot; safe to purge; never authoritative when it disagrees with CRM — the
+reconcile pass re-syncs it, and derived truth worth keeping is written BACK
+to HubSpot as tasks/notes/properties through `crm-operator`, the sole writer)
+or a **TRUE-SIDECAR** (data HubSpot structurally cannot hold — narrative
+color, learned instincts, writing-style voice, local governance evidence —
+which lives here by design). Current classification: account-memory deal
+fields (stage/amount/close-date) = derived-cache, reconciled by
+`escc reconcile`; account-memory narrative events and open loops, instincts,
+voice profiles/overlays, product-knowledge, the alias index, and governance
+events = true-sidecar (governance is local evidence of local enforcement).
+The doctrine, not reviewer taste, decides where a future feature's state
+belongs — "why isn't this a HubSpot object?" must have a written answer.
+
+**Consequence.** "Acme", "acme.com", "jane@acme.com", and "company:12345"
+now name ONE store, which makes cross-store joins, the reconcile pass, the
+account-truth resolver, and any future team-shared layer trustworthy instead
+of silently under-matched — and the historical `acme.com` vs
+`domain:acme.com` split heals itself at backfill. Costs accepted: a one-time
+migration step for existing workspaces (`escc identity backfill`, reversible
+via the timestamped backup dir); bare all-digit identifiers are now read as
+HubSpot company ids (documented; legacy bare-digit stems merge at backfill);
+and name-tier keys remain lossy until a human links them — the resolver says
+so and prints the link command rather than guessing. ADR-0010
+(account-memory) and ADR-0004 (crm-operator sole writer) remain in force;
+write-back happens only through crm-operator. Ships as v1.8.0.

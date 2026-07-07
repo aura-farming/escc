@@ -23,7 +23,9 @@ const path = require('path');
 
 const { resolveAgentDataHome } = require('./agent-data-home');
 const { atomicWriteFile, getDateString } = require('./utils');
-const { sanitizeAccountId } = require('./account-memory');
+// Canonical identity resolution (ADR-0018): the overlay for "Acme" and for
+// "company:12345" must be the SAME file once the alias is linked.
+const { accountKey } = require('./account-identity');
 
 const VOICE_ACCOUNT_SUBDIR = path.join('escc', 'voice', 'account');
 
@@ -34,7 +36,7 @@ function resolveVoiceAccountDir(options = {}) {
 
 /** Absolute path to an account's voice overlay file (throws on an unusable id). */
 function voiceOverlayFile(account, options = {}) {
-  const stem = sanitizeAccountId(account);
+  const stem = accountKey(account);
   if (!stem) throw new TypeError(`voice-overlay: unusable account id: ${account}`);
   return path.join(resolveVoiceAccountDir(options), `${stem}.md`);
 }
@@ -90,6 +92,18 @@ function writeOverlay(account, register, options = {}) {
   return file;
 }
 
+/**
+ * The overlay's last-verified date (its rendered "Last updated:" line), or
+ * null when the overlay is missing or predates the stamp. Consumers (the
+ * account-truth resolver) use this to label voice data by freshness instead
+ * of presenting a months-old register as current (ADR-0018 staleness).
+ */
+function overlayLastUpdated(account, options = {}) {
+  const md = readOverlay(account, options);
+  const m = md.match(/^Last updated:\s*(.+)$/m);
+  return m ? m[1].trim() : null;
+}
+
 /** Read an account's overlay markdown; tolerates a missing file (''). */
 function readOverlay(account, options = {}) {
   let file;
@@ -113,4 +127,5 @@ module.exports = {
   renderOverlay,
   writeOverlay,
   readOverlay,
+  overlayLastUpdated,
 };

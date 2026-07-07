@@ -1,0 +1,8 @@
+{
+  "$comment": "ESCC workspace locale template (v1.8.0 currency correctness). Copy to <ESCC_AGENT_DATA_HOME>/escc/config/locale.json and edit — the workspace copy is runtime data (never committed) and survives plugin updates. reporting_currency is the ONE currency every roll-up reports in; fx maps other deal currencies into it. Rates carry an as_of date and source because a stale rate is stale provenance — refresh them like any other claim. Without this file, cross-currency sums REFUSE (safe default) rather than silently mixing units.",
+  "reporting_currency": "USD",
+  "fx": {
+    "AUD": { "rate": 0.66, "as_of": "2026-07-01", "source": "operator-entered" },
+    "EUR": { "rate": 1.08, "as_of": "2026-07-01", "source": "operator-entered" }
+  }
+}

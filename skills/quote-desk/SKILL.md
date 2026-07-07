@@ -21,6 +21,9 @@ rather than deriving pricing independently.
 > `rules/targets.md` — quota and ramp targets inform deal sizing and coverage math.
 > `rules/common/selling-principles.md` — pricing and packaging facts come only from
 > approved `product-knowledge` entries; no fabricated list prices or capacity limits.
+> `rules/common/forecasting-definitions.md` Currency-correctness clause (v1.8.0) —
+> every quote states its currency; a multi-currency ramp or comparison normalizes
+> through the workspace locale config (rate + as-of stated), never by mixing units.
 
 ## When to Activate
 
