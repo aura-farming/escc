@@ -374,6 +374,8 @@ function normalizeGovernanceEventInput(governanceEvent) {
   return {
     id: governanceEvent.id,
     sessionId: governanceEvent.sessionId ?? null,
+    // Canonical account key (ADR-0018) — optional, so pre-v1.8 rows stay valid.
+    accountId: governanceEvent.accountId ?? governanceEvent.account_id ?? null,
     eventType: governanceEvent.eventType,
     payload: governanceEvent.payload ?? null,
     resolvedAt: governanceEvent.resolvedAt ?? null,
@@ -664,6 +666,7 @@ function createQueryApi(store) {
       store.appendRecord('governance_events', {
         id: normalized.id,
         session_id: normalized.sessionId,
+        account_id: normalized.accountId,
         event_type: normalized.eventType,
         payload: normalized.payload,
         resolved_at: normalized.resolvedAt,
@@ -671,6 +674,16 @@ function createQueryApi(store) {
         created_at: normalized.createdAt,
       });
       return normalized;
+    },
+    /**
+     * All governance rows stamped with a canonical account key (ADR-0018),
+     * newest first. Pre-v1.8 rows carry no account_id and are simply not
+     * returned — account attribution starts when stamping starts.
+     */
+    getGovernanceByAccount(accountId) {
+      return store.readTable('governance_events')
+        .filter(row => row && row.account_id === accountId)
+        .sort(compareCreatedAtDesc);
     },
     insertSkillRun(skillRun) {
       const normalized = normalizeSkillRunInput(skillRun);

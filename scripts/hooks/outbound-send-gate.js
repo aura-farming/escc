@@ -45,6 +45,25 @@ function block(reason) {
 }
 
 /**
+ * Separation-of-duties branch (v1.8.0, ADDITIVE TIGHTENING ONLY): under the
+ * strict hook profile — or ESCC_OVERRIDE_REQUIRES_MANAGER=1 on any profile —
+ * an approval token that was minted via a human OVERRIDE must be signed by a
+ * manager role. Non-override tokens (the four gates passed) are untouched,
+ * and the standard profile behaves exactly as before.
+ * @returns {string|null} a block reason, or null to proceed
+ */
+function overrideSodViolation(approval) {
+  const payload = approval && approval.payload;
+  if (!payload || !payload.override_reason) return null; // not an override token
+  const strict = String(process.env.ESCC_HOOK_PROFILE || 'standard').trim().toLowerCase() === 'strict'
+    || /^(1|true|on)$/i.test(String(process.env.ESCC_OVERRIDE_REQUIRES_MANAGER || ''));
+  if (!strict) return null;
+  const { isManagerRole } = require('../instincts/lifecycle');
+  if (isManagerRole(payload.approver_role)) return null;
+  return `this approval is an OVERRIDE ("${payload.override_reason}") but is not manager-signed (approver_role=${payload.approver_role || 'unset'}), and the strict profile requires separation of duties. Re-approve with --approver-role <manager role> by an actual manager.`;
+}
+
+/**
  * @param {string|object} raw
  * @param {{truncated?: boolean, pluginRoot?: string}} [ctx]
  * @returns {{exitCode:number, stderr:string}|undefined}
@@ -97,20 +116,30 @@ function run(raw, ctx = {}) {
       }
     }
 
+    // ONE governance read for the whole evaluation (v1.8.0 perf QW): the
+    // bulk counter and both approval lookups share this snapshot instead of
+    // each re-parsing the full log.
+    const events = review.loadGovernanceEvents({});
+
     // --- legacy live-send tools: bulk cap, then an approval token OR a legacy review ---
     if (cls.kind === 'send') {
       const fingerprint = review.fingerprintOutbound(toolName, toolInput);
       const max = review.bulkMax();
-      const alreadySent = review.countSends({ sessionId });
+      const alreadySent = review.countSends({ sessionId, events });
       if (alreadySent >= max) {
         review.recordSendDecision({ sessionId, fingerprint, decision: 'bulk' });
         return block(`bulk send cap reached (${alreadySent}/${max} sends this session via ESCC_BULK_SEND_MAX). Split the work across sessions or raise the cap deliberately.`);
       }
-      const approved = review.findValidApproval({ key: contentKey })
-        || review.findValidReview({ fingerprint, minConfidence: review.reviewMinConfidence() });
+      const approved = review.findValidApproval({ key: contentKey, events })
+        || review.findValidReview({ fingerprint, minConfidence: review.reviewMinConfidence(), events });
       if (!approved) {
         review.recordSendDecision({ sessionId, fingerprint, decision: 'unapproved' });
         return block(`no review-evidence marker for this outbound (tool=${toolName}). Run the blessed path (email-outbound-ops, or /escc-worklist for a batch) so it is reviewed and approved, then retry.`);
+      }
+      const sod = overrideSodViolation(approved);
+      if (sod) {
+        review.recordSendDecision({ sessionId, fingerprint, decision: 'unapproved' });
+        return block(sod);
       }
       review.recordSendDecision({ sessionId, fingerprint, decision: 'allow' });
       return undefined;
@@ -121,11 +150,16 @@ function run(raw, ctx = {}) {
       return block(`could not read the recipient/content of this ${cls.kind} to verify an escc review (fail-closed). Produce it through email-outbound-ops or /escc-worklist.`);
     }
 
-    const approval = review.findValidApproval({ key: contentKey });
+    const approval = review.findValidApproval({ key: contentKey, events });
     if (!approval) {
       review.recordSendDecision({ sessionId, fingerprint: contentKey, decision: 'unapproved' });
       const what = cls.kind === 'crm-email' ? 'this outbound email' : 'this draft';
       return block(`${what} has not passed escc review. Run the blessed path first — email-outbound-ops for one message, or /escc-worklist for a batch — so the adversarial reviewer + the four gates approve it; then retry.`);
+    }
+    const sod = overrideSodViolation(approval);
+    if (sod) {
+      review.recordSendDecision({ sessionId, fingerprint: contentKey, decision: 'unapproved' });
+      return block(sod);
     }
 
     // Cheap, no-network payload backstop: hard-fail an egregious overclaim even
@@ -145,7 +179,7 @@ function run(raw, ctx = {}) {
   }
 }
 
-module.exports = { run };
+module.exports = { run, overrideSodViolation };
 
 // Standalone fallback (legacy spawn path). Guarded so that require()-ing this
 // module from run-with-flags never registers stdin listeners or exits. Stays

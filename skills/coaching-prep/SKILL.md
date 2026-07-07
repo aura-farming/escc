@@ -112,6 +112,11 @@ Select focus areas from:
   are being logged (e.g. many emails, few calls) that suggests a skill gap.
   Cite `activity-audit` output and compare to segment targets from
   `rules/targets.md`.
+- **Follow-through pattern (v1.8.0):** `escc outcome summary` reports the
+  promised-vs-logged follow-up gap folded from recent sessions and
+  corroborated against the live promise ledger. Cite it as a coaching input
+  only when corroborated — and always alongside strengths, never as
+  surveillance.
 - **Call quality pattern:** if `call-review` scores show a consistent gap
   (e.g. low discovery depth, talk-to-listen ratio off), name the pattern with
   quoted evidence.

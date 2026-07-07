@@ -76,3 +76,38 @@ test('a logged override approves despite a block and does NOT persist the block'
     assert.equal(gate.run(draftCall(draft)), undefined, 'overridden draft passes the send-gate');
   });
 });
+
+test('an approval row carries the canonical account key and is account-queryable (ADR-0018)', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
+    const draft = { to: 'jane@acme.com', subject: 'Hi', body: 'Worth a look at rostering?' };
+    const records = { notes: [], lead_status: 'new', open_deals: [], priorEngagement: false, account_id: 'acme.com' };
+    const r = approve.approveOutbound({ draft, records, now: new Date().toISOString() });
+    assert.equal(r.approved, true);
+
+    const { createStateStoreSync } = require('../../scripts/lib/state-store/index.js');
+    const store = createStateStoreSync();
+    try {
+      const rows = store.getGovernanceByAccount('domain_acme.com');
+      assert.equal(rows.length, 1, 'approval row found by canonical account key');
+      assert.equal(rows[0].event_type, 'outbound_approval');
+      assert.equal(rows[0].payload.recipient, 'jane@acme.com');
+    } finally {
+      store.close();
+    }
+  });
+});
+
+test('with no records.account_id the recipient email resolves the account key', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
+    const draft = { to: 'ops@globex.io', subject: 'Hi', body: 'Quick look at scheduling?' };
+    const r = approve.approveOutbound({ draft, records: { notes: [], open_deals: [] }, now: new Date().toISOString() });
+    assert.equal(r.approved, true);
+    const { createStateStoreSync } = require('../../scripts/lib/state-store/index.js');
+    const store = createStateStoreSync();
+    try {
+      assert.equal(store.getGovernanceByAccount('domain_globex.io').length, 1);
+    } finally {
+      store.close();
+    }
+  });
+});

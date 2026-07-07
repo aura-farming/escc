@@ -10,6 +10,106 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.8.0] - 2026-07-07
+
+The source-of-truth release. Three structural fixes from the v1.7.1 strategic
+review land together: **one canonical account identity** every store joins on,
+a **fed learning loop** (the outcomes ledger and correction signal that were
+fully built but starved now have writers), and **"HubSpot wins" as code** (a
+reconcile pass, not prose). Plus the account-truth query surface, a
+compliance-grade audit CLI, separation-of-duties overrides, scheduled
+autonomy, and currency-correct money math. See [ADR-0018](docs/DECISIONS.md)
+and [docs/releases/v1.8.0.md](docs/releases/v1.8.0.md).
+
+### Added
+
+- **Canonical account identity (ADR-0018).** `scripts/lib/account-identity.js`
+  + `escc identity resolve|link|list|backfill`: `company:<hubspot-id>` is the
+  tier-1 key, domains/emails collapse to `domain_<x>`, and an append-only
+  alias index joins names to CRM identity ("Acme" = "acme.com" =
+  "company:12345" = ONE store). account-memory, voice overlays, promise rows,
+  and governance events all key through it. `backfill` merges historical
+  fragments (dry-run default, timestamped backup, provenance event,
+  idempotent); `privacy-purge` now erases the whole equivalence cluster
+  (legacy stems + voice overlays + alias rows).
+- **Outcome-capture bridge — the learning loop is FED.** `insertOutcome` had
+  zero production callers, so instinct confidence never moved on real results.
+  Now: `post:outcome-capture` turns HubSpot deal-STAGE writes into
+  `deal_stage_advanced`/`closed_won`/`closed_lost` outcomes and Calendar
+  events into `meeting_booked` (whitelisted payloads only — never free text);
+  `escc outcome record` attests replies; `escc outcome list|summary` inspect
+  the ledger. Schema + distill `OUTCOME_DOMAIN` gain the closed_won/lost types.
+- **`prompt:capture-correction`.** The engine's strongest signal
+  (`user_correction`, threshold 1) finally has a writer: a conservative
+  pattern table (`config/correction-patterns.json`) captures explicit rep
+  corrections as observations. Nothing auto-applies — the I7 review gate
+  (`/instinct-status`) still owns activation.
+- **CRM reconcile.** `scripts/lib/account-reconcile.js` + `escc reconcile
+  <account> --input <crm.json> [--apply]`: diffs the agent-read CRM snapshot
+  against account-memory's folded deal fields, seeds CRM-only deals,
+  auto-closes ONLY deal-status loops on closed-won/lost, appends
+  `source:'crm-reconcile'` events. Memory-only deals are reported for review,
+  never auto-closed. Local-only; crm-operator remains the sole CRM writer.
+- **Account truth.** `scripts/lib/account-truth.js` + `escc truth <account>`
+  + the `account-truth` skill (`/truth`): one provenance-labeled answer
+  joining live CRM (optional snapshot), memory (with staleness), promises,
+  outcomes, governance, and voice — with drift shown inline and cold-start
+  honesty (no CRM read → says so; product claims stay behind ADR-0012).
+- **`escc audit`.** Query/export the governance ledger
+  (`--recipient/--account/--event-type/--since/--json`) — "prove we honored
+  this opt-out", "list every override this quarter". Typo'd event types are
+  refused, not silently empty.
+- **Separation of duties (tighten-only).** Approval tokens record
+  `approver`/`approver_role`; under the strict profile (or
+  `ESCC_OVERRIDE_REQUIRES_MANAGER=1`) an override must be manager-signed —
+  refused at approve time AND blocked at the gate for pre-existing rep-signed
+  override tokens. Clean four-gates tokens and the standard profile are
+  byte-identical to v1.7.1. Every override lands in the notify queue.
+- **Scheduled autonomy + notify drain.** `escc watch
+  --emit-schedule|--install-schedule` generates/installs the launchd plist
+  (crontab line elsewhere) so the signal sweep runs on a cadence; `escc
+  notify drain [--clear] [--approve-self <your-email>]` empties the queue and
+  can mint a SELF-digest approval token — bound to the exact recipient +
+  content, unusable for a prospect draft; the fail-closed gate is untouched.
+- **Currency correctness (blocker fix).** `scripts/lib/currency.js` +
+  `config/locale.example.json`: amounts carry currency codes, a workspace
+  reporting currency + FX table (rate + as-of provenance) normalizes, and
+  mixed-currency sums REFUSE rather than silently mixing units.
+  `forecasting-definitions.md` owns the policy; forecast-rollup,
+  business-case, and quote-desk cite it.
+- **Staleness (quick win).** Open loops older than `ESCC_LOOP_STALE_DAYS`
+  (default 21) render as "stale — reverify" in digests (never dropped); voice
+  overlays expose their last-updated stamp to the truth view.
+
+### Changed
+
+- Governance events carry an optional canonical `account_id`;
+  `getGovernanceByAccount` joins them. The send-gate reads the governance log
+  ONCE per evaluation (was 3 full-file reads on the hottest fail-closed path).
+- Catalog: **68 skills, 70 commands, 30 hook matchers** (CI-pinned);
+  `skills-cross` carries `account-truth`; intent-router gains the /truth
+  route; reply-handling attests reply outcomes; coaching-prep cites
+  `escc outcome summary` (corroborated, coaching-not-surveillance);
+  account-memory documents the identity + write-back doctrine.
+- `.env.example`: +`ESCC_LOOP_STALE_DAYS`, +`ESCC_OVERRIDE_REQUIRES_MANAGER`.
+
+### Fixed
+
+- A reconcile loop-close event no longer carries `deal_id`, which would have
+  let its `status:'done'` overwrite the deal's CRM `won/lost` status in the
+  fold (caught by the idempotence test during development).
+
+### Security
+
+- The fail-closed send-gate changed in exactly two ways, both TIGHTENING:
+  one governance read instead of three (same verdicts, proven by the
+  existing suite), and the strict-profile SoD branch (proven tighten-only:
+  standard profile and clean tokens byte-identical). The self-digest token is
+  content-and-recipient-bound — tests prove it cannot launder a prospect
+  draft. Outcome payloads are whitelisted structured fields (ADR-0012);
+  correction capture skips long prompts (likely pasted third-party content)
+  and routes through the human review gate.
+
 ## [1.7.1] - 2026-07-06
 
 Hardening patch from a full verification run of the plugin (66-check machine

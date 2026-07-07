@@ -148,7 +148,12 @@ After the execution step is complete:
    the MEDDPICC picture.)
 3. Update or close any open follow-up tasks from `inbox-triage` or
    `follow-up-ops`.
-4. Never claim "replied" or "sent" without tool-result confirmation.
+4. Record the outcome so the learning loop compounds (v1.8.0): a genuine
+   prospect reply has no tool call to hook, so attest it —
+   `escc outcome record --type reply_received --account <account>`. Deal-stage
+   advances and booked meetings are captured automatically by the
+   `post:outcome-capture` hook; replies are the one outcome only you can see.
+5. Never claim "replied" or "sent" without tool-result confirmation.
 
 ## Examples
 

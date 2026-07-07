@@ -337,6 +337,9 @@
         "sessionId": {
           "$ref": "#/$defs/nullableString"
         },
+        "accountId": {
+          "$ref": "#/$defs/nullableString"
+        },
         "eventType": {
           "$ref": "#/$defs/nonEmptyString"
         },
@@ -511,7 +514,9 @@
             "reply_received",
             "meeting_booked",
             "deal_stage_advanced",
-            "sequence_step_engaged"
+            "sequence_step_engaged",
+            "closed_won",
+            "closed_lost"
           ]
         },
         "fingerprint": {

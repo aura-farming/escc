@@ -16,5 +16,21 @@ Shared definitions so "commit" means the same thing for every rep and manager. U
 - Forecast confidence is weighted by MEDDPICC completeness (`meddpicc/forecast-risk.md`): missing Metrics, Economic buyer, or Decision process materially discounts a commit.
 - "MEDDPICC-gap-check-before-forecast" is a default behavior (seed instinct).
 
+## Currency correctness (v1.8.0)
+- **Every amount carries a currency code, and a roll-up reports in ONE
+  currency** — the workspace reporting currency declared in
+  `<ESCC_AGENT_DATA_HOME>/escc/config/locale.json` (template:
+  `config/locale.example.json`).
+- **Mixed-currency sums REFUSE, never guess.** `scripts/lib/currency.js`
+  (`normalizeAmount` / `sumAmounts`) converts through the workspace FX table
+  and puts anything it cannot normalize in a `skipped` list — a total that
+  silently mixed AUD and USD is an authoritative-looking falsehood, worse
+  than no number.
+- **FX rates are provenance**: each carries an `as_of` date and source, and a
+  stale rate is a stale claim — state the rates and dates used whenever a
+  converted total is reported.
+- Applies to every money surface: `forecast-rollup`, `forecast-accuracy`,
+  `business-case`, `quote-desk`, `sales-reporting`, `retention-rollup`.
+
 ## Discipline
 - Report change-vs-last-week honestly: slips, pull-ins, new, expansion. No silent re-categorization to protect a number.
