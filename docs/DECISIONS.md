@@ -676,3 +676,99 @@ and name-tier keys remain lossy until a human links them — the resolver says
 so and prints the link command rather than guessing. ADR-0010
 (account-memory) and ADR-0004 (crm-operator sole writer) remain in force;
 write-back happens only through crm-operator. Ships as v1.8.0.
+
+## ADR-0019: The digital twin learns in-session, captures fidelity deterministically, and earns autonomy one gate at a time
+
+**Status:** Accepted
+
+**Context.** After v1.8.0 fed the learning loop (outcomes ledger, canonical
+identity, reconcile), the open question was how ESCC should learn the rep
+*automatically* — style, accounts, knowledge, judgment, outcomes — instead of
+by manual filling. A code-grounded design pass (eight subsystem readers plus
+adversarial review) surfaced four things the obvious design got wrong. (1) The
+appealing "point cron at a headless `claude -p` session" lane is unsafe as
+stated: the fail-closed send-gate is enforced *inside* node processes that
+launchd's minimal environment may never spawn, `--bare` (the usual unattended
+flag) skips plugins/hooks/gate entirely, and the wired CRM/Gmail/Calendar
+connectors authenticate through interactive OAuth that does not exist
+headlessly. (2) The earned-autonomy ladder's headline unlock metric —
+per-play-class draft revision-rate — has no writer, no store, and no play-class
+taxonomy in code, so it cannot accrue history until the release that first
+captures it. (3) Machine-written knowledge resonance is exactly the
+multi-causal attribution ADR-0012 deferred as "the fabrication failure mode
+automated." (4) Cross-cutting guarantees (privacy-purge reach, session-start
+injection trust, send-gate ledger growth, rollback of poisoned stores,
+cold-start) sit *between* subsystems and were unowned.
+
+**Decision.** (1) **The twin learns in-session (lane L-C).** The morning sweep —
+batch CRM reconcile, enrichment review-packs, pre-staged call-prep briefs — runs
+when the rep opens the first `/daily` of the day, with connectors authed, hooks
+guaranteed, and a human present; it persists prepared work onto the state-store
+`work_items` table (`source:'morning-prep'`) as **structured whitelisted fields
+only** (canonical account key, ISO meeting time, skill pointer, `generatedAt`,
+CRM `asOf`, a brief-file pointer) — never free-text prospect strings — so a
+calendar title cannot become a durable cross-session prompt-injection vector.
+The sweep is built as a scheduler-agnostic skill + CLI verbs; a headless
+launchd lane (L-A) is a later opt-in pilot behind five written preconditions
+(verified hook-spawn semantics, a hardened per-job plist, zero gated tools +
+`--bare` forbidden, a version-parity pre-step, and the drain race fixed).
+Claude-hosted Routines (L-B) are rejected for this release: they cannot read the
+local JSONL state the whole source-of-truth investment lives in.
+(2) **Fidelity is captured deterministically, never model-declared.** Per-item
+content keys are persisted at review-pack time; at approve time the approve-key
+is compared against the latest pack-key for that recipient — equal ⇒
+`draft_approved_unedited`, different ⇒ `draft_revised`. The two new outcome
+types carry the content key in `fingerprint` for per-message traceability and
+are deliberately kept OUT of the instinct-confidence domain map, so a productive
+class cannot silently push pending, unapproved instincts over the injection floor.
+(3) **Autonomy is earned one gate at a time.** v1.9.0 ships L1 (the existing
+blessed path), L2 (a daily batch review-pack), and a **narrowed L3** —
+auto-apply restricted to HubSpot task/note *creation* through `crm-operator`
+(the sole-writer monopoly untouched), backed by a fail-open applied-writes
+ledger and a daily after-pack; property/stage/owner/amount writes stay
+review-before until prior-value snapshots make them reversible. The grant /
+revocation / per-day-cap data model lands **dark** (issuance disabled). **L4
+auto-send is deferred to v2.0.0 behind its own ADR** — it is the first
+unreviewed live outbound in the system's history, its unlock metric cannot
+accrue until this release's capture ships, and the send-gate may only ever
+tighten. When it ships, class membership is anchored ONLY in local append-only
+ledgers (a `meeting_booked` outcome or a prior approval row for that recipient),
+never in model-supplied records; grant creation checks manager role
+unconditionally (attestation + audit trail, not a signature); auto-tokens carry
+minute-scale TTLs; and the content-bound self-digest token (v1.8.0) is the
+proven pattern the gate admits unchanged.
+(4) **Machine-written resonance amends ADR-0012.** Resonance may be
+machine-written as a **descriptive count with provenance** (source outcome ids,
+content keys, method, timestamp), joined to claims used in a draft ONLY on the
+exact outbound content key (the account×time-window fallback is rejected as the
+very attribution fantasy ADR-0012 named), **barred from any draft-selection or
+ranking path**, and applied only after an explicit operator accept of a staged
+proposal — mirroring the candidate→approve human gate. This, and v1.9.0's
+auto-mining of processed transcripts into candidates, supersede product-mine's
+"seeding only, loop deferred" scope line; the fabrication firewall
+(candidates/proposals stay `approved:false`+`untrusted:true` until a human
+promotes) is unchanged. Cadence-pattern mining is a declared *fourth* instinct
+source (rep-action metadata — timestamps and counts, never message content),
+emitting low-confidence PENDING instincts through the unchanged `/instinct-status`
+gate. (5) **Purge coverage is a declared doctrine.** Every state-store table and
+owned sidecar declares a purge strategy in `privacy-purge.PURGE_STRATEGIES`, a
+content-guard test fails the build if a table is undeclared, and the twin-writer
+stores (`outcomes`, `promises`, `work_items`, the notify queue, session metrics)
+are auto-erased on `--confirm`. Poisoned-store rollback ships as `escc outcome
+void`, an overlay `.bak` before every overwrite, and a per-store undo table.
+
+**Consequence.** "Learn the rep automatically" ships as an in-session,
+human-gated, deterministically-instrumented system in which every hard
+invariant survives untouched: the send-gate is never modified and only
+tightens, `crm-operator` stays the sole CRM writer, prospect content stays
+untrusted, and no machine write becomes quotable/sendable/active without the
+existing human gate. Deferring the headless lane and L4 costs no calendar time —
+the earned-autonomy clock cannot start until this release's fidelity capture
+exists — and buys a full release of real convergence data plus an ADR-grade
+review of the first unreviewed outbound. Costs accepted: the first `/daily` of
+the day runs a slower inline sweep; prep quality depends on the rep opening a
+session; and resonance/fidelity signals accrue slowly (attestation-bound), so
+the twin surfaces render "starved — needs N more samples" honestly rather than
+implying confidence it has not earned. ADR-0012 (fabrication firewall), ADR-0004
+(crm-operator sole writer), ADR-0016 (hint-only chaining), and ADR-0018
+(canonical identity, store doctrine) all remain in force. Ships as v1.9.0.

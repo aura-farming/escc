@@ -130,8 +130,13 @@ converts at materially higher rates than a back-and-forth email chain.
 | unsubscribe | `opt-out-handling` (route immediately — no drafting here) |
 
 All drafts consume the `[VOICE PROFILE]` owned by `brand-voice`. Do not invent
-a tone or style. When an account is in scope, also layer its per-account voice
-overlay (`escc voice show "<account>"`) on the rep base profile — see
+a tone or style. When an account is in scope, first **build or refresh its
+per-account voice overlay** from the buyer side of the thread you just read
+(`escc voice account "<account>" --input '{"texts":[...]}'`, buyer messages
+ONLY — gather the account's full buyer history, not just the newest message, so
+the refresh does not thin out a higher-confidence overlay; refresh when the
+overlay is missing or its "Last updated" is older than `ESCC_VOICE_STALE_DAYS`).
+Then layer it (`escc voice show "<account>"`) on the rep base profile — see
 `brand-voice` §Per-Account Voice Overlay (STYLE only; never the buyer's claims
 or numbers). Include the compliance block (sender identity + unsubscribe)
 on all commercial replies per `rules/common/outbound-compliance.md`.

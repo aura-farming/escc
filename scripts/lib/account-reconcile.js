@@ -143,6 +143,36 @@ function reconcile(accountId, snapshot = {}, options = {}) {
   };
 }
 
+/**
+ * Reconcile a MULTI-account snapshot in one pass (the morning sweep). Each entry
+ * follows the single-account contract; a per-entry failure is captured, never
+ * fatal, so one unusable account never sinks the batch.
+ * @param {{accounts?: object[], asOf?: string}} snapshot
+ * @param {{apply?: boolean, now?: string}} [options]
+ * @returns {{applied, asOf, results: object[], errors: Array<{account, error}>}}
+ */
+function reconcileBatch(snapshot = {}, options = {}) {
+  const apply = options.apply === true;
+  const now = options.now || new Date().toISOString();
+  const asOf = snapshot.asOf || snapshot.as_of || now;
+  const entries = Array.isArray(snapshot.accounts) ? snapshot.accounts : [];
+  const results = [];
+  const errors = [];
+  for (const entry of entries) {
+    const account = entry && (entry.account || entry.account_id);
+    if (!account) {
+      errors.push({ account: null, error: 'entry missing an account id' });
+      continue;
+    }
+    try {
+      results.push(reconcile(account, { deals: entry.deals, asOf: entry.asOf || entry.as_of || asOf }, { apply, now }));
+    } catch (err) {
+      errors.push({ account, error: err.message });
+    }
+  }
+  return { applied: apply, asOf, results, errors };
+}
+
 /** Human-readable drift report for the CLI. */
 function formatReport(r) {
   const lines = [
@@ -164,4 +194,14 @@ function formatReport(r) {
   return lines.join('\n');
 }
 
-module.exports = { DEAL_FIELDS, reconcile, formatReport, normalizeSnapshotDeal };
+/** Aggregate report for a batch reconcile (the morning sweep). */
+function formatBatchReport(batch) {
+  const lines = [
+    `${batch.applied ? 'RECONCILED' : 'DRIFT REPORT (read-only — re-run with --apply)'} — ${batch.results.length} account(s) (CRM as of ${batch.asOf})`,
+  ];
+  for (const r of batch.results) lines.push(formatReport(r).split('\n').map((l, i) => (i === 0 ? `\n${l}` : l)).join('\n'));
+  for (const e of batch.errors) lines.push(`  SKIPPED ${e.account || '(no id)'}: ${e.error}`);
+  return lines.join('\n');
+}
+
+module.exports = { DEAL_FIELDS, reconcile, reconcileBatch, formatReport, formatBatchReport, normalizeSnapshotDeal };

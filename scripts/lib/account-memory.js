@@ -417,6 +417,52 @@ function listNearCloseDeals(withinDays = 14, options = {}) {
   return out;
 }
 
+/**
+ * Enumerate every account-memory store, most-recent-activity first. With
+ * options.activeWithinDays set, return only accounts whose latest event falls
+ * inside that window — the "active accounts" the morning sweep reconciles.
+ * Mirrors listNearCloseDeals' readdir+hydrate sweep. Read-only.
+ * @param {{activeWithinDays?: number, now?: string|number}} [options]
+ * @returns {Array<{account_id, last_event_at, deal_count, open_loop_count, segment}>}
+ */
+function listAccounts(options = {}) {
+  const dir = resolveAccountsDir(options);
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch (_err) {
+    return [];
+  }
+  const envWindow = Number(process.env.ESCC_ACTIVE_ACCOUNT_WINDOW_DAYS);
+  const windowDays = Number.isFinite(options.activeWithinDays)
+    ? options.activeWithinDays
+    : (Number.isFinite(envWindow) && envWindow > 0 ? envWindow : null);
+  const cutoffMs = windowDays == null ? null : toMs(options.now) - Math.max(0, windowDays) * 24 * 60 * 60 * 1000;
+
+  const out = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith('.jsonl')) continue;
+    const stem = entry.name.replace(/\.jsonl$/, '');
+    const h = hydrate(stem, options);
+    if (cutoffMs != null) {
+      const evMs = h.lastEventAt ? Date.parse(h.lastEventAt) : NaN;
+      if (Number.isNaN(evMs) || evMs < cutoffMs) continue;
+    }
+    out.push({
+      // The filename stem is the canonical key (ADR-0018) every other store —
+      // reconcile, worklist, voice, purge — joins on; return it, not the raw
+      // stamped account_id, so the sweep keys consistently.
+      account_id: stem,
+      last_event_at: h.lastEventAt,
+      deal_count: Object.keys(h.deals || {}).length,
+      open_loop_count: (h.openLoops || []).length,
+      segment: h.segment || null,
+    });
+  }
+  out.sort((a, b) => String(b.last_event_at || '').localeCompare(String(a.last_event_at || '')));
+  return out;
+}
+
 module.exports = {
   sanitizeAccountId,
   resolveAccountsDir,
@@ -429,6 +475,7 @@ module.exports = {
   writeMarkdownView,
   resolveActiveAccount,
   listNearCloseDeals,
+  listAccounts,
   pickPrimaryDealId,
   loopStaleDays,
   DEFAULT_LOOP_STALE_DAYS,

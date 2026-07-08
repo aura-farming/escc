@@ -27,6 +27,9 @@ const accountMemory = require('../../scripts/lib/account-memory');
 const store = require('../../scripts/instincts/instinct-store');
 const session = require('../../scripts/lib/session-manager');
 const purgeLib = require('../../scripts/lib/privacy-purge');
+const { createStateStoreSync } = require('../../scripts/lib/state-store');
+const notify = require('../../scripts/lib/notify');
+const sessionSignal = require('../../scripts/lib/session-signal');
 
 function withEnv(overrides, fn) {
   const keys = Object.keys(overrides);
@@ -199,5 +202,74 @@ test('the legacy sessions/ directory is also scanned for references', () => {
     fs.writeFileSync(path.join(legacyDir, '2025-01-01-legacy-session.tmp'), 'old notes about acme.test\n');
     const res = purgeLib.purge({ identifier: 'acme.test' });
     assert.ok(res.manualReview.sessionFiles.some(p => /legacy-session/.test(p)), 'a legacy session reference is surfaced');
+  });
+});
+
+// --- ADR-0019 D1: purge reaches the twin-writer stores -----------------------
+
+// Seed the state-store tables + sidecar queues each v1.9.0 learning/prep writer
+// lands rows in: one row referencing the subject, one unrelated.
+function seedTwinStores() {
+  const db = createStateStoreSync();
+  db.insertOutcome({ id: 'o-sub', type: 'reply_received', account_id: SUBJECT });
+  db.insertOutcome({ id: 'o-other', type: 'reply_received', account_id: 'beta-corp' });
+  db.upsertPromise({ id: 'p-sub', account_id: SUBJECT, text: 'follow up with them' });
+  db.upsertPromise({ id: 'p-other', account_id: 'beta-corp', text: 'ping beta' });
+  db.upsertWorkItem({ id: 'w-sub', source: 'morning-prep', sourceId: SUBJECT, title: 'Call prep', status: 'open' });
+  db.upsertWorkItem({ id: 'w-other', source: 'morning-prep', sourceId: 'beta-corp', title: 'Call prep', status: 'open' });
+  db.close();
+
+  const queue = notify.resolveQueuePath();
+  fs.mkdirSync(path.dirname(queue), { recursive: true });
+  fs.writeFileSync(queue, [
+    JSON.stringify({ ts: '2026-07-01T00:00:00Z', severity: 'high', title: 'Deal alert', message: 'movement', account: SUBJECT }),
+    JSON.stringify({ ts: '2026-07-01T00:00:00Z', severity: 'high', title: 'Deal alert', message: 'movement', account: 'beta-corp' }),
+  ].join('\n') + '\n');
+
+  const soPath = sessionSignal.sessionOutcomesPath();
+  fs.mkdirSync(path.dirname(soPath), { recursive: true });
+  fs.writeFileSync(soPath, [
+    JSON.stringify({ session_id: 's-sub', account: SUBJECT, metrics: { draftsCreated: 1 } }),
+    JSON.stringify({ session_id: 's-other', metrics: { draftsCreated: 2 } }),
+  ].join('\n') + '\n');
+}
+
+test('dry-run reports twin-store erasure targets but mutates nothing', () => {
+  withEnv(freshEnv(), () => {
+    seedTwinStores();
+    const res = purgeLib.purge({ identifier: SUBJECT });
+    assert.equal(res.confirmed, false);
+    assert.equal(res.erased.outcomesRemoved, 1, 'one subject outcome targeted');
+    assert.equal(res.erased.promisesRemoved, 1, 'one subject promise targeted');
+    assert.equal(res.erased.workItemsRemoved, 1, 'one subject work item targeted');
+    assert.equal(res.erased.notificationsRemoved, 1, 'one subject notification targeted');
+    assert.equal(res.erased.sessionOutcomesRemoved, 1, 'one subject session-metric row targeted');
+
+    // dry-run mutated nothing.
+    const db = createStateStoreSync();
+    assert.equal(db.listOutcomes().length, 2, 'outcomes untouched in dry-run');
+    db.close();
+  });
+});
+
+test('--confirm erases twin-store rows referencing the subject; unrelated survive', () => {
+  withEnv(freshEnv(), () => {
+    seedTwinStores();
+    const res = purgeLib.purge({ identifier: SUBJECT, confirm: true });
+    assert.equal(res.confirmed, true);
+
+    const db = createStateStoreSync();
+    assert.deepEqual(db.listOutcomes().map(o => o.id), ['o-other'], 'only the unrelated outcome survives');
+    assert.deepEqual(db.listWorkItems().items.map(w => w.id).sort(), ['w-other'], 'only the unrelated work item survives');
+    assert.ok(!db.listOpenPromises().some(p => p.id === 'p-sub'), 'subject promise erased');
+    assert.ok(db.listOpenPromises().some(p => p.id === 'p-other'), 'unrelated promise survives');
+    db.close();
+
+    const queueRows = fs.readFileSync(notify.resolveQueuePath(), 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse);
+    assert.equal(queueRows.length, 1, 'one notification survives');
+    assert.equal(queueRows[0].account, 'beta-corp', 'the surviving notification is the unrelated one');
+
+    const soRows = fs.readFileSync(sessionSignal.sessionOutcomesPath(), 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse);
+    assert.deepEqual(soRows.map(r => r.session_id), ['s-other'], 'only the unrelated session-metric row survives');
   });
 });

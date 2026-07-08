@@ -63,22 +63,36 @@ function extractObjectionCandidates(text, opts = {}) {
   return out;
 }
 
+// Cap candidates accepted per mine call (ADR-0019): auto-mining every processed
+// transcript must not flood the operator review queue, or the ADR-0012 firewall
+// degrades from a control into a rubber stamp. Env-tunable; drops are surfaced.
+function mineMax() {
+  const n = Number(process.env.ESCC_MINE_MAX);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 25;
+}
+
 /**
  * Ingest a batch of candidate structs (e.g. from the quarantine subagent) into the
  * operator-only candidate area. appendCandidate FORCES approved:false +
- * untrusted:true, so nothing here can ever be approved or trusted.
- * @returns {object[]} the stored candidate rows
+ * untrusted:true, so nothing here can ever be approved or trusted. Accepts at
+ * most ESCC_MINE_MAX (or opts.max) candidates; the surplus is dropped and
+ * reported on the returned array's `.dropped` count (never silently truncated).
+ * @returns {object[]} the stored candidate rows (with a `.dropped` count)
  */
 function ingestCandidates(items, opts = {}) {
+  const list = Array.isArray(items) ? items : [];
+  const cap = Number.isFinite(opts.max) && opts.max > 0 ? Math.floor(opts.max) : mineMax();
+  const accepted = list.slice(0, cap);
   const stored = [];
-  for (const item of items || []) {
+  for (const item of accepted) {
     stored.push(appendCandidate({
       source_type: item.source_type || opts.sourceType || 'manual',
       source_ref: item.source_ref || opts.sourceRef || null,
       ...item,
     }, opts));
   }
+  Object.defineProperty(stored, 'dropped', { value: Math.max(0, list.length - accepted.length), enumerable: false });
   return stored;
 }
 
-module.exports = { extractObjectionCandidates, ingestCandidates, sentences, OBJECTION_CUES };
+module.exports = { extractObjectionCandidates, ingestCandidates, mineMax, sentences, OBJECTION_CUES };

@@ -169,6 +169,11 @@ NEXT STEP
    consume at the next handoff or for the next session:start to hydrate from.
 3. Verify: call `hydrate` after the batch and confirm open loops match
    the action items added. Assert nothing before the event objects are returned.
+4. **Auto-mine knowledge candidates** from the structured summary (not raw
+   text): ingest any objections / pains / competitor mentions via
+   `escc product mine --input '{"items":[...]}'` — all land `approved:false` +
+   `untrusted:true` (ADR-0012), operator-only until promoted. Same pattern and
+   guards as `discovery-notes` §2b (never `--from-transcript` on raw bytes).
 
 ## Examples
 

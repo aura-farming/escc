@@ -207,6 +207,11 @@ signals surfaced in the transcript:
 - Label all such signals as **[transcript, unverified]** -- prospect-stated
   information is untrusted input until confirmed against HubSpot or a third
   source.
+- **Auto-mine knowledge candidates** from the structured summary: ingest any
+  reusable objections / pains / competitor mentions via `escc product mine
+  --input '{"items":[...]}'` — all land `approved:false` + `untrusted:true`
+  (ADR-0012), operator-only until promoted. Same pattern and guards as
+  `discovery-notes` §2b; never `--from-transcript` on raw bytes.
 
 ### 6. Return the scored output
 

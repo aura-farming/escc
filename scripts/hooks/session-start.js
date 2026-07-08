@@ -194,6 +194,22 @@ function buildImminentDealsBlock() {
   return lines.join('\n');
 }
 
+function buildPreparedDayBlock() {
+  let items;
+  try {
+    items = require('../lib/worklist-store').listPreparedItems({ status: 'open' });
+  } catch (_err) {
+    return '';
+  }
+  if (!items.length) return '';
+  // Counts + safe pointers ONLY (ADR-0019): titles are composed from canonical
+  // keys + ISO times, never prospect free text, and brief bodies live behind
+  // /daily — nothing prospect-authored is re-injected across sessions.
+  const head = `Prepared for today (${items.length} item${items.length === 1 ? '' : 's'} — run /daily to work them):`;
+  const lines = items.slice(0, 8).map(i => `- ${i.title}`);
+  return [head, ...lines].join('\n');
+}
+
 function buildActiveAccountBlock() {
   let active;
   try {
@@ -426,10 +442,14 @@ function buildContext(sessionId, source) {
   const { overdueBlock, restBlock } = buildPromiseBlocks(today);
   const { block: activeBlock, segment } = buildActiveAccountBlock();
 
+  // Priority order = eviction order under the char budget (later blocks drop
+  // first). Prepared-day sits just below imminent deals — morning-critical and
+  // tiny (counts + pointers) — and above the recent-summary/nudge tail.
   const blocks = [
     buildResumeBlock(sessionId, source),
     overdueBlock,
     buildImminentDealsBlock(),
+    buildPreparedDayBlock(),
     activeBlock,
     restBlock,
     buildRecentSummaryBlock(),

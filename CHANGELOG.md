@@ -10,6 +10,52 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.9.0] - unreleased
+
+The digital twin: ESCC learns the rep automatically instead of by manual
+filling — it prepares the day, keeps the per-account writing voice current from
+real correspondence, mines reusable knowledge from every processed call, and
+lets the outcomes ledger feed itself, all in-session and behind the existing
+human gates. Governed by ADR-0019; design code-grounded and adversarially
+pressure-tested first. See [docs/releases/v1.9.0.md](docs/releases/v1.9.0.md).
+Version bump + tag are cut at merge, after the live smoke test.
+
+### Added
+
+- **Prepared day (lane L-C):** an in-session morning sweep (batch
+  `escc reconcile`, `accountMemory.listAccounts`) that pre-stages work onto a
+  persistent prepared-day store (`escc worklist add|list|done`, structured
+  whitelisted fields only), surfaced at session-start and in `/daily`.
+- **Style loop:** `reply-handling` / `inbox-triage` / `discovery-notes` now
+  build/refresh the per-account voice overlay from buyer text, with a
+  sample-count downgrade guard, an `<file>.bak` backup before overwrite, and
+  actionable staleness (`ESCC_VOICE_STALE_DAYS`).
+- **Knowledge loop:** `discovery-notes` / `call-review` / `meeting-followthrough`
+  auto-mine reusable candidates (objections, pains, competitor mentions) into
+  the operator-only candidate area (ADR-0012 firewall unchanged).
+- **Outcomes loop:** `inbox-triage` auto-attests inbound replies;
+  `escc outcome record --thread` dedupes; `escc outcome void <id>` rolls a bad
+  outcome back everywhere (filtered at the single `listOutcomes` seam).
+- **`escc twin [--days N]`:** a read-only "what the twin learned lately" digest
+  with a correction-surface pointer per line.
+
+### Security
+
+- **Privacy-purge reaches every twin-writer store** (outcomes, promises, work
+  items, notify queue, session metrics); a content-guard test requires every
+  state-store table to declare a purge strategy so none can silently escape
+  erasure.
+- Quarantine guard on `escc product mine --from-transcript` (refuses quarantined
+  paths); per-mine ingest cap (`ESCC_MINE_MAX`) so auto-mining cannot flood the
+  review queue.
+
+### Deferred
+
+- Fidelity instrumentation (revision-rate capture + dark autonomy grant model)
+  and machine-written resonance (the ADR-0012 amendment) are speced but held for
+  a focused follow-up (each carries a schema change). L4 auto-send remains
+  deferred to v2.0.0 behind its own ADR.
+
 ## [1.8.1] - 2026-07-07
 
 Public-source hygiene release: a full-repo sensitivity audit (tree, docs,
