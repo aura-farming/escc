@@ -1,0 +1,523 @@
+# Instincts generated from https://github.com/aura-farming/escc
+# Generated: 2026-07-09T23:00:01.641Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: escc-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat, docs, chore
+
+## Evidence
+
+- 6 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat(twin): digital-twin learning loops — prepared day, style/knowledge/outcomes self-learning, rollback + observability (v1.9.0, ADR-0019), docs(release): add v1.9.0 to the README "What's new" status block
+
+---
+id: escc-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Commit Length
+
+## Action
+
+Write moderate-length commit messages (~70 characters)
+
+## Evidence
+
+- Average commit message length: 70 chars
+- Based on 6 commits
+
+---
+id: escc-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Naming Files
+
+## Action
+
+Use kebab-case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: kebab-case
+
+---
+id: escc-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: escc-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: escc-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: escc-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.js
+
+## Evidence
+
+- File pattern: *.test.js
+- Consistent across test files
+
+---
+id: escc-workflow-feature-release-version-bump
+trigger: "when doing feature release version bump"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Workflow Feature Release Version Bump
+
+## Action
+
+Follow the feature-release-version-bump workflow:
+1. Update package.json and package-lock.json with the new version.
+2. Update .claude-plugin/plugin.json and .claude-plugin/marketplace.json with the new version.
+3. Update CLAUDE.md with the new version line.
+4. Update CHANGELOG.md with the release date and details.
+5. Optionally update SOUL.md, AGENTS.md, agent.yaml, or other meta files.
+6. Commit with chore(release): vX.Y.Z message.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: package.json, package-lock.json, .claude-plugin/plugin.json
+
+---
+id: escc-workflow-feature-development-with-docs-and-tests
+trigger: "when doing feature development with docs and tests"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Workflow Feature Development With Docs And Tests
+
+## Action
+
+Follow the feature-development-with-docs-and-tests workflow:
+1. Implement new or updated logic in scripts/lib/ and scripts/escc.js.
+2. Update or create related skills/*/SKILL.md files.
+3. Update or add documentation in docs/DECISIONS.md and docs/releases/vX.Y.Z.md.
+4. Add or update tests in tests/unit/ for new/changed logic.
+5. Update CHANGELOG.md with a summary of the feature.
+6. Update .env.example if new config is needed.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: scripts/escc.js, scripts/lib/*.js, skills/*/SKILL.md
+
+---
+id: escc-workflow-release-documentation-update
+trigger: "when doing release documentation update"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/aura-farming/escc
+---
+
+# Escc Workflow Release Documentation Update
+
+## Action
+
+Follow the release-documentation-update workflow:
+1. Add or update docs/releases/vX.Y.Z.md with release notes.
+2. Update docs/DECISIONS.md with new ADRs or decision records.
+3. Update CHANGELOG.md with the new version and summary.
+4. Update README.md to add the new release to the status block.
+5. Optionally update TROUBLESHOOTING.md for new behaviors.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: docs/releases/*.md, docs/DECISIONS.md, CHANGELOG.md
+
+---
+id: escc-instinct-file-naming
+trigger: "When creating or renaming a file"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct File Naming
+
+## Action
+
+Use kebab-case for file names (e.g., my-file.js)
+
+## Evidence
+
+- Pattern in namingConventions.files
+- Observed in scripts/escc.js, scripts/lib/*.js
+
+---
+id: escc-instinct-function-naming
+trigger: "When defining a function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Function Naming
+
+## Action
+
+Use camelCase for function names
+
+## Evidence
+
+- Pattern in namingConventions.functions
+- JavaScript conventions in scripts/lib/*.js
+
+---
+id: escc-instinct-class-naming
+trigger: "When defining a class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Class Naming
+
+## Action
+
+Use PascalCase for class names
+
+## Evidence
+
+- Pattern in namingConventions.classes
+
+---
+id: escc-instinct-constant-naming
+trigger: "When declaring a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Constant Naming
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for constant names
+
+## Evidence
+
+- Pattern in namingConventions.constants
+
+---
+id: escc-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Import Style
+
+## Action
+
+Use relative import paths
+
+## Evidence
+
+- Pattern in importStyle: relative
+- Observed in scripts/lib/*.js
+
+---
+id: escc-instinct-export-style
+trigger: "When exporting from a module"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Export Style
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in exportStyle: named
+
+---
+id: escc-instinct-test-location
+trigger: "When adding or updating tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Test Location
+
+## Action
+
+Place unit tests in the tests/unit/ directory with filenames ending in .test.js
+
+## Evidence
+
+- Pattern in testLocation: separate
+- testTypes: unit
+- filePattern: *.test.js
+
+---
+id: escc-instinct-test-coverage-config
+trigger: "When configuring or running tests"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Test Coverage Config
+
+## Action
+
+Ensure test coverage is configured and measured
+
+## Evidence
+
+- Pattern in coverageConfig: true
+
+---
+id: escc-instinct-test-update-on-feature
+trigger: "When implementing or updating a feature"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Test Update On Feature
+
+## Action
+
+Add or update corresponding unit tests for new or changed logic
+
+## Evidence
+
+- Workflow: feature-development-with-docs-and-tests
+- Example: Add or update tests in tests/unit/
+
+---
+id: escc-instinct-commit-format
+trigger: "When making a git commit"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Commit Format
+
+## Action
+
+Use Conventional Commits format with a prefix (feat, docs, chore), optional scope, and concise message
+
+## Evidence
+
+- Pattern in commits.type: conventional
+- Examples: feat(twin): ..., docs(release): ..., chore(release): ...
+
+---
+id: escc-instinct-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Commit Length
+
+## Action
+
+Keep the commit message around 70 characters on average
+
+## Evidence
+
+- Pattern in commits.averageLength: 70
+
+---
+id: escc-instinct-feature-release-version-bump
+trigger: "When a new feature or major change is merged and ready for release"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Feature Release Version Bump
+
+## Action
+
+Update all version and changelog files, then commit with chore(release): vX.Y.Z
+
+## Evidence
+
+- Workflow: feature-release-version-bump
+- Example commit: chore(release): v1.9.0
+
+---
+id: escc-instinct-feature-development-with-docs-and-tests
+trigger: "When adding a significant new feature or capability"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Feature Development With Docs And Tests
+
+## Action
+
+Implement code, update/create SKILL.md, update docs/DECISIONS.md and docs/releases/, add/update unit tests, update CHANGELOG.md, and .env.example if needed
+
+## Evidence
+
+- Workflow: feature-development-with-docs-and-tests
+- Example: Implement new or updated logic in scripts/lib/ and scripts/escc.js
+
+---
+id: escc-instinct-release-documentation-update
+trigger: "When documenting a new release or major change"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Release Documentation Update
+
+## Action
+
+Update docs/releases/, docs/DECISIONS.md, CHANGELOG.md, README.md, and optionally TROUBLESHOOTING.md
+
+## Evidence
+
+- Workflow: release-documentation-update
+- Example: Add or update docs/releases/vX.Y.Z.md with release notes
+
+---
+id: escc-instinct-error-handling
+trigger: "When handling errors in code"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: aura-farming/escc
+---
+
+# Escc Instinct Error Handling
+
+## Action
+
+Use try-catch blocks for error handling; do not use custom error classes or global handlers
+
+## Evidence
+
+- Pattern in errorHandling.style: try-catch
+- customErrorClasses: false
+
