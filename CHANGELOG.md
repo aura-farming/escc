@@ -10,7 +10,7 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
-## [1.9.1] - unreleased
+## [1.9.1] - 2026-07-10
 
 The adversarial reviewer is now enforced in the approval path, and a batch ask
 routes to the blessed worklist on-ramp. A field test (bulk-drafting ~38 emails
