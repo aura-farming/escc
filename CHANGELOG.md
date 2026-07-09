@@ -10,7 +10,7 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
-## [1.9.0] - unreleased
+## [1.9.0] - 2026-07-10
 
 The digital twin: ESCC learns the rep automatically instead of by manual
 filling — it prepares the day, keeps the per-account writing voice current from
@@ -18,7 +18,6 @@ real correspondence, mines reusable knowledge from every processed call, and
 lets the outcomes ledger feed itself, all in-session and behind the existing
 human gates. Governed by ADR-0019; design code-grounded and adversarially
 pressure-tested first. See [docs/releases/v1.9.0.md](docs/releases/v1.9.0.md).
-Version bump + tag are cut at merge, after the live smoke test.
 
 ### Added
 
