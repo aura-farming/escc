@@ -84,6 +84,22 @@ test('specific-before-general: MEDDPICC audit beats single-deal MEDDPICC', () =>
   assert.equal(routedSkill('run meddpicc on the Globex deal'), 'deal-review');
 });
 
+// --- batch/worklist on-ramp (regression guard for the mass-draft routing gap) --
+
+test('BATCH cluster: mass/bulk/count/list phrasings reach the worklist on-ramp', () => {
+  assert.equal(routedSkill('mass draft 38 emails to these prospects'), 'worklist');
+  assert.equal(routedSkill('bulk draft cold outreach for my whole list'), 'worklist');
+  assert.equal(routedSkill('draft 40 emails for the territory'), 'worklist');
+  assert.equal(routedSkill('work through my overdue tasks'), 'worklist');
+  assert.equal(routedSkill('reach out to everyone on the list'), 'worklist');
+  assert.equal(routedSkill('these 25 contacts need a first touch'), 'worklist');
+});
+
+test('BATCH on-ramp is precise: single-message and prospect-list asks are untouched', () => {
+  assert.equal(routedSkill('write a cold email to Jane at Example Co'), 'cold-outreach');
+  assert.equal(routedSkill('build me a prospect list for mid-market'), 'prospecting-pipeline');
+});
+
 // --- skip rules ---------------------------------------------------------------
 
 test('skips prompts that are already routed', () => {

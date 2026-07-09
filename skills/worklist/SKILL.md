@@ -91,7 +91,9 @@ node "$CLAUDE_PLUGIN_ROOT/scripts/escc.js" outbound review-pack --input worklist
 "records": {notes,lead_status,open_deals,lifecycle,priorEngagement,account_id} } ] }`.
 Then run `outbound-reviewer` on each draft for the qualitative >80%-confidence
 layer (compliance, fabrication, voice, one-CTA). A draft ships only if BOTH the
-gates pass and the reviewer is clean.
+gates pass and the reviewer is clean. Capture each draft's reviewer verdict +
+confidence — they feed `outbound approve` in Step 6, which will **not** mint a
+token without them (ADR-0020).
 
 ### Step 5 — Assemble ONE consolidated review-pack
 
@@ -116,8 +118,10 @@ NEXT: approve the sendable set to send via the gated path, or override an exclus
 For each approved sendable item:
 
 ```bash
-# mint the per-recipient approval token (gates re-run; on pass the token is written):
-node "$CLAUDE_PLUGIN_ROOT/scripts/escc.js" outbound approve --input draft.json
+# mint the per-recipient approval token — gates re-run AND the Step-4 reviewer
+# verdict is required (ADR-0020); on a clean pass the token is written:
+node "$CLAUDE_PLUGIN_ROOT/scripts/escc.js" outbound approve --input draft.json \
+  --review-verdict approved --review-confidence 0.9 --reviewer outbound-reviewer
 # (add  --override "<reason>"  only for an explicit, logged human override)
 ```
 
@@ -155,6 +159,12 @@ APPROVED (override logged). Draft placed via email-outbound-ops; activity logged
 
 - **Looping a raw send tool over the list.** That is exactly the bypass this
   skill exists to prevent. Every send goes through approve → the send-gate.
+- **Hand-rolling the batch with general-purpose subagents.** The value here is the
+  *dedicated* agents — `account-researcher`, `outreach-drafter`, `outbound-reviewer`,
+  `crm-operator` — and the enforced review. Briefing generic agents to triage / draft /
+  create drafts bypasses that structure: the fail-closed send-gate still holds, but you
+  lose the adversarial reviewer, the consolidated review-pack, and the write discipline.
+  Delegate to the ESCC agents by name; do not re-implement them.
 - **One blob of 40 drafts with no triage.** Drop internal/no-contact/unreachable
   first; a review-pack of junk wastes the reviewer's attention.
 - **Auto-approving to clear the backlog.** The gates and reviewer are the point.

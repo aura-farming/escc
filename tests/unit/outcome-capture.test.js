@@ -245,6 +245,7 @@ test('escc audit filters the governance ledger and refuses a typo eventType', ()
     approve.approveOutbound({
       draft: { to: 'jane@acme.example', subject: 'Hi', body: 'Quick look?' },
       records: { notes: [], open_deals: [] },
+      review: { verdict: 'approved', confidence: 0.9 },
       now: new Date().toISOString(),
     });
     approve.approveOutbound({

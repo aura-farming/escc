@@ -44,7 +44,7 @@ test('approveOutbound approves a clean draft and the send-gate then allows it', 
     // `now` must be the REAL current time: recordApproval stamps expires_at =
     // now + TTL (7 days), but the send-gate checks expiry against the actual
     // clock — a past pinned date here becomes a date-bomb once TTL elapses.
-    const r = approve.approveOutbound({ draft, records, now: new Date().toISOString() });
+    const r = approve.approveOutbound({ draft, records, review: { verdict: 'approved', confidence: 0.9 }, now: new Date().toISOString() });
     assert.equal(r.approved, true);
     // the matching draft now passes the fail-closed gate
     assert.equal(gate.run(draftCall(draft)), undefined, 'approved draft passes the send-gate');
@@ -55,7 +55,7 @@ test('approveOutbound blocks a draft to an open-deal account and remembers the b
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
     const draft = { to: 'x@y.example', subject: 'Hi', body: 'You could cut review time — keen for a look?' };
     const records = { open_deals: [{ id: 'd1' }], account_id: 'acme-1' };
-    const r = approve.approveOutbound({ draft, records });
+    const r = approve.approveOutbound({ draft, records, review: { verdict: 'approved', confidence: 0.9 } });
     assert.equal(r.approved, false);
     assert.ok(r.blocks.some(b => b.gate === 'contactability'));
     assert.ok(dnc.findActiveBlock({ key: 'acme-1' }), 'the account is written to the do-not-contact list');
@@ -81,7 +81,7 @@ test('an approval row carries the canonical account key and is account-queryable
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
     const draft = { to: 'jane@acme.example', subject: 'Hi', body: 'Worth a look at reporting?' };
     const records = { notes: [], lead_status: 'new', open_deals: [], priorEngagement: false, account_id: 'acme.example' };
-    const r = approve.approveOutbound({ draft, records, now: new Date().toISOString() });
+    const r = approve.approveOutbound({ draft, records, review: { verdict: 'approved', confidence: 0.9 }, now: new Date().toISOString() });
     assert.equal(r.approved, true);
 
     const { createStateStoreSync } = require('../../scripts/lib/state-store/index.js');
@@ -100,7 +100,7 @@ test('an approval row carries the canonical account key and is account-queryable
 test('with no records.account_id the recipient email resolves the account key', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
     const draft = { to: 'ops@globex.test', subject: 'Hi', body: 'Quick look at scheduling?' };
-    const r = approve.approveOutbound({ draft, records: { notes: [], open_deals: [] }, now: new Date().toISOString() });
+    const r = approve.approveOutbound({ draft, records: { notes: [], open_deals: [] }, review: { verdict: 'approved', confidence: 0.9 }, now: new Date().toISOString() });
     assert.equal(r.approved, true);
     const { createStateStoreSync } = require('../../scripts/lib/state-store/index.js');
     const store = createStateStoreSync();
@@ -109,5 +109,74 @@ test('with no records.account_id the recipient email resolves the account key', 
     } finally {
       store.close();
     }
+  });
+});
+
+// --- ADR-0020: the adversarial reviewer is ENFORCED in the approval path -------
+// The token no longer mints on the four deterministic gates alone; the qualitative
+// outbound-reviewer verdict is part of the sanctioned path (default-on, fail-closed).
+
+const CLEAN = { notes: [], lead_status: 'new', open_deals: [], priorEngagement: false };
+
+test('a clean-gates draft with NO reviewer verdict is BLOCKED by default (review enforced)', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshHome(), ESCC_OUTBOUND_REQUIRE_REVIEW: undefined }, () => {
+    const draft = { to: 'a@b.example', subject: 'Thursday', body: 'You could save your team hours on reporting — worth a quick look?' };
+    const r = approve.approveOutbound({ draft, records: CLEAN, now: new Date().toISOString() });
+    assert.equal(r.approved, false, 'no review => no token, even though the four gates pass');
+    assert.ok(r.blocks.some(b => b.gate === 'adversarial-review'), 'the block names the missing review');
+    assert.equal(gate.run(draftCall(draft)).exitCode, 2, 'and the send-gate blocks the draft (no token)');
+  });
+});
+
+test('a below-floor or non-approval reviewer verdict is BLOCKED', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
+    const draft = { to: 'a@b.example', subject: 'S', body: 'You could cut review time — keen for a look?' };
+    const low = approve.approveOutbound({ draft, records: CLEAN, review: { verdict: 'approved', confidence: 0.5 }, now: new Date().toISOString() });
+    assert.equal(low.approved, false, 'confidence below the 0.8 floor is not a pass');
+    assert.ok(low.blocks.some(b => b.gate === 'adversarial-review'));
+  });
+  withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
+    const draft = { to: 'a@b.example', subject: 'S', body: 'You could cut review time — keen for a look?' };
+    const changes = approve.approveOutbound({ draft, records: CLEAN, review: { verdict: 'needs-changes', confidence: 0.99 }, now: new Date().toISOString() });
+    assert.equal(changes.approved, false, 'a non-approval verdict is not a pass');
+  });
+});
+
+test('a clean-gates draft WITH a valid reviewer verdict approves, and the token records the attestation', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
+    const draft = { to: 'sam@acme.example', subject: 'Reporting', body: 'You could save your team hours — worth a quick look?' };
+    const r = approve.approveOutbound({ draft, records: { ...CLEAN, account_id: 'acme.example' }, review: { verdict: 'clean', confidence: 0.92, reviewer: 'outbound-reviewer' }, now: new Date().toISOString() });
+    assert.equal(r.approved, true);
+    assert.equal(r.review.verdict, 'clean');
+    assert.equal(gate.run(draftCall(draft)), undefined, 'the reviewed + approved draft passes the send-gate');
+    const { createStateStoreSync } = require('../../scripts/lib/state-store/index.js');
+    const store = createStateStoreSync();
+    try {
+      const rows = store.getGovernanceByAccount('domain_acme.example').filter(x => x.event_type === 'outbound_approval');
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0].payload.review.reviewer, 'outbound-reviewer');
+      assert.ok(rows[0].payload.review.confidence >= 0.8, 'the attestation confidence is persisted');
+    } finally {
+      store.close();
+    }
+  });
+});
+
+test('ESCC_OUTBOUND_REQUIRE_REVIEW=off restores the legacy four-gates-only approval', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshHome(), ESCC_OUTBOUND_REQUIRE_REVIEW: 'off' }, () => {
+    const draft = { to: 'a@b.example', subject: 'S', body: 'Worth a quick look at reporting?' };
+    const r = approve.approveOutbound({ draft, records: CLEAN, now: new Date().toISOString() });
+    assert.equal(r.approved, true, 'with the requirement off, clean gates approve without a review');
+    assert.equal(gate.run(draftCall(draft)), undefined);
+  });
+});
+
+test('a logged override approves despite a missing review (the explicit, logged escape hatch)', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
+    const draft = { to: 'a@b.example', subject: 'S', body: 'Worth a quick look at reporting?' };
+    const r = approve.approveOutbound({ draft, records: CLEAN, override: 'sending pre-reviewed copy', now: new Date().toISOString() });
+    assert.equal(r.approved, true);
+    assert.equal(r.override, true);
+    assert.equal(gate.run(draftCall(draft)), undefined);
   });
 });

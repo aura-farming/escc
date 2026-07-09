@@ -124,7 +124,7 @@
         "id": "post:crm-log-reminder"
       },
       {
-        "matcher": "mcp__claude_ai_Fireflies__get_.*|mcp__claude_ai_Gmail__get_thread|mcp__claude_ai_Gmail__search_threads|mcp__hubspot__get_crm_objects|mcp__hubspot__search_crm_objects|mcp__hubspot__query_crm_data",
+        "matcher": "mcp__claude_ai_Fireflies__get_.*|mcp__claude_ai_Gmail__get_thread|mcp__claude_ai_Gmail__search_threads|mcp__hubspot__get_crm_objects|mcp__hubspot__search_crm_objects|mcp__hubspot__query_crm_data|mcp__.*__create_draft",
         "hooks": [
           {
             "type": "command",
@@ -132,7 +132,7 @@
             "timeout": 5
           }
         ],
-        "description": "Next-play suggestion after a high-signal tool result (ADR-0016): transcript -> discovery-notes, Gmail thread -> reply-handling, HubSpot deal read -> deal-review. Once per chain family per session; pure hint, never blocks.",
+        "description": "Next-play suggestion after a high-signal tool result (ADR-0016): transcript -> discovery-notes, Gmail thread -> reply-handling, HubSpot deal read -> deal-review, created draft -> worklist batch on-ramp (ADR-0020). Once per chain family per session; pure hint, never blocks.",
         "id": "post:chaining-hints"
       },
       {

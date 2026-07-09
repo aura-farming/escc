@@ -65,10 +65,12 @@ Workspace / data:
   notify drain                print + hand off queued notifications ([--clear]; --approve-self <your-email> mints a
                               self-digest approval token so the gate admits the matching Gmail draft)
 
-Outbound enforcement (v1.1.0):
-  outbound approve       run the four gates + record a per-recipient approval token (--input <json>
+Outbound enforcement (v1.1.0; adversarial review required per ADR-0020):
+  outbound approve       four gates + adversarial-review check, then record a per-recipient approval
+                         token. --input <json> = {draft,records,review:{verdict,confidence}} — or pass
+                         --review-verdict approved --review-confidence 0.9 [--reviewer outbound-reviewer].
                          [--override "<reason>"] [--approver "<name>"] [--approver-role <role>] — strict
-                         profile requires manager-signed overrides)
+                         profile requires manager-signed overrides; ESCC_OUTBOUND_REQUIRE_REVIEW=off disables.
   outbound check         run the four gates read-only, no writes (--input <json>)
   outbound review-pack   split a worklist into sendable vs excluded-with-reasons (--input <json>)
 
@@ -128,7 +130,7 @@ const VALUE_FLAGS = new Set([
   '--id', '--type', '--segment', '--competitor', '--approved-by',
   '--source-ref', '--source-type', '--use-case', '--from-transcript',
   '--account', '--deal', '--note', '--recipient', '--since', '--event-type',
-  '--approver', '--approver-role', '--interval', '--approve-self',
+  '--approver', '--approver-role', '--review-verdict', '--review-confidence', '--reviewer', '--interval', '--approve-self',
   '--thread', '--kind', '--meeting', '--skill', '--crm-as-of',
 ]);
 
@@ -326,16 +328,26 @@ function handleOutbound(positional, flags) {
   }
   try {
     if (action === 'approve') {
+      // The adversarial-review verdict (ADR-0020) comes from --input {…, review:{…}}
+      // or the --review-* flags; it is REQUIRED unless ESCC_OUTBOUND_REQUIRE_REVIEW=off
+      // or a logged --override proceeds.
+      const reviewInput = payload.review || (
+        (flags.reviewVerdict != null || flags.reviewConfidence != null || flags.reviewer != null)
+          ? { verdict: flags.reviewVerdict, confidence: flags.reviewConfidence != null ? Number(flags.reviewConfidence) : undefined, reviewer: flags.reviewer }
+          : undefined
+      );
       const r = outboundApprove.approveOutbound({
         draft: payload.draft, records: payload.records, sessionId: payload.sessionId,
         now: payload.now, override: flags.override || payload.override,
         approver: flags.approver || payload.approver,
         approverRole: flags.approverRole || payload.approverRole,
+        review: reviewInput,
       });
       const notes = r.warnings && r.warnings.length ? `\nnotes:\n${r.warnings.map(w => `  - ${w.reason}`).join('\n')}` : '';
+      const rev = r.review ? ` [reviewer ${r.review.reviewer} · ${r.review.verdict} · conf ${r.review.confidence}]` : '';
       const text = r.approved
-        ? `APPROVED${r.override ? ` (override: ${r.overrideReason})` : ''} — token recorded for ${r.recipient || '(recipient)'} [key ${r.key.slice(0, 12)}…]${notes}`
-        : `BLOCKED — not approved:\n${r.blocks.map(b => `  - ${b.gate}: ${b.reason}`).join('\n')}\nProvide --override "<reason>" to proceed anyway (logged).`;
+        ? `APPROVED${r.override ? ` (override: ${r.overrideReason})` : ''}${rev} — token recorded for ${r.recipient || '(recipient)'} [key ${r.key.slice(0, 12)}…]${notes}`
+        : `BLOCKED — not approved:\n${r.blocks.map(b => `  - ${b.gate}: ${b.reason}`).join('\n')}\nFix and re-run, or add --override "<reason>" to proceed anyway (logged).`;
       return { code: r.approved ? 0 : 1, text, data: r };
     }
     if (action === 'check') {

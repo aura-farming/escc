@@ -156,27 +156,35 @@ The compliance block — sender identity + physical address + unsubscribe link �
 is required on every commercial message per `rules/common/outbound-compliance.md`.
 Do not omit it. Do not embed it in a PS that is easy to miss.
 
-### Step 4b — Gate, review, and approve (the blessed path)
+### Step 4b — Review, gate, and approve (the blessed path)
 
 A draft is the artifact a human then sends, so it is **gated**: the
 `pre:outbound-send-gate` hook blocks `create_draft` (and any send) until a
-per-recipient **approval token** exists. The token is written only after the four
-outbound gates pass:
+per-recipient **approval token** exists. Since **ADR-0020** the token is written
+only after BOTH the four outbound gates pass AND the adversarial reviewer approves
+— the reviewer is part of the path, not an optional extra:
 
 1. Gather the contact's records — recent notes/calls, `lead_status`, open deals,
    lifecycle, prior engagement (`crm-operator` / `account-memory`, read-only).
-2. Run the gates (+ the adversarial reviewer for the qualitative layer):
+2. Run the adversarial `outbound-reviewer` on the draft (read-only; the >80%-
+   confidence gate over personalization evidence, compliance, fabrication, voice,
+   one CTA). Capture its verdict (`clean` / `approved`) and confidence — a clean
+   review is a valid review.
+3. Approve, passing the reviewer's verdict so the token records it:
 
    ```bash
-   node "$CLAUDE_PLUGIN_ROOT/scripts/escc.js" outbound approve --input draft.json
+   node "$CLAUDE_PLUGIN_ROOT/scripts/escc.js" outbound approve --input draft.json \
+     --review-verdict approved --review-confidence 0.9 --reviewer outbound-reviewer
    ```
 
-   `draft.json` = `{ "draft": {to,subject,body}, "records": {...} }`. On a clean
-   pass the token is recorded and the draft will clear the send-gate.
-3. On a BLOCK, the gates say why (timing/do-not-contact, claim-vs-record, WIIFM,
-   contactability). Fix the draft and re-run — or, for an explicit, logged
-   exception, add `--override "<reason>"`. Default is block; never silently send
-   around a gate. See `rules/common/outbound-gates.md`.
+   `draft.json` = `{ "draft": {to,subject,body}, "records": {...} }` (the review can
+   instead live in the JSON as `"review": {"verdict":"approved","confidence":0.9}`).
+   On a clean pass the token is recorded and the draft clears the send-gate.
+4. On a BLOCK the gates or the reviewer say why (timing/do-not-contact,
+   claim-vs-record, WIIFM, contactability, or a review finding). Fix the draft and
+   re-review — or, for an explicit, logged exception, add `--override "<reason>"`.
+   Default is block; never silently send around a gate or skip the reviewer. See
+   `rules/common/outbound-gates.md`.
 
 ### Step 5 — Verify sent (proof-of-send)
 

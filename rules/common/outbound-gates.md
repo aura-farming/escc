@@ -14,8 +14,9 @@
 a Gmail draft, any live-send tool, or a HubSpot OUTBOUND email engagement — is
 BLOCKED until a per-recipient **approval token** exists. The token is keyed by
 `recipient + sha256(normalized subject + body)` and is written only after the
-four gates below pass (or a logged human override). This holds even when no ESCC
-skill was invoked: a drifted agent that calls the tools directly is still gated.
+four gates below pass **and** the adversarial reviewer approves (ADR-0020), or a
+logged human override. This holds even when no ESCC skill was invoked: a drifted
+agent that calls the tools directly is still gated.
 
 **Not gated:** CRM reads, and internal HubSpot writes — tasks, notes, deals,
 property updates. A follow-up *task* is not outbound; never block it. Only an
@@ -58,8 +59,12 @@ The sanctioned way to produce outbound:
   consolidated review-pack → on approval, gated send → logged activity.
 
 On a clean pass the approval token is recorded and the send-gate allows the
-artifact. The adversarial reviewer runs by default and **defaults to reject when
-uncertain** — a reviewer pass is part of what earns the token.
+artifact. The adversarial reviewer is **required, not optional** (ADR-0020): its
+verdict is passed to `outbound approve` (`--review-verdict approved
+--review-confidence <=1`, or `review:{...}` in the JSON), and the token does not
+mint without an approval at or above the confidence floor. The reviewer defaults
+to reject when uncertain. `ESCC_OUTBOUND_REQUIRE_REVIEW=off` falls back to the
+legacy four-gates-only behavior for a deliberate, supervised exception.
 
 ## The do-not-contact list
 
