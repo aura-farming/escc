@@ -18,25 +18,37 @@ you cannot explain from a SKILL.md is usually coming from a hook.
 `[outbound-send-gate] BLOCKED` message even though the message looks ready.
 
 **Cause.** `pre:outbound-send-gate` is the one fail-closed hook in ESCC. It
-blocks any live send by a send-capable tool until a **review-evidence marker is
-recorded in the state store** by an `outbound-reviewer` run. It also blocks on
-*any* doubt — truncated hook input, an unparseable payload, missing config — and
-caps bulk sends at `ESCC_BULK_SEND_MAX` (default 5) per session.
+blocks any live send — and any Gmail draft or HubSpot OUTBOUND email — until a
+per-recipient **approval token** exists in the state store. The token is minted by
+`escc outbound approve`, which (ADR-0020) requires the four deterministic gates
+**and** an adversarial `outbound-reviewer` verdict at/above the confidence floor.
+The gate also blocks on *any* doubt — truncated hook input, an unparseable
+payload, missing config — and caps bulk sends at `ESCC_BULK_SEND_MAX` (default 5)
+per session.
 
 **Fix.**
 
-1. **Record a review.** Run the `outbound-reviewer` on the draft so a
-   review-evidence marker is written; then the gate allows the send. This is
-   the intended path and resolves almost every legitimate block.
-2. **Check the bulk cap.** If you are sending in bulk and hit the limit, you
-   have reached `ESCC_BULK_SEND_MAX` (default 5/session). Raise it deliberately
+1. **Use the blessed path.** `email-outbound-ops` (one message) or
+   `/escc-worklist` (a batch) run the `outbound-reviewer` and mint the token for
+   you. This resolves almost every legitimate block.
+2. **Or approve directly with the reviewer verdict.** After running the reviewer,
+   pass its result to approve:
+   `escc outbound approve --input draft.json --review-verdict approved --review-confidence 0.9`.
+   A block reading `adversarial-review: no ... verdict supplied` means exactly
+   this step is missing.
+3. **Check the bulk cap.** If you are sending in bulk and hit the limit, you have
+   reached `ESCC_BULK_SEND_MAX` (default 5/session). Raise it deliberately
    (`ESCC_BULK_SEND_MAX=10`) only if the larger batch is genuinely intended.
-3. **Remember Gmail is draft-only.** If you expected Gmail to send, it does not
-   — it creates drafts by construction. Sending happens through the gated path.
-4. **Last resort, dangerous.** `ESCC_OUTBOUND_GATE=off` disables the gate
+4. **Remember Gmail is draft-only.** If you expected Gmail to send, it does not
+   — it creates drafts by construction. Delivery happens through the gated path.
+5. **Explicit exceptions, both logged.** `escc outbound approve --override
+   "<reason>"` proceeds past a block (manager-signed under the strict profile);
+   `ESCC_OUTBOUND_REQUIRE_REVIEW=off` falls back to four-gates-only for deliberate,
+   supervised use. Prefer options 1–2.
+6. **Last resort, dangerous.** `ESCC_OUTBOUND_GATE=off` disables the gate
    entirely and removes the protection that blocks un-reviewed live sends. It is
    a documented, dangerous escape hatch for deliberate, supervised testing only.
-   Prefer option 1. If you use it, turn it back on immediately afterward.
+   Prefer options 1–2. If you use it, turn it back on immediately afterward.
 
 ---
 
@@ -61,9 +73,9 @@ is noisy.
   export ESCC_DISABLED_HOOKS=pre:crm-write-guard,post:deliverables-location
   ```
 
-- **Do not disable the send-gate this way to send faster.** Record an
-  `outbound-reviewer` run instead (see above). Disabling
-  `pre:outbound-send-gate` removes a fail-closed safety control.
+- **Do not disable the send-gate this way to send faster.** Run the blessed path
+  (or pass a reviewer verdict to `outbound approve`) instead (see above).
+  Disabling `pre:outbound-send-gate` removes a fail-closed safety control.
 - **Strictness knob.** If warn-only quality hooks are escalating to blocks
   unexpectedly, check `ESCC_QUALITY_GATE_STRICT` (default `false`).
 

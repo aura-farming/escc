@@ -772,3 +772,59 @@ the twin surfaces render "starved — needs N more samples" honestly rather than
 implying confidence it has not earned. ADR-0012 (fabrication firewall), ADR-0004
 (crm-operator sole writer), ADR-0016 (hint-only chaining), and ADR-0018
 (canonical identity, store doctrine) all remain in force. Ships as v1.9.0.
+
+## ADR-0020: The adversarial reviewer is part of the approval path, not a layer on top
+
+**Status:** Accepted
+
+**Context.** A field test — bulk-drafting ~38 emails through a hand-rolled
+triage→draft→gate→create loop in a harness where ESCC's *prompt-level* routing
+never engaged — exposed a real gap. The parts that are HOOKS held perfectly: the
+fail-closed `pre:outbound-send-gate` blocked every draft until a per-recipient
+token existed, and the four deterministic gates ran via `escc outbound approve`.
+But the adversarial `outbound-reviewer` — the >80%-confidence semantic pass over
+personalization evidence, compliance, fabrication, voice, and the single CTA —
+never ran, because `approveOutbound` minted the token on the four gates ALONE
+(`outbound-gates.js` even described the reviewer as a layer "on top"). Meanwhile
+`SECURITY.md` / `TROUBLESHOOTING.md` told operators the token implied "an
+`outbound-reviewer` run." Docs claimed enforcement the code did not have: the
+reviewer was skippable by default in the sanctioned tooling. Two upstream causes
+compounded it — the intent-router had no pattern for a batch-draft ask (so the
+model never entered the blessed `worklist` path and hand-rolled with
+general-purpose subagents that carry none of ESCC's agent/routing contract), and
+nothing nudged the reviewer after a draft landed.
+
+**Decision.** (1) **The reviewer is REQUIRED in the approval path**, default-on
+and fail-closed. `approveOutbound` records a token only when a review attestation
+`{verdict, confidence}` is an approval at or above the review-confidence floor
+(`ESCC_OUTBOUND_REVIEW_MIN_CONFIDENCE`, 0.8) **in addition to** the four gates.
+The verdict is supplied through `escc outbound approve` (`--input {…,review:{…}}`
+or `--review-verdict/--review-confidence/--reviewer`) and is stamped onto the
+token payload so "approved WITH what review?" is auditable. A missing/weak review
+blocks exactly like a gate failure — but, unlike a gate block, writes no
+do-not-contact row (a thin draft is not a suppression signal).
+`ESCC_OUTBOUND_REQUIRE_REVIEW=off` is a deliberate, supervised fallback to the
+legacy four-gates-only behavior; a logged `--override` still proceeds (strict-
+profile manager-signing unchanged). (2) **The send-gate hook is UNCHANGED.** The
+trust boundary stays where it was; only the *meaning* of the content-keyed token
+is tightened at mint time. This deliberately avoids threading a review through
+the gate, where the reviewer's tool-specific fingerprint would not match a
+later send's content key — folding the attestation into the one content-keyed
+token is both simpler and strictly a tightening. (3) **Routing recognizes
+batches.** The intent-router `worklist` route gains high-precision batch
+phrasings (mass/bulk, "draft N emails", "these N contacts", "work my list") and
+is lifted above the single-message routes; a once-per-session post-draft
+chaining-hint points a nascent batch at `/escc-worklist`; and `worklist` /
+`email-outbound-ops` gain an explicit anti-pattern against hand-rolling the batch
+with general-purpose agents.
+
+**Consequences.** The change only ever TIGHTENS — a token is now harder to mint,
+never easier, and the fail-closed gate never loosens (ADR-0019's send-gate-only-
+tightens invariant holds). Blast radius is the honest blessed path, which now
+runs the reviewer and passes its verdict; the kill-switch and the logged override
+are the escape hatches, and every prior test contract is preserved (override
+cases already bypassed review; tests that mint via `recordApproval` directly are
+untouched). Attestation fakeability is equivalent to the existing four-gate
+inputs — a dishonest caller could fabricate `records` too — and is now auditable
+on the token. ADR-0012 (fabrication firewall), ADR-0004 (`crm-operator` sole
+writer), and ADR-0016 (hint-only routing) remain in force. Ships as v1.9.1.

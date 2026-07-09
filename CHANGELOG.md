@@ -10,6 +10,46 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.9.1] - unreleased
+
+The adversarial reviewer is now enforced in the approval path, and a batch ask
+routes to the blessed worklist on-ramp. A field test (bulk-drafting ~38 emails
+via a hand-rolled loop, in a harness where prompt-level routing never engaged)
+showed the fail-closed send-gate holding perfectly while the `outbound-reviewer`
+was skipped and the batch never reached `/escc-worklist`. v1.9.1 makes the code
+match the documented intent — and only ever *tightens*. Governed by ADR-0020.
+See [docs/releases/v1.9.1.md](docs/releases/v1.9.1.md).
+
+### Changed
+
+- **`escc outbound approve` requires an adversarial-review verdict** before it
+  mints a per-recipient token (default-on, fail-closed): a review attestation
+  `{verdict, confidence}` must be an approval at/above
+  `ESCC_OUTBOUND_REVIEW_MIN_CONFIDENCE` (0.8) **in addition to** the four gates,
+  and is stamped on the token for audit. `pre:outbound-send-gate` is unchanged —
+  only the token's meaning tightens at mint time (a token is harder to earn,
+  never easier). (ADR-0020)
+- **Intent-router recognizes batch-draft asks:** the `worklist` route gains
+  high-precision batch patterns (mass/bulk, `draft N emails`, `these N contacts`,
+  `work my list`) and is lifted above the single-message routes.
+- **`worklist` / `email-outbound-ops`** now pass the reviewer verdict into
+  `outbound approve`, and warn against hand-rolling the batch with
+  general-purpose agents (delegate to the dedicated ESCC agents by name).
+
+### Added
+
+- **`--review-verdict` / `--review-confidence` / `--reviewer` flags** on
+  `escc outbound approve` (or `review:{…}` in `--input`), and
+  **`ESCC_OUTBOUND_REQUIRE_REVIEW`** (default on; `off` for a supervised,
+  legacy four-gates-only fallback).
+- A once-per-session **post-draft chaining-hint** (`create_draft` →
+  `/escc-worklist`); the `post:chaining-hints` hook matcher now includes
+  `create_draft`.
+- Enforcement + routing regression tests: approval-path block-without-review,
+  below-floor, non-approval verdict, valid-review-approves (with audit trail),
+  kill-switch, override-bypass; batch routing with negative cases proving
+  single-message and prospect-list asks are untouched; the draft chaining-hint.
+
 ## [1.9.0] - 2026-07-10
 
 The digital twin: ESCC learns the rep automatically instead of by manual
