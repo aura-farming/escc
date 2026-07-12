@@ -23,6 +23,13 @@
       "skill": "deal-review",
       "command": "/deal-review",
       "hint": "you just pulled deal data — escc:deal-review (/deal-review) scores MEDDPICC health with gaps as dated actions; a full-pipeline sweep is escc:pipeline-hygiene (/pipeline)."
+    },
+    {
+      "family": "outbound-batch",
+      "match": "mcp__.*__create_draft",
+      "skill": "worklist",
+      "command": "/escc-worklist",
+      "hint": "a gated outbound draft just landed — if this is one of several, run the batch through escc:worklist (/escc-worklist): it triages, researches, drafts, runs the four gates + the adversarial outbound-reviewer, and returns ONE consolidated review-pack, instead of hand-rolling a per-draft loop."
     }
   ]
 }

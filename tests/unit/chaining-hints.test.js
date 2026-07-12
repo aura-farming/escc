@@ -45,6 +45,13 @@ test('a HubSpot DEAL read chains to deal-review; a contact read does not', () =>
   assert.equal(contactRead, undefined, 'a non-deal CRM read gets no hint (input_match filter)');
 });
 
+test('a Gmail draft creation chains to the worklist batch on-ramp (ADR-0020)', () => {
+  const result = hook.run(toolResult('mcp__claude_ai_Gmail__create_draft', { to: 'a@b.example', subject: 'S', body: 'B' }));
+  assert.ok(result && result.additionalContext, 'a create_draft result yields a hint');
+  assert.match(result.additionalContext, /worklist/);
+  assert.match(result.additionalContext, /escc next-step/);
+});
+
 test('each chain family fires at most ONCE per session', () => {
   const session = freshSession();
   const first = hook.run(toolResult('mcp__claude_ai_Fireflies__get_transcript', {}, session));

@@ -86,7 +86,7 @@ test('SoD gate branch blocks a REP-signed override token under strict — but ne
   // Token minted under STANDARD by a rep override…
   withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_HOOK_PROFILE: undefined, ESCC_ROLE: undefined, ESCC_REP_ROLE: undefined }, () => {
     approve.approveOutbound({ draft: { to: 'x@y.example', subject: 'Hi', body: 'Cut rework?' }, records: BLOCKED_RECORDS, override: 'rep override' });
-    approve.approveOutbound({ draft: { to: 'clean@ok.example', subject: 'Yo', body: 'Worth a look at reporting?' }, records: { notes: [], open_deals: [] }, now: new Date().toISOString() });
+    approve.approveOutbound({ draft: { to: 'clean@ok.example', subject: 'Yo', body: 'Worth a look at reporting?' }, records: { notes: [], open_deals: [] }, review: { verdict: 'approved', confidence: 0.9 }, now: new Date().toISOString() });
   });
   // …then the workspace tightens to strict:
   withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_HOOK_PROFILE: 'strict' }, () => {

@@ -120,14 +120,17 @@ Output a one-line summary: sender, subject, key point. No draft reply.
    touch, open tasks. (`deal-review` owns MEDDPICC scoring — consume it, do
    not redefine it.)
 3. Read the full thread before composing. Never reply from memory.
-4. Draft a reply using account context + `[VOICE PROFILE]` (brand-voice owns
-   the voice profile; consume it here). When an account is in scope, also layer
-   its per-account voice overlay (`escc voice show "<account>"`) on the rep base
-   profile — see `brand-voice` §Per-Account Voice Overlay (STYLE only; never the
-   buyer's claims or numbers).
-5. Include any required compliance block (unsubscribe, sender identity) per
+4. Build or refresh the account's per-account voice overlay from the buyer side
+   of the thread you just read (`escc voice account "<account>" --input
+   '{"texts":[...]}'`, buyer messages ONLY, full buyer history; refresh when
+   missing or older than `ESCC_VOICE_STALE_DAYS`).
+5. Draft a reply using account context + `[VOICE PROFILE]` (brand-voice owns
+   the voice profile; consume it here), layering the per-account overlay
+   (`escc voice show "<account>"`) on the rep base profile — see `brand-voice`
+   §Per-Account Voice Overlay (STYLE only; never the buyer's claims or numbers).
+6. Include any required compliance block (unsubscribe, sender identity) per
    `rules/common/outbound-compliance.md`.
-6. Output: Gmail draft (labeled "draft", not "sent") + proposed CRM activity
+7. Output: Gmail draft (labeled "draft", not "sent") + proposed CRM activity
    log entry for `crm-operator` to write.
 
 #### `action_required`
@@ -146,18 +149,33 @@ Output a one-line summary: sender, subject, key point. No draft reply.
    (as data), and the date received.
 4. `opt-out-handling` owns the suppression workflow end-to-end.
 
-### Step 4 — Post-triage follow-through (hooks, not prompts)
+### Step 4 — Post-triage follow-through
 
-**Reliability principle from ECC:** hooks over prompts. The `post:triage-followup`
-hook enforces CRM activity logging and task creation after a draft is confirmed.
-Do not rely on the model to remember to log — the hook intercepts draft saves and
-injects the follow-through checklist. This skill declares the intent; the hook
-delivers the guarantee.
+**Reliability principle from ECC:** hooks over prompts, where a hook exists.
+CRM logging is nudged by the `post:crm-log-reminder` hook and every CRM write
+goes through `crm-operator` (the sole writer); follow-through promises are
+tracked in the state store and surfaced by `stop:follow-through-check`. This
+skill proposes the follow-through; those mechanisms deliver it. (There is no
+`triage-followup` hook — do not claim one.)
 
-Proposed follow-through (logged as pending until hook confirms):
+Proposed follow-through:
 - CRM activity entry for each replied thread (via `crm-operator`).
 - Open task for any `deal_action` thread with no immediate reply.
 - Calendar note for `meeting_info` conflicts flagged.
+
+**Auto-attest a genuine inbound reply (v1.9.0 outcomes loop).** When a message
+classifies as `deal_action` or `action_required` AND it is a real NEW inbound
+reply from the prospect (not a notification, out-of-office, calendar bounce, or
+your own sent copy), attest it so the learning loop sees it:
+
+```bash
+escc outcome record --type reply_received --account "<canonical account>" --thread "<gmail thread id>"
+```
+
+`--thread` dedupes: triaging the same thread twice records one row, never two.
+Pass whitelisted flags ONLY (account, thread, optional --deal). NEVER quote the
+prospect's words into `--note` — prospect prose must not enter the ledger. Do
+NOT attest `skip`, `info_only`, `meeting_info`, or `opt_out_request` messages.
 
 ### Step 5 — Triage briefing output
 
@@ -265,6 +283,11 @@ crm-operator write (confirmed by hook).
   `crm-operator` execute and confirm it.
 - **Overriding the [VOICE PROFILE] when drafting.** Brand-voice owns the voice
   profile. Do not invent a tone or style that deviates from it.
+- **Attesting a non-reply as `reply_received`.** Out-of-office auto-replies,
+  delivery notifications, calendar invites, and your own sent copy are NOT
+  prospect replies. Attest only a genuine new inbound reply, always with
+  `--thread` so a re-triage cannot double-count it, and never quote prospect
+  prose into `--note`.
 
 ## Related
 

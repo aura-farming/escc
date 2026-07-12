@@ -34,6 +34,35 @@ const accountMemory = require('./account-memory');
 const identity = require('./account-identity');
 const session = require('./session-manager');
 const store = require('../instincts/instinct-store');
+const notify = require('./notify');
+const sessionSignal = require('./session-signal');
+
+/*
+ * Purge coverage doctrine (ADR-0019, D1): every JSONL store ESCC owns must
+ * declare a purge strategy so a new store cannot silently escape erasure. The
+ * content-guard test (tests/unit/content-guard-purge-coverage.test.js) asserts
+ * every state-store TABLE_KEYS entry appears here. `auto:true` = rewritten in
+ * place on --confirm (by canonical account key + JSON substring); `auto:false`
+ * = either no per-subject identifier, or an aggregate whose auto-erasure would
+ * over-erase unrelated subjects (scanned + reported for manual review instead).
+ */
+const PURGE_STRATEGIES = {
+  // --- state-store tables (one entry per state-store TABLE_KEYS key) ---
+  outcomes: { auto: true, reason: 'account_id canonical key (ADR-0018) + JSON substring; reply/fidelity outcome rows.' },
+  promises: { auto: true, reason: 'account_id canonical key + JSON substring.' },
+  work_items: { auto: true, reason: 'sourceId canonical key + JSON substring; morning-prep prepared-day items.' },
+  governance_events: { auto: true, reason: 'JSON substring (approval tokens carry the recipient email — PII) + accountId.' },
+  do_not_contact: { auto: true, reason: 'keyed by recipient (PII); JSON substring.' },
+  forecast_snapshots: { auto: false, reason: 'aggregate multi-account rollup — auto-erasing a snapshot would over-erase unrelated subjects; scanned + reported for manual review, like session-data summaries.' },
+  sessions: { auto: false, reason: 'session lifecycle metadata keyed by session id; no per-subject account identifier (session-data SUMMARY files are handled separately under manualReview.sessionFiles).' },
+  skill_runs: { auto: false, reason: 'skill-invocation telemetry; no account identifiers.' },
+  skill_versions: { auto: false, reason: 'skill version registry; no account data.' },
+  decisions: { auto: false, reason: 'architectural decision log; no account data.' },
+  install_state: { auto: false, reason: 'install-target state; no account data.' },
+  // --- sidecar JSONL files (outside the state store) ---
+  'notifications.jsonl': { auto: true, reason: 'notify queue rows carry account + free-text title/message; JSON substring rewrite.' },
+  'session-outcomes.jsonl': { auto: true, reason: 'session follow-through metrics; JSON substring rewrite (rarely names a subject, scanned for safety).' },
+};
 
 // Identifiers shorter than this are refused: a 1-2 char substring (e.g. a
 // ccTLD like "io") would over-erase unrelated subjects' data.
@@ -98,6 +127,41 @@ function stateDir() {
     return require('./state-store').resolveStateStorePath();
   } catch (_err) {
     return null;
+  }
+}
+
+/**
+ * Partition a JSONL file's rows into kept vs removed. A row is removed when its
+ * canonical-key field (account_id / sourceId) resolves into the subject's
+ * identity cluster, OR when the whole row JSON contains the identifier (the
+ * substring fallback that catches deal ids, recipient emails, and free text).
+ * Pure — never writes. @returns {{kept:object[], removed:number}}
+ */
+function partitionJsonl(file, { keyFields, stemSet, idLower }) {
+  const kept = [];
+  let removed = 0;
+  if (!file || !idLower) return { kept, removed };
+  for (const r of readJsonl(file)) {
+    const keyHit = keyFields.some(f => r && stemSet.has(r[f]));
+    if (keyHit || matches(JSON.stringify(r), idLower)) removed += 1;
+    else kept.push(r);
+  }
+  return { kept, removed };
+}
+
+/** Resolve a path via a resolver that may throw; null on failure. */
+function safeResolve(fn) {
+  try {
+    return fn();
+  } catch (_err) {
+    return null;
+  }
+}
+
+/** Atomically rewrite `file` to `part.kept`, only when a row was removed. */
+function rewriteKept(file, part) {
+  if (file && part.removed > 0) {
+    atomicRewrite(file, part.kept.map(r => JSON.stringify(r)).join('\n') + (part.kept.length ? '\n' : ''));
   }
 }
 
@@ -212,6 +276,31 @@ function purge(args = {}) {
     }
   }
 
+  // --- twin learning/prep stores (v1.9.0 writers, ADR-0019 D1) ---------------
+  // outcomes / promises / work_items rewrite by canonical account key +
+  // substring; two sidecar queues rewrite by substring. Forecast snapshots are
+  // aggregate rollups -> reported for manual review, never auto-erased.
+  const stemSet = new Set(stems);
+  const outcomesFile = sdir ? path.join(sdir, 'outcomes.jsonl') : null;
+  const promisesFile = sdir ? path.join(sdir, 'promises.jsonl') : null;
+  const workItemsFile = sdir ? path.join(sdir, 'work_items.jsonl') : null;
+  const forecastFile = sdir ? path.join(sdir, 'forecast_snapshots.jsonl') : null;
+  const notificationsFile = safeResolve(() => notify.resolveQueuePath());
+  const sessionOutcomesFile = safeResolve(() => sessionSignal.sessionOutcomesPath());
+
+  const outcomesPart = partitionJsonl(outcomesFile, { keyFields: ['account_id'], stemSet, idLower });
+  const promisesPart = partitionJsonl(promisesFile, { keyFields: ['account_id'], stemSet, idLower });
+  const workItemsPart = partitionJsonl(workItemsFile, { keyFields: ['sourceId'], stemSet, idLower });
+  const notificationsPart = partitionJsonl(notificationsFile, { keyFields: [], stemSet, idLower });
+  const sessionOutcomesPart = partitionJsonl(sessionOutcomesFile, { keyFields: [], stemSet, idLower });
+
+  let forecastSnapshotsReferencing = 0;
+  if (idLower && forecastFile) {
+    for (const r of readJsonl(forecastFile)) {
+      if (matches(JSON.stringify(r), idLower)) forecastSnapshotsReferencing += 1;
+    }
+  }
+
   // --- session-data: summaries referencing the subject (manual review) --------
   // Scan the active session-data dir AND the legacy sessions/ dir (older installs).
   const sessionFiles = [];
@@ -249,16 +338,35 @@ function purge(args = {}) {
     if (doNotContactRemoved > 0) atomicRewrite(dncFile, dncKept.map(r => JSON.stringify(r)).join('\n') + (dncKept.length ? '\n' : ''));
     if (governanceRemoved > 0) atomicRewrite(govFile, govKept.map(r => JSON.stringify(r)).join('\n') + (govKept.length ? '\n' : ''));
     if (aliasRowsRemoved > 0) atomicRewrite(aliasFile, aliasKept.map(r => JSON.stringify(r)).join('\n') + (aliasKept.length ? '\n' : ''));
+    rewriteKept(outcomesFile, outcomesPart);
+    rewriteKept(promisesFile, promisesPart);
+    rewriteKept(workItemsFile, workItemsPart);
+    rewriteKept(notificationsFile, notificationsPart);
+    rewriteKept(sessionOutcomesFile, sessionOutcomesPart);
   }
 
   return {
     identifier: id,
     confirmed: confirm,
-    erased: { accountFiles, observationsRemoved, instinctsRemoved, instinctsScrubbed, doNotContactRemoved, governanceRemoved, aliasRowsRemoved },
+    erased: {
+      accountFiles,
+      observationsRemoved,
+      instinctsRemoved,
+      instinctsScrubbed,
+      doNotContactRemoved,
+      governanceRemoved,
+      aliasRowsRemoved,
+      outcomesRemoved: outcomesPart.removed,
+      promisesRemoved: promisesPart.removed,
+      workItemsRemoved: workItemsPart.removed,
+      notificationsRemoved: notificationsPart.removed,
+      sessionOutcomesRemoved: sessionOutcomesPart.removed,
+    },
     manualReview: {
       hubspot: `Erase the HubSpot record(s) for "${id}" via crm-operator — ESCC cannot delete CRM rows directly.`,
       sessionFiles,
       accountReferences,
+      forecastSnapshotsReferencing,
     },
   };
 }
@@ -277,10 +385,16 @@ function formatManifest(m) {
     `  do-not-contact rows:  ${e.doNotContactRemoved || 0}`,
     `  outbound gov rows:    ${e.governanceRemoved || 0}`,
     `  identity alias rows:  ${e.aliasRowsRemoved || 0}`,
+    `  outcome rows:         ${e.outcomesRemoved || 0}`,
+    `  promise rows:         ${e.promisesRemoved || 0}`,
+    `  work-item rows:       ${e.workItemsRemoved || 0}`,
+    `  notification rows:    ${e.notificationsRemoved || 0}`,
+    `  session-metric rows:  ${e.sessionOutcomesRemoved || 0}`,
     'Manual follow-up required (NOT auto-erased):',
     `  - ${m.manualReview.hubspot}`,
     `  - session-data references: ${m.manualReview.sessionFiles.length}`,
     `  - cross-referencing accounts: ${m.manualReview.accountReferences.length}`,
+    `  - forecast snapshots referencing subject: ${m.manualReview.forecastSnapshotsReferencing || 0} (aggregate rollups — review manually)`,
   ];
   if (m.confirmed) {
     lines.push('Note: run privacy-purge when no active Claude Code session is writing to this workspace, so concurrent writes are not lost.');
@@ -304,4 +418,4 @@ function runPurge(opts = {}) {
   return { code: 0, text: formatManifest(manifest), data: manifest };
 }
 
-module.exports = { purge, runPurge, formatManifest };
+module.exports = { purge, runPurge, formatManifest, PURGE_STRATEGIES };

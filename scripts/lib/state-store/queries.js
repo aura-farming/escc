@@ -813,9 +813,16 @@ function createQueryApi(store) {
     listOutcomes(options = {}) {
       const type = options.type ?? null;
       const accountId = options.accountId ?? options.account_id ?? null;
+      // Voided rows (rolled back via `escc outcome void`) are excluded by
+      // default here — the SINGLE seam every consumer (distill weighting,
+      // account-truth counts, `outcome summary`) reads through, so a rollback
+      // is honored everywhere at once (ADR-0019 WS-D.4). Pass includeVoided to
+      // see them (the void verb itself, to find the row to void).
+      const includeVoided = options.includeVoided === true;
       return readOutcomes()
         .filter(row => (type == null ? true : row.type === type))
         .filter(row => (accountId == null ? true : row.account_id === accountId))
+        .filter(row => (includeVoided ? true : !(row.payload && row.payload.voided === true)))
         .slice()
         .sort(compareCreatedAtDesc);
     },

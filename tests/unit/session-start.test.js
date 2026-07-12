@@ -102,6 +102,22 @@ test('resume-from-compaction block is injected when a scratch file exists (C4)',
   });
 });
 
+test('injects a prepared-day summary (counts + safe pointers, no brief bodies)', () => {
+  const home = freshHome();
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined, ESCC_INSTINCTS_DIR: undefined }, () => {
+    require('../../scripts/lib/worklist-store').addPreparedItem({
+      account: 'company:12345',
+      kind: 'call_prep',
+      meetingTime: '2026-07-09T10:00:00Z',
+      skill: 'call-prep',
+    });
+    const ctx = contextOf(hook.run(startInput('startup')));
+    assert.ok(/Prepared for today \(1 item/.test(ctx), 'prepared-day count injected');
+    assert.ok(/company_12345/.test(ctx), 'safe canonical-key pointer present');
+    assert.ok(/\/daily/.test(ctx), 'points at /daily to work them');
+  });
+});
+
 test('hydrates the active account context (C1)', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'globex', ESCC_INSTINCTS_DIR: undefined }, () => {

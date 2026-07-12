@@ -84,12 +84,50 @@ function renderOverlay(account, register, options = {}) {
 
 /**
  * Atomically write/refresh an account's voice overlay.
- * @returns {string} the overlay file path
+ *
+ * Downgrade guard (v1.9.0, ADR-0019): writeOverlay is a WHOLESALE overwrite, so
+ * a standing refresh built from a 1-2 message thread would otherwise replace a
+ * high-confidence overlay (8+ samples) with a low-confidence one. When the new
+ * register has FEWER samples than the stored overlay, the write is skipped
+ * (keep the richer overlay) unless options.force is set — so the caller should
+ * gather the account's full buyer history per refresh, and the guard is the
+ * safety net. Before any real overwrite the prior overlay is backed up to
+ * `<file>.bak` (cheap rollback if a refresh poisons the register).
+ * @returns {string} the overlay file path (written or preserved)
  */
 function writeOverlay(account, register, options = {}) {
   const file = voiceOverlayFile(account, options); // throws on bad id
+  const newCount = Number((register || {}).sampleCount) || 0;
+  let existing = null;
+  try {
+    existing = fs.readFileSync(file, 'utf8');
+  } catch (_err) {
+    existing = null;
+  }
+  if (existing != null && !options.force) {
+    const stored = parseSampleCount(existing);
+    if (stored > 0 && newCount < stored) return file; // keep the higher-confidence overlay
+  }
+  if (existing != null) {
+    try {
+      fs.writeFileSync(`${file}.bak`, existing, 'utf8');
+    } catch (_err) {
+      /* backup is best-effort; never block the write */
+    }
+  }
   atomicWriteFile(file, renderOverlay(account, register, options));
   return file;
+}
+
+/** Parse a rendered overlay's "Sample count: N" line (0 if absent). */
+function parseSampleCount(md) {
+  const m = String(md || '').match(/^Sample count:\s*(\d+)/m);
+  return m ? Number(m[1]) : 0;
+}
+
+/** The stored overlay's sample count (0 if missing), for downgrade decisions. */
+function overlaySampleCount(account, options = {}) {
+  return parseSampleCount(readOverlay(account, options));
 }
 
 /**
@@ -128,4 +166,5 @@ module.exports = {
   writeOverlay,
   readOverlay,
   overlayLastUpdated,
+  overlaySampleCount,
 };

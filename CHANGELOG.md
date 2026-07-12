@@ -10,6 +10,91 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.9.1] - 2026-07-10
+
+The adversarial reviewer is now enforced in the approval path, and a batch ask
+routes to the blessed worklist on-ramp. A field test (bulk-drafting ~38 emails
+via a hand-rolled loop, in a harness where prompt-level routing never engaged)
+showed the fail-closed send-gate holding perfectly while the `outbound-reviewer`
+was skipped and the batch never reached `/escc-worklist`. v1.9.1 makes the code
+match the documented intent — and only ever *tightens*. Governed by ADR-0020.
+See [docs/releases/v1.9.1.md](docs/releases/v1.9.1.md).
+
+### Changed
+
+- **`escc outbound approve` requires an adversarial-review verdict** before it
+  mints a per-recipient token (default-on, fail-closed): a review attestation
+  `{verdict, confidence}` must be an approval at/above
+  `ESCC_OUTBOUND_REVIEW_MIN_CONFIDENCE` (0.8) **in addition to** the four gates,
+  and is stamped on the token for audit. `pre:outbound-send-gate` is unchanged —
+  only the token's meaning tightens at mint time (a token is harder to earn,
+  never easier). (ADR-0020)
+- **Intent-router recognizes batch-draft asks:** the `worklist` route gains
+  high-precision batch patterns (mass/bulk, `draft N emails`, `these N contacts`,
+  `work my list`) and is lifted above the single-message routes.
+- **`worklist` / `email-outbound-ops`** now pass the reviewer verdict into
+  `outbound approve`, and warn against hand-rolling the batch with
+  general-purpose agents (delegate to the dedicated ESCC agents by name).
+
+### Added
+
+- **`--review-verdict` / `--review-confidence` / `--reviewer` flags** on
+  `escc outbound approve` (or `review:{…}` in `--input`), and
+  **`ESCC_OUTBOUND_REQUIRE_REVIEW`** (default on; `off` for a supervised,
+  legacy four-gates-only fallback).
+- A once-per-session **post-draft chaining-hint** (`create_draft` →
+  `/escc-worklist`); the `post:chaining-hints` hook matcher now includes
+  `create_draft`.
+- Enforcement + routing regression tests: approval-path block-without-review,
+  below-floor, non-approval verdict, valid-review-approves (with audit trail),
+  kill-switch, override-bypass; batch routing with negative cases proving
+  single-message and prospect-list asks are untouched; the draft chaining-hint.
+
+## [1.9.0] - 2026-07-10
+
+The digital twin: ESCC learns the rep automatically instead of by manual
+filling — it prepares the day, keeps the per-account writing voice current from
+real correspondence, mines reusable knowledge from every processed call, and
+lets the outcomes ledger feed itself, all in-session and behind the existing
+human gates. Governed by ADR-0019; design code-grounded and adversarially
+pressure-tested first. See [docs/releases/v1.9.0.md](docs/releases/v1.9.0.md).
+
+### Added
+
+- **Prepared day (lane L-C):** an in-session morning sweep (batch
+  `escc reconcile`, `accountMemory.listAccounts`) that pre-stages work onto a
+  persistent prepared-day store (`escc worklist add|list|done`, structured
+  whitelisted fields only), surfaced at session-start and in `/daily`.
+- **Style loop:** `reply-handling` / `inbox-triage` / `discovery-notes` now
+  build/refresh the per-account voice overlay from buyer text, with a
+  sample-count downgrade guard, an `<file>.bak` backup before overwrite, and
+  actionable staleness (`ESCC_VOICE_STALE_DAYS`).
+- **Knowledge loop:** `discovery-notes` / `call-review` / `meeting-followthrough`
+  auto-mine reusable candidates (objections, pains, competitor mentions) into
+  the operator-only candidate area (ADR-0012 firewall unchanged).
+- **Outcomes loop:** `inbox-triage` auto-attests inbound replies;
+  `escc outcome record --thread` dedupes; `escc outcome void <id>` rolls a bad
+  outcome back everywhere (filtered at the single `listOutcomes` seam).
+- **`escc twin [--days N]`:** a read-only "what the twin learned lately" digest
+  with a correction-surface pointer per line.
+
+### Security
+
+- **Privacy-purge reaches every twin-writer store** (outcomes, promises, work
+  items, notify queue, session metrics); a content-guard test requires every
+  state-store table to declare a purge strategy so none can silently escape
+  erasure.
+- Quarantine guard on `escc product mine --from-transcript` (refuses quarantined
+  paths); per-mine ingest cap (`ESCC_MINE_MAX`) so auto-mining cannot flood the
+  review queue.
+
+### Deferred
+
+- Fidelity instrumentation (revision-rate capture + dark autonomy grant model)
+  and machine-written resonance (the ADR-0012 amendment) are speced but held for
+  a focused follow-up (each carries a schema change). L4 auto-send remains
+  deferred to v2.0.0 behind its own ADR.
+
 ## [1.8.1] - 2026-07-07
 
 Public-source hygiene release: a full-repo sensitivity audit (tree, docs,

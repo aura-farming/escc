@@ -65,10 +65,12 @@ Workspace / data:
   notify drain                print + hand off queued notifications ([--clear]; --approve-self <your-email> mints a
                               self-digest approval token so the gate admits the matching Gmail draft)
 
-Outbound enforcement (v1.1.0):
-  outbound approve       run the four gates + record a per-recipient approval token (--input <json>
+Outbound enforcement (v1.1.0; adversarial review required per ADR-0020):
+  outbound approve       four gates + adversarial-review check, then record a per-recipient approval
+                         token. --input <json> = {draft,records,review:{verdict,confidence}} — or pass
+                         --review-verdict approved --review-confidence 0.9 [--reviewer outbound-reviewer].
                          [--override "<reason>"] [--approver "<name>"] [--approver-role <role>] — strict
-                         profile requires manager-signed overrides)
+                         profile requires manager-signed overrides; ESCC_OUTBOUND_REQUIRE_REVIEW=off disables.
   outbound check         run the four gates read-only, no writes (--input <json>)
   outbound review-pack   split a worklist into sendable vs excluded-with-reasons (--input <json>)
 
@@ -94,6 +96,13 @@ Canonical account identity (ADR-0018):
   identity list                    list all alias links
   identity backfill [--apply]      merge legacy store fragments into canonical keys (DRY-RUN default; --apply backs up first)
   reconcile <account> [--apply]    diff account-memory vs a live CRM snapshot (--input '{"deals":[...]}'); --apply syncs memory to CRM
+                                    (batch: --input '{"accounts":[{"account":"company:1","deals":[...]}]}' reconciles the whole morning sweep)
+
+Prepared day (v1.9.0):
+  worklist list [--all]            show prepared-day items (default: open); the morning sweep stages them, /daily surfaces them
+  worklist add --account <id> [--kind <k>] [--meeting <iso>] [--skill <s>]   stage a prepared item
+  worklist done <id>               mark a prepared item worked
+  twin [--days <n>]                what the twin learned/staged lately (outcomes, prepared items, candidates, pending instincts) + where to correct each
 
 Account truth & audit (v1.8.0):
   truth <account> [--input <crm.json>]   THE reconciled account picture — every section labeled source + last-verified
@@ -101,8 +110,10 @@ Account truth & audit (v1.8.0):
                                           query/export the outbound governance ledger (compliance proof)
 
 Outcome ledger (v1.8.0 learning loop):
-  outcome record --type <t>   attest an outcome (reply_received | meeting_booked | deal_stage_advanced | sequence_step_engaged | closed_won | closed_lost) [--account <id>] [--deal <id>] [--note "<why>"]
+  outcome record --type <t>   attest an outcome (reply_received | meeting_booked | deal_stage_advanced | sequence_step_engaged | closed_won | closed_lost) [--account <id>] [--deal <id>] [--thread <id>] [--note "<why>"]
+                              (--thread dedupes: the same reply attested twice collapses to one row)
   outcome list                list recorded outcomes (--type, --account, --limit)
+  outcome void <id>           roll back a bad/fabricated outcome — excluded from distill, truth, and summary everywhere (v1.9.0)
   outcome summary             ledger counts by type + the session follow-through gap (coaching input)
 
 Instinct engine (mounted from instinct-cli):
@@ -119,7 +130,8 @@ const VALUE_FLAGS = new Set([
   '--id', '--type', '--segment', '--competitor', '--approved-by',
   '--source-ref', '--source-type', '--use-case', '--from-transcript',
   '--account', '--deal', '--note', '--recipient', '--since', '--event-type',
-  '--approver', '--approver-role', '--interval', '--approve-self',
+  '--approver', '--approver-role', '--review-verdict', '--review-confidence', '--reviewer', '--interval', '--approve-self',
+  '--thread', '--kind', '--meeting', '--skill', '--crm-as-of',
 ]);
 
 /** `--repo-root` -> `repoRoot`, `--within-days` -> `withinDays`. */
@@ -316,16 +328,26 @@ function handleOutbound(positional, flags) {
   }
   try {
     if (action === 'approve') {
+      // The adversarial-review verdict (ADR-0020) comes from --input {…, review:{…}}
+      // or the --review-* flags; it is REQUIRED unless ESCC_OUTBOUND_REQUIRE_REVIEW=off
+      // or a logged --override proceeds.
+      const reviewInput = payload.review || (
+        (flags.reviewVerdict != null || flags.reviewConfidence != null || flags.reviewer != null)
+          ? { verdict: flags.reviewVerdict, confidence: flags.reviewConfidence != null ? Number(flags.reviewConfidence) : undefined, reviewer: flags.reviewer }
+          : undefined
+      );
       const r = outboundApprove.approveOutbound({
         draft: payload.draft, records: payload.records, sessionId: payload.sessionId,
         now: payload.now, override: flags.override || payload.override,
         approver: flags.approver || payload.approver,
         approverRole: flags.approverRole || payload.approverRole,
+        review: reviewInput,
       });
       const notes = r.warnings && r.warnings.length ? `\nnotes:\n${r.warnings.map(w => `  - ${w.reason}`).join('\n')}` : '';
+      const rev = r.review ? ` [reviewer ${r.review.reviewer} · ${r.review.verdict} · conf ${r.review.confidence}]` : '';
       const text = r.approved
-        ? `APPROVED${r.override ? ` (override: ${r.overrideReason})` : ''} — token recorded for ${r.recipient || '(recipient)'} [key ${r.key.slice(0, 12)}…]${notes}`
-        : `BLOCKED — not approved:\n${r.blocks.map(b => `  - ${b.gate}: ${b.reason}`).join('\n')}\nProvide --override "<reason>" to proceed anyway (logged).`;
+        ? `APPROVED${r.override ? ` (override: ${r.overrideReason})` : ''}${rev} — token recorded for ${r.recipient || '(recipient)'} [key ${r.key.slice(0, 12)}…]${notes}`
+        : `BLOCKED — not approved:\n${r.blocks.map(b => `  - ${b.gate}: ${b.reason}`).join('\n')}\nFix and re-run, or add --override "<reason>" to proceed anyway (logged).`;
       return { code: r.approved ? 0 : 1, text, data: r };
     }
     if (action === 'check') {
@@ -442,6 +464,14 @@ function handleProduct(positional, flags) {
     }
     if (action === 'mine') {
       if (flags.fromTranscript) {
+        // Quarantine guard (v1.9.0, ADR-0019): the Read-matcher quarantine hook
+        // cannot see this Bash-invoked CLI read, so refuse a quarantined path
+        // here — raw untrusted bytes must go through the transcript-analyzer
+        // subagent, whose STRUCTURED output is ingested via --input instead.
+        const { isQuarantinedPath, isQuarantineContext } = require('./hooks/attachment-quarantine');
+        if (isQuarantinedPath(flags.fromTranscript) && !isQuarantineContext()) {
+          return { code: 1, text: `Refused: "${flags.fromTranscript}" is a quarantined path. Route raw transcripts through the transcript-analyzer subagent and ingest its structured output with 'escc product mine --input <json>'.`, data: null };
+        }
         const text = fs.readFileSync(flags.fromTranscript, 'utf8');
         const opts = { sourceType: flags.sourceType || 'call', sourceRef: flags.sourceRef || flags.fromTranscript };
         const items = productMine.extractObjectionCandidates(text, opts);
@@ -451,7 +481,8 @@ function handleProduct(positional, flags) {
       const input = readProductInput(flags);
       const items = Array.isArray(input) ? input : (input.items || []);
       const stored = productMine.ingestCandidates(items, { sourceType: flags.sourceType, sourceRef: flags.sourceRef });
-      return { code: 0, text: `Ingested ${stored.length} candidate(s) -> operator-only review.`, data: { candidates: stored } };
+      const dropCap = stored.dropped ? ` (${stored.dropped} over the per-mine cap dropped — raise ESCC_MINE_MAX or ingest in batches)` : '';
+      return { code: 0, text: `Ingested ${stored.length} candidate(s) -> operator-only review${dropCap}.`, data: { candidates: stored, dropped: stored.dropped || 0 } };
     }
     return { code: 1, text: `product: unknown action '${action}' (retrieve | resolve-role | vocab | add | approve | candidates | gaps | mine)`, data: null };
   } catch (err) {
@@ -485,9 +516,13 @@ function handleVoice(positional, flags) {
       }
       const texts = Array.isArray(input) ? input : (input.texts || input.buyerTexts || []);
       const register = accountRegister.extractRegister(texts, {});
-      const file = voiceOverlay.writeOverlay(account, register, {});
-      const text = `Wrote per-account voice overlay for ${account} — ${register.sampleCount} sample(s), formality ${register.formality}, ${register.lexicon.length} term(s) -> ${file}.\nSTYLE ONLY: register + buyer lexicon; facts still come from approved product-knowledge.`;
-      return { code: 0, text, data: { account, register, file } };
+      const stored = voiceOverlay.overlaySampleCount(account, {});
+      const file = voiceOverlay.writeOverlay(account, register, { force: Boolean(flags.force) });
+      const kept = stored > 0 && register.sampleCount < stored && !flags.force;
+      const text = kept
+        ? `Kept the existing higher-confidence overlay for ${account} (${stored} sample(s)); this refresh gathered only ${register.sampleCount} — pass --force to overwrite. Gather the full buyer history to refresh cleanly.`
+        : `Wrote per-account voice overlay for ${account} — ${register.sampleCount} sample(s), formality ${register.formality}, ${register.lexicon.length} term(s) -> ${file}.\nSTYLE ONLY: register + buyer lexicon; facts still come from approved product-knowledge.`;
+      return { code: 0, text, data: { account, register, file, kept } };
     }
     if (action === 'show') {
       const account = positional[1];
@@ -580,9 +615,18 @@ function handleReconcile(positional, flags) {
   } catch (err) {
     return { code: 1, text: `reconcile: could not read the CRM snapshot JSON (--input <file> or stdin): ${err.message}`, data: null };
   }
+  // Batch (morning sweep): {accounts:[{account, deals}], asOf} -> one pass.
+  if (Array.isArray(snapshot.accounts)) {
+    try {
+      const batch = accountReconcile.reconcileBatch(snapshot, { apply: Boolean(flags.apply) });
+      return { code: 0, text: accountReconcile.formatBatchReport(batch), data: batch };
+    } catch (err) {
+      return { code: 1, text: `reconcile (batch) failed: ${err.message}`, data: null };
+    }
+  }
   const account = positional[0] || snapshot.account || snapshot.account_id;
   if (!account) {
-    return { code: 1, text: 'reconcile requires <account> (positional or "account" in the snapshot JSON).', data: null };
+    return { code: 1, text: 'reconcile requires <account> (positional or "account" in the snapshot JSON), or an "accounts" array for a batch.', data: null };
   }
   try {
     const result = accountReconcile.reconcile(account, snapshot, { apply: Boolean(flags.apply) });
@@ -608,17 +652,49 @@ function handleOutcome(positional, flags) {
         return { code: 1, text: 'outcome record requires --type <reply_received|meeting_booked|deal_stage_advanced|sequence_step_engaged|closed_won|closed_lost>.', data: null };
       }
       const accountId = flags.account ? accountIdentity.accountKey(String(flags.account)) : null;
+      // Dedupe key (v1.9.0 auto-attest): when --thread is supplied, the same
+      // inbound reply attested twice (double-triage of one thread) collapses to
+      // one row. Thread id is the rep's own mailbox metadata, never prospect
+      // prose. Without --thread, behavior is unchanged (always insert).
+      const thread = flags.thread ? String(flags.thread) : null;
+      const fingerprint = thread
+        ? require('crypto').createHash('sha1').update(`${flags.type}:${accountId || ''}:${thread}`).digest('hex')
+        : null;
       const store = createStateStoreSync();
       try {
+        if (fingerprint) {
+          const existing = store.listOutcomes({ type: flags.type, accountId }).find(r => r.fingerprint === fingerprint);
+          if (existing) {
+            return { code: 0, text: `Already attested ${flags.type}${accountId ? ` for ${accountId}` : ''} (thread ${thread}) — no duplicate row.`, data: existing };
+          }
+        }
+        const payload = {};
+        if (flags.note) payload.note = String(flags.note).slice(0, 200);
+        if (thread) payload.thread_id = thread;
         const row = store.insertOutcome({
           id: `oc-${Date.now().toString(36)}-${require('crypto').randomBytes(4).toString('hex')}`,
           type: flags.type,
+          fingerprint,
           account_id: accountId,
           deal_id: flags.deal ? String(flags.deal) : null,
           session_id: process.env.CLAUDE_SESSION_ID || null,
-          payload: flags.note ? { note: String(flags.note).slice(0, 200) } : null,
+          payload: Object.keys(payload).length ? payload : null,
         });
         return { code: 0, text: `Recorded outcome ${row.type}${accountId ? ` for ${accountId}` : ''} — the ledger moves instinct confidence at session end.`, data: row };
+      } finally {
+        store.close();
+      }
+    }
+    if (action === 'void') {
+      const id = positional[1] || flags.id;
+      if (!id) return { code: 1, text: 'outcome void requires an outcome id (rolls the row back so it stops moving instinct confidence and truth counts).', data: null };
+      const store = createStateStoreSync();
+      try {
+        const row = store.listOutcomes({ includeVoided: true }).find(r => r.id === id);
+        if (!row) return { code: 1, text: `No outcome with id ${id}.`, data: null };
+        if (row.payload && row.payload.voided) return { code: 0, text: `Outcome ${id} is already voided.`, data: row };
+        const voided = store.insertOutcome({ ...row, payload: { ...(row.payload || {}), voided: true } });
+        return { code: 0, text: `Voided outcome ${id} (${row.type}) — excluded from the ledger everywhere (distill, truth, summary).`, data: voided };
       } finally {
         store.close();
       }
@@ -847,6 +923,8 @@ function run(argv = []) {
     case 'voice': return handleVoice(positional, flags);
     case 'identity': return handleIdentity(positional, flags);
     case 'reconcile': return handleReconcile(positional, flags);
+    case 'worklist': return require('./lib/worklist-store').runWorklist(positional, flags);
+    case 'twin': return require('./lib/twin-digest').runTwin(flags);
     case 'outcome': return handleOutcome(positional, flags);
     case 'truth': return handleTruth(positional, flags);
     case 'audit': return handleAudit(positional, flags);
