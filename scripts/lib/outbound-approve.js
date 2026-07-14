@@ -107,9 +107,10 @@ function approveOutbound(args = {}) {
   // Blocked, no override: remember the blocks so the eventual send is caught too,
   // and record NO approval token.
   for (const w of result.blocklistWrites) {
-    const bkey = w.scope === 'account'
-      ? (records.account_id || records.accountId || recipient)
-      : recipient;
+    // Account-scope blocks are stored under the CANONICAL account key (ADR-0018)
+    // so the send-gate can re-derive the same key from the recipient's email and
+    // enforce the block even against an older per-recipient token.
+    const bkey = w.scope === 'account' ? (accountId || recipient) : recipient;
     if (bkey) {
       dnc.recordDoNotContact({ key: bkey, scope: w.scope, reason: w.reason, notBefore: w.not_before, sessionId, stateDir });
     }

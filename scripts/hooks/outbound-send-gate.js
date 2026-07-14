@@ -38,6 +38,7 @@ const {
 } = require('../lib/hook-input');
 const review = require('../lib/outbound-review');
 const dnc = require('../lib/do-not-contact');
+const identity = require('../lib/account-identity');
 const gates = require('../lib/outbound-gates');
 
 function block(reason) {
@@ -104,15 +105,26 @@ function run(raw, ctx = {}) {
     const recipient = cls.recipient ? String(cls.recipient) : '';
     const contentKey = review.outboundContentKey({ recipient, subject: cls.subject, body: cls.body });
 
-    // --- do-not-contact blocklist (contact-level; account-level is enforced at
-    // approval time — a blocked account never gets a token, so the approval
-    // check below blocks it here too). ---
+    // --- do-not-contact blocklist: the CONTACT and the recipient's ACCOUNT.
+    // A blocked account suppresses all its contacts even when a per-recipient
+    // token exists (a token minted before the account was blocked must not
+    // outlive it). The account key is re-derived from the recipient's email via
+    // the ADR-0018 canonical identity, best-effort so a resolution error can
+    // never break this fail-closed gate. ---
     if (recipient) {
-      const blocked = dnc.findActiveBlock({ key: recipient });
-      if (blocked) {
-        const until = blocked.not_before ? ` (not before ${String(blocked.not_before).slice(0, 10)})` : ' (indefinite)';
-        review.recordSendDecision({ sessionId, fingerprint: contentKey, decision: 'unapproved' });
-        return block(`recipient is on the do-not-contact list — ${blocked.reason}${until}. Clear the block or wait until the not-before date before contacting them.`);
+      const keysToCheck = [recipient];
+      try {
+        const acct = identity.accountKey(recipient);
+        if (acct && acct !== recipient) keysToCheck.push(acct);
+      } catch (_e) { /* identity resolution is best-effort; the contact check still runs */ }
+      for (const dncKey of keysToCheck) {
+        const blocked = dnc.findActiveBlock({ key: dncKey });
+        if (blocked) {
+          const until = blocked.not_before ? ` (not before ${String(blocked.not_before).slice(0, 10)})` : ' (indefinite)';
+          const who = dncKey === recipient ? 'recipient is' : "the recipient's account is";
+          review.recordSendDecision({ sessionId, fingerprint: contentKey, decision: 'unapproved' });
+          return block(`${who} on the do-not-contact list — ${blocked.reason}${until}. Clear the block or wait until the not-before date before contacting them.`);
+        }
       }
     }
 

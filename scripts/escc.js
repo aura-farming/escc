@@ -207,16 +207,31 @@ function handleCatalog(flags) {
 
 function formatDoctor(report) {
   const s = report.summary || {};
-  const lines = [`Doctor: ${s.okCount || 0} ok, ${s.errorCount || 0} error(s) across ${(report.results || []).length} target(s).`];
-  for (const r of report.results || []) lines.push(`- ${r.adapter ? r.adapter.id : '?'}: ${r.status}`);
+  const results = (report && report.results) || [];
+  // A marketplace / plugin-manager install writes no `escc install` file-copy
+  // records, so discovery finds nothing. Say so honestly — an empty result is
+  // NOT a clean bill of health for a plugin install.
+  if (!results.length) {
+    return [
+      'Doctor: no `escc install` file-copy target records found (0 targets checked).',
+      'If you installed ESCC via the Claude Code marketplace / plugin manager, that is expected —',
+      'this doctor only checks file-copy installs, not plugin-managed ones. It has NOT verified your plugin.',
+      'Verify a plugin install with `/plugin` inside Claude Code; run `escc install` only for a file-copy install.',
+    ].join('\n');
+  }
+  const lines = [`Doctor: ${s.okCount || 0} ok, ${s.errorCount || 0} error(s) across ${results.length} target(s).`];
+  for (const r of results) lines.push(`- ${r.adapter ? r.adapter.id : '?'}: ${r.status}`);
   return lines.join('\n');
 }
 
 function handleDoctor(flags) {
   try {
     const report = lifecycle.buildDoctorReport(toLifecycleOpts(flags));
+    const results = (report && report.results) || [];
     const errors = (report.summary && report.summary.errorCount) || 0;
-    return { code: flags.exitCode && errors > 0 ? 1 : 0, text: formatDoctor(report), data: report };
+    // Under --exit-code, "nothing was checked" is not a pass: errors OR zero targets => non-zero.
+    const bad = errors > 0 || results.length === 0;
+    return { code: flags.exitCode && bad ? 1 : 0, text: formatDoctor(report), data: report };
   } catch (err) {
     return { code: 1, text: `doctor failed: ${err.message}`, data: null };
   }
