@@ -98,6 +98,21 @@ test('BATCH cluster: mass/bulk/count/list phrasings reach the worklist on-ramp',
 test('BATCH on-ramp is precise: single-message and prospect-list asks are untouched', () => {
   assert.equal(routedSkill('write a cold email to Jane at Example Co'), 'cold-outreach');
   assert.equal(routedSkill('build me a prospect list for mid-market'), 'prospecting-pipeline');
+  // bare "batch" of NON-outbound work must NOT hijack to the outbound worklist…
+  assert.notEqual(routedSkill('process this batch of call transcripts'), 'worklist');
+  assert.notEqual(routedSkill('run a batch update on these deal stages'), 'worklist');
+  // …but an outbound batch phrasing with "batch" still routes there.
+  assert.equal(routedSkill('batch prospect these 20 accounts'), 'worklist');
+});
+
+test('ATTACK on-ramp: plan-of-attack / get-into phrasings reach account-attack-plan', () => {
+  assert.equal(routedSkill('build me a plan of attack for Globex'), 'account-attack-plan');
+  assert.equal(routedSkill('how do I get into Acme Corp'), 'account-attack-plan');
+  assert.equal(routedSkill('what is the best way into this account'), 'account-attack-plan');
+  assert.equal(routedSkill('game plan for cracking Initech'), 'account-attack-plan');
+  // must NOT steal the brief-only or list asks:
+  assert.equal(routedSkill('research this account for me'), 'account-research');
+  assert.equal(routedSkill('who should I target in mid-market'), 'prospecting-pipeline');
 });
 
 // --- skip rules ---------------------------------------------------------------

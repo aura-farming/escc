@@ -10,6 +10,41 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.10.0] - unreleased
+
+Adds the A-Z account attack-plan capability and hardens the outbound review path
+from a full-repo review. A rep can now name one target business and get a deep
+multi-agent research brief PLUS a sequenced, multi-channel plan of attack — not
+just a brief. Governed by ADR-0021. See [docs/releases/v1.10.0.md](docs/releases/v1.10.0.md).
+
+### Added
+
+- **`account-attack-plan` skill + `/attack` command:** the single A-Z on-ramp for
+  ONE named target account. Screens do-not-contact / contactability first, fans the
+  read-only research agents (`account-researcher`, `prospect-researcher`,
+  `competitor-analyst`, `warm-path-mapper`, `signal-scorer`) out in parallel across
+  an A-P rubric, synthesizes a sequenced plan of attack via `sales-planner` (who
+  first, channel, approved proof, one CTA, dates, objection pre-empts, silent-branch
+  fallback), and hands the first touches into the gated draft path / `/escc-worklist`.
+  Draft-only; every claim sourced. Routing recognizes "plan of attack / get into /
+  break into / game plan for <account>". (ADR-0021)
+
+### Fixed
+
+- **Account-scope do-not-contact is now enforced at the send-gate.** A per-recipient
+  token minted before an account was blocked no longer outlives the block: the gate
+  re-derives the recipient's canonical account key (ADR-0018) and blocks on an active
+  account-scope suppression, not just a contact-scope one.
+- **`findValidApproval` fails closed on a non-numeric confidence.** A NaN/missing
+  confidence on an approval row is now rejected (was treated as valid), matching the
+  review-attestation path.
+- **`escc doctor` no longer reads as a clean pass when it checked nothing.** On a
+  marketplace / plugin-manager install (no file-copy targets) it says so explicitly
+  and, under `--exit-code`, returns non-zero instead of "0 ok, 0 error(s)".
+- **Intent-router: the worklist `\bbatch\b` route no longer over-captures.** A bare
+  "batch" of non-outbound work (e.g. "batch of transcripts") is no longer hinted
+  toward the outbound batch pipeline; an outbound "batch prospect/draft/…" still is.
+
 ## [1.9.1] - 2026-07-10
 
 The adversarial reviewer is now enforced in the approval path, and a batch ask

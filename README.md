@@ -36,9 +36,9 @@ System of record is **HubSpot** (via MCP). Email and calendar run on **Gmail + G
 <!-- ESCC:CATALOG:START -->
 | Surface | Count |
 | --- | --- |
-| Skills | 68 |
+| Skills | 69 |
 | Agents | 18 |
-| Commands | 70 |
+| Commands | 71 |
 | Rules | 24 |
 | Hook matchers | 30 |
 
