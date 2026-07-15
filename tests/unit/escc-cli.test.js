@@ -172,3 +172,42 @@ test('status --write surfaces a write failure instead of silently swallowing it'
     assert.ok(/could not write|warning/i.test(res.text), 'warning surfaced in text');
   });
 });
+
+test('outcome refuses an unknown --type on record AND list (no false-empty ledger reads)', () => {
+  withEnv(freshWorkspaceEnv(), () => {
+    const rec = cli.run(['outcome', 'record', '--type', 'reply_recieved']);
+    assert.equal(rec.code, 1);
+    assert.ok(/unknown --type/.test(rec.text));
+    assert.ok(rec.text.includes('reply_received'), 'the refusal teaches the valid set');
+
+    const lst = cli.run(['outcome', 'list', '--type', 'meeting_boked']);
+    assert.equal(lst.code, 1, 'a typo filter must error, not read as an (empty) compliance pass');
+  });
+});
+
+test('outcome list --json emits the machine-readable ledger slice', () => {
+  withEnv(freshWorkspaceEnv(), () => {
+    cli.run(['outcome', 'record', '--type', 'reply_received', '--account', 'company:5']);
+    const res = cli.run(['outcome', 'list', '--json']);
+    assert.equal(res.code, 0);
+    const parsed = JSON.parse(res.text);
+    assert.equal(parsed.total, 1);
+    assert.equal(parsed.outcomes[0].type, 'reply_received');
+  });
+});
+
+test('product add refuses a candidate that could never be approved; a well-shaped one lands', () => {
+  withEnv(freshWorkspaceEnv(), () => {
+    const bad = cli.run(['product', 'add', '--input', JSON.stringify({ type: 'objection', pattern: 'too expensive' })]);
+    assert.equal(bad.code, 1);
+    assert.ok(/could never be approved/.test(bad.text));
+    assert.ok(/objection requires pattern \+ response/.test(bad.text));
+    assert.ok(/source_type is required/.test(bad.text));
+
+    const ok = cli.run(['product', 'add', '--input', JSON.stringify({
+      type: 'objection', pattern: 'too expensive', response: 'reframe against the cost of manual rosters', source_type: 'call',
+    })]);
+    assert.equal(ok.code, 0, ok.text);
+    assert.ok(/candidate/i.test(ok.text));
+  });
+});

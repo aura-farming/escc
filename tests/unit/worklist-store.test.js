@@ -125,6 +125,17 @@ test('runWorklist add without --account is refused', () => {
   });
 });
 
+test('runWorklist list --json emits machine-readable items', () => {
+  withEnv(freshHome(), () => {
+    worklist.runWorklist(['add'], { account: 'company:7', kind: 'call_prep' });
+    const res = worklist.runWorklist(['list'], { json: true });
+    assert.equal(res.code, 0);
+    const parsed = JSON.parse(res.text);
+    assert.equal(parsed.length, 1);
+    assert.equal(parsed[0].accountKey, 'company_7');
+  });
+});
+
 test('escc worklist add captures --kind/--meeting/--skill values through the CLI parser', () => {
   withEnv(freshHome(), () => {
     const escc = require('../../scripts/escc.js');

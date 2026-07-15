@@ -175,6 +175,7 @@ function runWorklist(positional = [], flags = {}) {
     }
     if (action === 'list') {
       const items = listPreparedItems(flags.all ? {} : { status: 'open' });
+      if (flags.json) return { code: 0, text: JSON.stringify(items, null, 2), data: items };
       return { code: 0, text: formatList(items), data: items };
     }
     return { code: 1, text: `Unknown worklist action: ${action} (use add|list|done).`, data: null };

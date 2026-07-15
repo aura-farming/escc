@@ -118,6 +118,19 @@ test('routing-precision fixes (review batch): disambiguated pairs route correctl
   assert.equal(routedSkill('how accurate were our forecasts last quarter'), 'forecast-accuracy');
 });
 
+test('INGEST on-ramp beats vocabulary overlap: doc drops reach knowledge-intake, pricing math stays at quote-desk', () => {
+  // "pricing" inside an ingest ask used to shadow-route to quote-desk.
+  assert.equal(routedSkill('ingest this pricing doc'), 'knowledge-intake');
+  // the "here's our <doc>" drop phrasings were dead behind quote-desk/battlecards.
+  assert.equal(routedSkill("here's our pricing from marketing"), 'knowledge-intake');
+  assert.equal(routedSkill('here is our battlecard for the team'), 'knowledge-intake');
+  // …without stealing the genuine pricing-math and competitive asks:
+  assert.equal(routedSkill('what should I quote for 200 seats'), 'quote-desk');
+  assert.equal(routedSkill('how do we beat Dealify'), 'competitor-battlecards');
+  // brand-voice keeps ownership of the writing-style phrasing.
+  assert.equal(routedSkill('learn my writing style from these emails'), 'brand-voice');
+});
+
 test('ATTACK on-ramp: plan-of-attack / get-into phrasings reach account-attack-plan', () => {
   assert.equal(routedSkill('build me a plan of attack for Globex'), 'account-attack-plan');
   assert.equal(routedSkill('how do I get into Acme Corp'), 'account-attack-plan');

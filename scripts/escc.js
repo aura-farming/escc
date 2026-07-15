@@ -11,12 +11,16 @@
  *
  * Subcommands: install · plan · catalog · doctor · repair · status ·
  * sessions · list-installed · uninstall · auto-update · privacy-purge · watch ·
- * outbound · product, plus the mounted instinct handlers (instinct-status /
- * instinct-promote / evolve) from scripts/instincts/instinct-cli.js.
+ * notify · outbound · dnc · product · voice · identity · reconcile · worklist ·
+ * twin · outcome · truth · audit, plus the mounted instinct handlers
+ * (instinct-status / instinct-promote / evolve) from scripts/instincts/instinct-cli.js.
  *
  * The dispatcher delegates to already-tested libs; it never re-implements their
- * logic. Heavy/destructive work (install apply, privacy erasure, git pull) is
- * gated by the libs themselves (dry-run defaults, --confirm, injectable git).
+ * logic, and verb clusters live beside their domain libs (worklist-store.runWorklist,
+ * do-not-contact.runDnc, ledger-cli.runOutcome/runTruth/runAudit, autonomy-cli.*)
+ * so this router stays under the 800-line machinery cap. Heavy/destructive work
+ * (install apply, privacy erasure, git pull) is gated by the libs themselves
+ * (dry-run defaults, --confirm, injectable git).
  */
 
 const fs = require('fs');
@@ -39,7 +43,6 @@ const accountRegister = require('./lib/account-register');
 const voiceOverlay = require('./lib/voice-overlay');
 const accountIdentity = require('./lib/account-identity');
 const accountReconcile = require('./lib/account-reconcile');
-const accountTruth = require('./lib/account-truth');
 
 const HELP = `escc — EverythingSales Claude Code operator CLI
 
@@ -73,6 +76,15 @@ Outbound enforcement (v1.1.0; adversarial review required per ADR-0020):
                          profile requires manager-signed overrides; ESCC_OUTBOUND_REQUIRE_REVIEW=off disables.
   outbound check         run the four gates read-only, no writes (--input <json>)
   outbound review-pack   split a worklist into sendable vs excluded-with-reasons (--input <json>)
+
+Do-not-contact blocklist (hook-enforced — the fail-closed send-gate reads exactly this store):
+  dnc record --key <email>   suppress a contact so every gated outbound to them BLOCKS. Opt-out-handling
+                             runs this FIRST (a CRM flag alone does not gate sends). --scope account
+                             suppresses the whole company; --reason "<trigger quote>" --source email|phone|verbal
+                             carry compliance provenance; --not-before <iso> = timing block instead of indefinite
+  dnc check --key <k>        would the send-gate block this contact/account right now?
+  dnc list [--json]          show the folded blocklist
+  dnc clear --key <k> --evidence "<documented re-consent>"   lift a block (audited; refuses without evidence)
 
 Product knowledge (ADR-0012):
   product retrieve     run the role+segment+competitor ladder (--role --segment --competitor --type --use-case)
@@ -132,6 +144,7 @@ const VALUE_FLAGS = new Set([
   '--account', '--deal', '--note', '--recipient', '--since', '--event-type',
   '--approver', '--approver-role', '--review-verdict', '--review-confidence', '--reviewer', '--interval', '--approve-self',
   '--thread', '--kind', '--meeting', '--skill', '--crm-as-of',
+  '--key', '--reason', '--source', '--not-before', '--evidence',
 ]);
 
 /** `--repo-root` -> `repoRoot`, `--within-days` -> `withinDays`. */
@@ -477,6 +490,11 @@ function handleProduct(positional, flags) {
       }
       const vt = productKnowledge.validateVocabTags(entry);
       if (!vt.ok) return { code: 1, text: `add (candidate) failed:\n${vt.errors.map(e => `  - ${e}`).join('\n')}`, data: { ok: false, errors: vt.errors } };
+      // Fail un-approvable candidates at ADD time, not at promotion — the same
+      // shape gate `product approve` applies later, minus id (appendCandidate
+      // auto-fills one).
+      const shape = productKnowledge.requiredFieldErrors(entry).filter(e => e !== 'id is required');
+      if (shape.length) return { code: 1, text: `add (candidate) refused — this candidate could never be approved:\n${shape.map(e => `  - ${e}`).join('\n')}`, data: { ok: false, errors: shape } };
       const stored = productKnowledge.appendCandidate(entry);
       return { code: 0, text: `Added candidate ${stored.id} (approved:false, untrusted:true) — operator-only until promoted.`, data: { candidate: stored } };
     }
@@ -661,257 +679,6 @@ function handleReconcile(positional, flags) {
   }
 }
 
-/**
- * Outcome-ledger verbs (v1.8.0 learning loop): attest, inspect, and summarize
- * the outcomes that move instinct confidence at SessionEnd (I2). `record` is
- * the rep-attestation path for outcomes with no tool call to hook (a prospect
- * REPLY); stage advances and booked meetings capture automatically via
- * post:outcome-capture.
- */
-function handleOutcome(positional, flags) {
-  const action = positional[0] || 'list';
-  const { createStateStoreSync } = require('./lib/state-store');
-  try {
-    if (action === 'record') {
-      if (!flags.type) {
-        return { code: 1, text: 'outcome record requires --type <reply_received|meeting_booked|deal_stage_advanced|sequence_step_engaged|closed_won|closed_lost>.', data: null };
-      }
-      const accountId = flags.account ? accountIdentity.accountKey(String(flags.account)) : null;
-      // Dedupe key (v1.9.0 auto-attest): when --thread is supplied, the same
-      // inbound reply attested twice (double-triage of one thread) collapses to
-      // one row. Thread id is the rep's own mailbox metadata, never prospect
-      // prose. Without --thread, behavior is unchanged (always insert).
-      const thread = flags.thread ? String(flags.thread) : null;
-      const fingerprint = thread
-        ? require('crypto').createHash('sha1').update(`${flags.type}:${accountId || ''}:${thread}`).digest('hex')
-        : null;
-      const store = createStateStoreSync();
-      try {
-        if (fingerprint) {
-          const existing = store.listOutcomes({ type: flags.type, accountId }).find(r => r.fingerprint === fingerprint);
-          if (existing) {
-            return { code: 0, text: `Already attested ${flags.type}${accountId ? ` for ${accountId}` : ''} (thread ${thread}) — no duplicate row.`, data: existing };
-          }
-        }
-        const payload = {};
-        if (flags.note) payload.note = String(flags.note).slice(0, 200);
-        if (thread) payload.thread_id = thread;
-        const row = store.insertOutcome({
-          id: `oc-${Date.now().toString(36)}-${require('crypto').randomBytes(4).toString('hex')}`,
-          type: flags.type,
-          fingerprint,
-          account_id: accountId,
-          deal_id: flags.deal ? String(flags.deal) : null,
-          session_id: process.env.CLAUDE_SESSION_ID || null,
-          payload: Object.keys(payload).length ? payload : null,
-        });
-        return { code: 0, text: `Recorded outcome ${row.type}${accountId ? ` for ${accountId}` : ''} — the ledger moves instinct confidence at session end.`, data: row };
-      } finally {
-        store.close();
-      }
-    }
-    if (action === 'void') {
-      const id = positional[1] || flags.id;
-      if (!id) return { code: 1, text: 'outcome void requires an outcome id (rolls the row back so it stops moving instinct confidence and truth counts).', data: null };
-      const store = createStateStoreSync();
-      try {
-        const row = store.listOutcomes({ includeVoided: true }).find(r => r.id === id);
-        if (!row) return { code: 1, text: `No outcome with id ${id}.`, data: null };
-        if (row.payload && row.payload.voided) return { code: 0, text: `Outcome ${id} is already voided.`, data: row };
-        const voided = store.insertOutcome({ ...row, payload: { ...(row.payload || {}), voided: true } });
-        return { code: 0, text: `Voided outcome ${id} (${row.type}) — excluded from the ledger everywhere (distill, truth, summary).`, data: voided };
-      } finally {
-        store.close();
-      }
-    }
-    if (action === 'list') {
-      const store = createStateStoreSync();
-      try {
-        const accountId = flags.account ? accountIdentity.accountKey(String(flags.account)) : null;
-        const rows = store.listOutcomes({ type: flags.type || null, accountId });
-        const limit = flags.limit ? Number(flags.limit) : 20;
-        const shown = rows.slice(0, Number.isFinite(limit) ? limit : 20);
-        const text = shown.length
-          ? `Outcomes (${shown.length}/${rows.length}):\n${shown.map(r => `  ${String(r.created_at).slice(0, 10)} ${r.type}${r.account_id ? ` [${r.account_id}]` : ''}${r.deal_id ? ` deal ${r.deal_id}` : ''}`).join('\n')}`
-          : 'No outcomes recorded yet — the ledger fills from deal-stage writes, booked meetings, and `escc outcome record`.';
-        return { code: 0, text, data: { outcomes: shown, total: rows.length } };
-      } finally {
-        store.close();
-      }
-    }
-    if (action === 'summary') {
-      const sessionSignal = require('./lib/session-signal');
-      const store = createStateStoreSync();
-      let counts = {};
-      try {
-        for (const r of store.listOutcomes()) counts[r.type] = (counts[r.type] || 0) + 1;
-      } finally {
-        store.close();
-      }
-      const countLines = Object.keys(counts).length
-        ? Object.entries(counts).map(([t, n]) => `  ${t}: ${n}`).join('\n')
-        : '  (empty — the loop starts compounding once outcomes land)';
-      const follow = sessionSignal.formatFollowThrough(sessionSignal.followThroughSummary());
-      const text = `Outcome ledger:\n${countLines}${follow ? `\n${follow}` : ''}`;
-      return { code: 0, text, data: { counts } };
-    }
-    return { code: 1, text: `outcome: unknown action '${action}' (record | list | summary)`, data: null };
-  } catch (err) {
-    return { code: 1, text: `outcome ${action} failed: ${err.message}`, data: null };
-  }
-}
-
-/** Account truth (ADR-0018): the reconciled, provenance-labeled picture. */
-function handleTruth(positional, flags) {
-  const account = positional[0];
-  if (!account) return { code: 1, text: 'truth requires <account> (name, domain, email, or company:<id>).', data: null };
-  let crm = null;
-  if (flags.input) {
-    try {
-      crm = JSON.parse(fs.readFileSync(flags.input, 'utf8'));
-    } catch (err) {
-      return { code: 1, text: `truth: could not read the CRM snapshot (--input): ${err.message}`, data: null };
-    }
-  }
-  try {
-    const t = accountTruth.resolveTruth(account, { crm });
-    return { code: 0, text: accountTruth.formatTruth(t), data: t };
-  } catch (err) {
-    return { code: 1, text: `truth failed: ${err.message}`, data: null };
-  }
-}
-
-// Known governance event types (a typo'd --event-type filter would otherwise
-// silently return an empty result and read as a compliance pass).
-const AUDIT_EVENT_TYPES = new Set([
-  'outbound_approval', 'outbound_review', 'outbound_send', 'unapproved_send', 'bulk_send_attempt',
-  'secret_detected', 'policy_violation', 'approval_requested', 'hook_input_truncated', 'crm_destructive_op',
-]);
-
-/**
- * Governance audit (v1.8.0): query/export the outbound decision ledger —
- * "prove we honored this opt-out", "list every override this quarter".
- * Read-only, local-only.
- */
-function handleAudit(positional, flags) {
-  try {
-    const outboundReview = require('./lib/outbound-review');
-    const { resolveStateStorePath } = require('./lib/state-store');
-    let rows = outboundReview.readGovernanceEvents(resolveStateStorePath());
-
-    if (flags.eventType) {
-      if (!AUDIT_EVENT_TYPES.has(flags.eventType)) {
-        return { code: 1, text: `audit: unknown --event-type "${flags.eventType}". Known: ${[...AUDIT_EVENT_TYPES].join(', ')}`, data: null };
-      }
-      rows = rows.filter(r => r.event_type === flags.eventType);
-    }
-    if (flags.recipient) {
-      const needle = String(flags.recipient).toLowerCase();
-      rows = rows.filter(r => String((r.payload && r.payload.recipient) || '').toLowerCase().includes(needle));
-    }
-    if (flags.account) {
-      const key = accountIdentity.accountKey(String(flags.account));
-      rows = rows.filter(r => r.account_id === key);
-    }
-    if (flags.since) {
-      const since = String(flags.since);
-      rows = rows.filter(r => String(r.created_at || '') >= since);
-    }
-    rows = rows.slice().sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
-
-    if (flags.json) {
-      return { code: 0, text: JSON.stringify(rows, null, 2), data: { rows } };
-    }
-    const counts = {};
-    for (const r of rows) counts[r.event_type] = (counts[r.event_type] || 0) + 1;
-    const head = `Governance audit: ${rows.length} row(s)${Object.keys(counts).length ? ` — ${Object.entries(counts).map(([k, n]) => `${k}: ${n}`).join(', ')}` : ''}`;
-    const body = rows.slice(0, 50).map(r => {
-      const p = r.payload || {};
-      const bits = [String(r.created_at || '').slice(0, 19), r.event_type];
-      if (p.recipient) bits.push(p.recipient);
-      if (r.account_id) bits.push(`[${r.account_id}]`);
-      if (p.override_reason) bits.push(`OVERRIDE: ${p.override_reason}`);
-      if (p.decision) bits.push(`decision: ${p.decision}`);
-      return `  ${bits.join(' · ')}`;
-    }).join('\n');
-    return { code: 0, text: rows.length ? `${head}\n${body}${rows.length > 50 ? `\n  … ${rows.length - 50} more (use --json for the full export)` : ''}` : `${head} (no matching rows)`, data: { rows } };
-  } catch (err) {
-    return { code: 1, text: `audit failed: ${err.message}`, data: null };
-  }
-}
-
-/**
- * Watch scheduling (v1.8.0 autonomy): emit or install the OS scheduler wiring
- * for the read-only sweep. Emission prints; --install-schedule writes ONE
- * plist file and prints the single load command — nothing registers silently.
- */
-function handleWatchSchedule(flags) {
-  const scheduleEmit = require('./lib/schedule-emit');
-  const intervalSeconds = scheduleEmit.parseIntervalSeconds(flags.interval);
-  if (flags.installSchedule) {
-    if (process.platform !== 'darwin') {
-      return { code: 1, text: `--install-schedule writes a macOS launchd plist; on this platform add the crontab line yourself:\n  ${scheduleEmit.emitCrontabLine({ intervalSeconds })}`, data: null };
-    }
-    const r = scheduleEmit.installLaunchd({ intervalSeconds });
-    return { code: 0, text: `Wrote ${r.plistPath} (every ${intervalSeconds}s).\nActivate it with:\n  ${r.loadCommand}\nRemove later with: launchctl unload ${r.plistPath} && rm ${r.plistPath}`, data: r };
-  }
-  const text = [
-    `Scheduled watch wiring (every ${intervalSeconds}s):`,
-    '',
-    '# macOS — save as ~/Library/LaunchAgents/com.escc.watch.plist, then `launchctl load -w <path>`',
-    scheduleEmit.emitLaunchdPlist({ intervalSeconds }),
-    '# Linux/other — add to `crontab -e`:',
-    scheduleEmit.emitCrontabLine({ intervalSeconds }),
-  ].join('\n');
-  return { code: 0, text, data: { intervalSeconds } };
-}
-
-/**
- * Notify-queue drain (v1.8.0 autonomy): print queued escalations for delivery.
- * --approve-self <your-email> additionally mints a SELF-DIGEST approval token
- * (recipient = the operator's own mailbox, content = exactly the digest body
- * printed) so the fail-closed send-gate admits the matching Gmail draft. The
- * gate itself is untouched — this is a blessed token for a self-addressed
- * digest, unusable for any other recipient or content.
- */
-function handleNotify(positional, flags) {
-  const action = positional[0] || 'drain';
-  if (action !== 'drain') {
-    return { code: 1, text: `notify: unknown action '${action}' (drain)`, data: null };
-  }
-  try {
-    const notifyLib = require('./lib/notify');
-    const records = notifyLib.drainNotifications({ clear: Boolean(flags.clear) });
-    if (!records.length) {
-      return { code: 0, text: 'Notify queue: empty.', data: { records: [] } };
-    }
-    const subject = `ESCC digest — ${records.length} queued notification(s)`;
-    const body = records
-      .map(r => `- [${r.severity || 'medium'}] ${r.message || r.title || '(no message)'}${r.account ? ` (${r.account})` : ''}`)
-      .join('\n');
-    const lines = [`Notify queue (${records.length})${flags.clear ? ' — CLEARED after read' : ''}:`, body];
-
-    if (flags.approveSelf) {
-      const email = String(flags.approveSelf).trim();
-      if (!/@/.test(email)) return { code: 1, text: `--approve-self requires your own email address (got "${email}").`, data: null };
-      const key = require('./lib/outbound-review').outboundContentKey({ recipient: email, subject, body });
-      require('./lib/outbound-review').recordApproval({
-        key,
-        recipient: email,
-        accountId: accountIdentity.accountKey(email),
-        confidence: 1,
-        verdict: 'approved',
-        gates: { self_digest: 'pass' },
-        approver: process.env.ESCC_REP_IDENTITY || email,
-        approverRole: process.env.ESCC_ROLE || process.env.ESCC_REP_ROLE || 'rep',
-      });
-      lines.push('', `Self-digest approval token minted for ${email}. Create the Gmail draft with EXACTLY:`, `  subject: ${subject}`, '  body:', body.split('\n').map(l => `    ${l}`).join('\n'));
-    }
-    return { code: 0, text: lines.join('\n'), data: { records, subject, body } };
-  } catch (err) {
-    return { code: 1, text: `notify drain failed: ${err.message}`, data: null };
-  }
-}
 
 // --- dispatch ---------------------------------------------------------------
 
@@ -940,19 +707,20 @@ function run(argv = []) {
     case 'auto-update': return autoUpdateLib.runAutoUpdate({ repoRoot: flags.repoRoot, homeDir: flags.home, targets: flags.target ? [flags.target] : undefined, dryRun: flags.dryRun });
     case 'privacy-purge': return purgeLib.runPurge({ identifier: positional[0], confirm: flags.confirm });
     case 'watch':
-      if (flags.emitSchedule || flags.installSchedule) return handleWatchSchedule(flags);
+      if (flags.emitSchedule || flags.installSchedule) return require('./lib/autonomy-cli').runWatchSchedule(flags);
       return watchLib.runWatch({ withinDays: flags.withinDays ? Number(flags.withinDays) : undefined });
-    case 'notify': return handleNotify(positional, flags);
+    case 'notify': return require('./lib/autonomy-cli').runNotify(positional, flags);
     case 'outbound': return handleOutbound(positional, flags);
     case 'product': return handleProduct(positional, flags);
     case 'voice': return handleVoice(positional, flags);
     case 'identity': return handleIdentity(positional, flags);
     case 'reconcile': return handleReconcile(positional, flags);
     case 'worklist': return require('./lib/worklist-store').runWorklist(positional, flags);
+    case 'dnc': return require('./lib/do-not-contact').runDnc(positional, flags);
     case 'twin': return require('./lib/twin-digest').runTwin(flags);
-    case 'outcome': return handleOutcome(positional, flags);
-    case 'truth': return handleTruth(positional, flags);
-    case 'audit': return handleAudit(positional, flags);
+    case 'outcome': return require('./lib/ledger-cli').runOutcome(positional, flags);
+    case 'truth': return require('./lib/ledger-cli').runTruth(positional, flags);
+    case 'audit': return require('./lib/ledger-cli').runAudit(positional, flags);
     default: return { code: 1, text: `Unknown command: ${command}. Run 'escc help' for usage.`, data: null };
   }
 }

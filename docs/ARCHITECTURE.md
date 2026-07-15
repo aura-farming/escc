@@ -157,16 +157,21 @@ quarantine subagent -- privileged agents receive only the cleaned summary it
 returns, never the raw bytes. The `pre:attachment-quarantine` hook enforces this
 by blocking a privileged Read of a quarantined path.
 
-### 2. pre:outbound-send-gate FAILS CLOSED; every other hook FAILS OPEN
+### 2. pre:outbound-send-gate FAILS CLOSED; every other hook FAILS OPEN on error
 
 Hook failure policy is asymmetric and must never be inverted:
 
-- **Every hook fails open.** A hook error, a disabled hook, a path-traversal
-  attempt, oversized stdin, or a missing script all resolve to exit 0 -- the
+- **Every hook fails open on its own malfunction.** A hook error, a disabled
+  hook, a path-traversal attempt, or a missing script resolves to exit 0 -- the
   tool call proceeds. A bug in observability or a quality nudge can never block
   legitimate selling work. `run-with-flags.js` enforces this at the dispatcher
-  level.
-- **`pre:outbound-send-gate` fails CLOSED** (the single exception). It blocks a
+  level. Guard hooks still block deliberately as their designed verdict
+  (compliance-protection on protected-file edits, attachment-quarantine on
+  quarantined reads, mcp-health-check on known-unhealthy servers -- and the
+  verifying guards also refuse a truncated payload they cannot check), but an
+  internal *error* inside any of them fails open.
+- **`pre:outbound-send-gate` fails CLOSED** (the single exception to the
+  malfunction rule). It blocks a
   live send by a send-capable tool until a review-evidence marker is recorded in
   the state store, and it caps bulk sends at `ESCC_BULK_SEND_MAX` (default 5 per
   session). On *any* doubt -- truncated input, an unidentifiable tool, a missing
@@ -181,8 +186,10 @@ See `docs/HOOKS.md` for the per-hook detail.
 
 Every agent is read-only **except `crm-operator`**. Any HubSpot write goes
 through `crm-operator`, which uses review-pack-before-apply on bulk changes and
-logs every write. No other agent is granted write tools; the content-guard tests
-assert this. The CRM write path is additionally guarded by `pre:crm-write-guard`
+is instructed to log every write (prompt-level; the audit trail is additionally
+hook-persisted only when the opt-in `post:governance-capture` hook is enabled
+via `ESCC_GOVERNANCE_CAPTURE=1`). No other agent is granted write tools; the
+content-guard tests assert this. The CRM write path is additionally guarded by `pre:crm-write-guard`
 (warns on deletes, checks stage-advance writes for next-step and
 destination-stage exit-criteria, guards property/schema mutation).
 

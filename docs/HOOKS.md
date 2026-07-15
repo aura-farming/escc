@@ -33,9 +33,11 @@ Two environment variables control which hooks run (full surface in
 
 `ESCC_HOOK_INPUT_MAX_BYTES` (default 1048576) caps how much hook stdin is read.
 Oversized input is truncated and the dispatcher suppresses the pass-through echo;
-the action proceeds (fail-open) -- except that the fail-closed send-gate treats a
-truncated payload as a reason to block, because it cannot verify a review on a
-send it cannot fully see.
+for most hooks the action then proceeds (fail-open). Hooks whose job is to verify
+something about the payload refuse instead: the fail-closed send-gate blocks a
+truncated send it cannot fully see, and `pre:compliance-protection` /
+`pre:mcp-health-check` likewise block when truncation means they cannot verify
+their target.
 
 ---
 
@@ -43,13 +45,20 @@ send it cannot fully see.
 
 The policy is asymmetric and must never be inverted:
 
-- **Every hook fails OPEN.** A hook error, a disabled hook, a missing script, a
-  path-traversal attempt, or oversized stdin all resolve to a non-blocking exit
-  (0, or 1 when a legacy child crashes — only exit 2 blocks the tool call) and
-  leave the work unblocked. `run-with-flags.js` enforces this at the dispatcher
-  level so a bug in observability or a quality nudge can never block legitimate
-  work.
-- **`pre:outbound-send-gate` fails CLOSED** -- the single exception. On any doubt
+- **Every hook fails OPEN on its own malfunction.** A hook error, a disabled
+  hook, a missing script, or a path-traversal attempt resolves to a non-blocking
+  exit (0, or 1 when a legacy child crashes — only exit 2 blocks the tool call)
+  and leaves the work unblocked. `run-with-flags.js` enforces this at the
+  dispatcher level so a bug in observability or a quality nudge can never block
+  legitimate work. Failing open is about *malfunction*, not *purpose*: guard
+  hooks still BLOCK deliberately as their designed verdict —
+  `pre:compliance-protection` blocks an agent edit to a protected compliance
+  rule (and refuses a truncated payload it cannot verify),
+  `pre:attachment-quarantine` blocks a privileged read of a quarantined path,
+  and `pre:mcp-health-check` blocks calls to a server it has marked unhealthy —
+  but an internal error inside any of them fails open.
+- **`pre:outbound-send-gate` fails CLOSED** -- the single exception to the
+  malfunction rule. On any doubt
   it blocks (exit 2). This is enforced end-to-end: the gate is **non-disableable**
   (`ESCC_DISABLED_HOOKS` and profiles cannot switch it off — see
   `hook-flags.js` `FAIL_CLOSED_HOOKS`), and if it cannot run to a verdict for any

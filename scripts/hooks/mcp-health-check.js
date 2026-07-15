@@ -23,7 +23,12 @@
  * run() is synchronous (the dispatcher does not await it):
  *  - The block-from-cached-state decision (the security-relevant part) is fully
  *    synchronous.
- *  - Command (stdio) servers are probed synchronously via spawnSync.
+ *  - Command (stdio) servers are probed synchronously via spawnSync: the probe
+ *    writes one newline-delimited JSON-RPC `initialize` request and treats an
+ *    answer on stdout as healthy. Spec-compliant stdio servers exit cleanly on
+ *    stdin EOF, so "it responded" — not "it outlived the timeout" — is the
+ *    primary health signal (and a healthy probe returns in milliseconds instead
+ *    of burning the full timeout).
  *  - HTTP/SSE servers cannot be probed without an async client, so they are
  *    treated as reachable on the live-probe path; their cached-unhealthy state
  *    is still honored. See the note in probeServerSync().
@@ -217,12 +222,27 @@ function probeServerSync(serverName, resolvedConfig) {
       ...process.env,
       ...(config.env && typeof config.env === 'object' && !Array.isArray(config.env) ? config.env : {}),
     };
+    // One newline-delimited JSON-RPC initialize per the MCP stdio transport.
+    // spawnSync writes it and then closes stdin — a spec-compliant server
+    // answers on stdout and exits cleanly on the EOF, so an answer (not
+    // survival past the timeout) is the primary health signal.
+    const initialize = `${JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2025-06-18',
+        capabilities: {},
+        clientInfo: { name: 'escc-mcp-health-probe', version: '1.0.0' },
+      },
+    })}\n`;
     let result;
     try {
       result = spawnSync(config.command, args, {
         env: mergedEnv,
         cwd: process.cwd(),
-        stdio: ['ignore', 'ignore', 'pipe'],
+        input: initialize,
+        stdio: ['pipe', 'pipe', 'pipe'],
         timeout: timeoutMs,
         encoding: 'utf8',
       });
@@ -230,20 +250,26 @@ function probeServerSync(serverName, resolvedConfig) {
       return { ok: false, failureCode: null, reason: err.message };
     }
 
+    // Best signal first: the server answered JSON-RPC on stdout. Healthy no
+    // matter how it exited — SDK-built stdio servers exit(0) on stdin EOF, and
+    // before v1.10.0 that clean fast exit was misread as a failed probe.
+    if (/"jsonrpc"/.test(String(result.stdout || ''))) {
+      return { ok: true, failureCode: null, reason: `${serverName} answered the initialize probe` };
+    }
     // Killed by the timeout -> the server kept running past the spawn, i.e. it
-    // accepted a new stdio process (reachable).
+    // accepted a new stdio process (reachable, just quiet toward our probe).
     if (result.signal === 'SIGTERM' || result.error?.code === 'ETIMEDOUT') {
       return { ok: true, failureCode: null, reason: `${serverName} accepted a new stdio process` };
     }
     if (result.error) {
       return { ok: false, failureCode: null, reason: result.error.message };
     }
-    // A process that exited cleanly before the handshake timeout is suspect.
+    // Exited before the timeout without answering: crashed, or not an MCP server.
     const stderr = String(result.stderr || '').trim();
     return {
       ok: false,
       failureCode: null,
-      reason: stderr || `process exited before handshake (${result.status})`,
+      reason: stderr || `process exited without answering the initialize probe (${result.status})`,
     };
   }
 

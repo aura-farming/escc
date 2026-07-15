@@ -118,10 +118,11 @@
     {
       "id": "skills-sdr",
       "kind": "skills",
-      "description": "SDR persona skills (12): prospecting, account research, enrichment, ICP, outbound sequencing, cold outreach/calling, follow-up, objection handling, meeting booking, inbound response, outreach analytics.",
+      "description": "SDR persona skills (13): prospecting, account research, account attack plan (/attack), enrichment, ICP, outbound sequencing, cold outreach/calling, follow-up, objection handling, meeting booking, inbound response, outreach analytics.",
       "paths": [
         "skills/prospecting-pipeline",
         "skills/account-research",
+        "skills/account-attack-plan",
         "skills/enrichment-ops",
         "skills/icp-profile",
         "skills/outbound-sequences",
@@ -214,12 +215,13 @@
     {
       "id": "skills-cross",
       "kind": "skills",
-      "description": "Cross-cutting skills (13): daily brief, inbox triage, email outbound ops, brand voice, CRM hygiene, sales handoffs, account memory, account truth (/truth), opt-out handling, meeting followthrough, trigger detection, reply handling, knowledge intake (/ingest).",
+      "description": "Cross-cutting skills (14): daily brief, inbox triage, email outbound ops, worklist (/escc-worklist batch outbound), brand voice, CRM hygiene, sales handoffs, account memory, account truth (/truth), opt-out handling, meeting followthrough, trigger detection, reply handling, knowledge intake (/ingest).",
       "paths": [
         "skills/account-truth",
         "skills/daily-brief",
         "skills/inbox-triage",
         "skills/email-outbound-ops",
+        "skills/worklist",
         "skills/brand-voice",
         "skills/crm-hygiene",
         "skills/sales-handoffs",

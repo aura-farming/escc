@@ -85,6 +85,21 @@ function main() {
     }
   }
 
+  // 2b. Disk -> manifest completeness (the reverse of 2): every skill on disk
+  // must be claimed by a hand-authored module, or the skill ships in the repo
+  // but never reaches a profile install — how worklist (v1.9.0) and
+  // account-attack-plan (v1.10.0) went missing. Agents/commands/rules are
+  // claimed wholesale as directories, so only per-skill paths can drift.
+  const skillsDir = path.join(ROOT, 'skills');
+  if (fs.existsSync(skillsDir) && !claimedPaths.has('skills')) {
+    for (const name of fs.readdirSync(skillsDir)) {
+      if (name.startsWith('.') || !fs.statSync(path.join(skillsDir, name)).isDirectory()) continue;
+      if (!claimedPaths.has(`skills/${name}`)) {
+        fail(`skills/${name} exists on disk but no install module claims it (a profile install would never ship it)`);
+      }
+    }
+  }
+
   // 3. Resolved (synthetic-inclusive) view for reference resolution.
   let manifests;
   try {

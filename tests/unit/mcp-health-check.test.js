@@ -158,3 +158,41 @@ test('run never throws on garbage input (fails open)', () => {
   // garbage -> no target -> undefined (no opinion)
   assert.equal(result, undefined);
 });
+
+test('a spec-compliant stdio server (answers initialize, exits on stdin EOF) is HEALTHY', () => {
+  clearEnv();
+  const statePath = tmpFile('state.json');
+  const configPath = tmpFile('config.json');
+  process.env.ESCC_MCP_HEALTH_STATE_PATH = statePath;
+  process.env.ESCC_MCP_CONFIG_PATH = configPath;
+  // Minimal spec-shaped server: reply one JSON-RPC line to whatever arrives,
+  // then exit 0 when the probe closes stdin. Before v1.10.0 this clean fast
+  // exit was misread as "exited before handshake" -> unhealthy -> blocked.
+  const script = 'process.stdin.on("data",()=>{process.stdout.write(JSON.stringify({jsonrpc:"2.0",id:1,result:{}})+"\\n")});process.stdin.on("end",()=>process.exit(0));';
+  writeJson(configPath, { mcpServers: { specmcp: { command: process.execPath, args: ['-e', script] } } });
+
+  const result = hook.run(preToolInput('mcp__specmcp__do_thing'));
+  assert.ok(result && result.exitCode === 0, `expected exit 0, got ${JSON.stringify(result)}`);
+  const state = hook.loadState(statePath);
+  assert.equal(state.servers.specmcp.status, 'healthy');
+  fs.rmSync(statePath, { force: true });
+  fs.rmSync(configPath, { force: true });
+  clearEnv();
+});
+
+test('a command that exits cleanly WITHOUT answering the probe is unhealthy (not an MCP server)', () => {
+  clearEnv();
+  const statePath = tmpFile('state.json');
+  const configPath = tmpFile('config.json');
+  process.env.ESCC_MCP_HEALTH_STATE_PATH = statePath;
+  process.env.ESCC_MCP_CONFIG_PATH = configPath;
+  writeJson(configPath, { mcpServers: { silentexit: { command: process.execPath, args: ['-e', 'process.exit(0)'] } } });
+
+  const result = hook.run(preToolInput('mcp__silentexit__do_thing'));
+  assert.ok(result && result.exitCode === 2);
+  const state = hook.loadState(statePath);
+  assert.equal(state.servers.silentexit.status, 'unhealthy');
+  fs.rmSync(statePath, { force: true });
+  fs.rmSync(configPath, { force: true });
+  clearEnv();
+});
