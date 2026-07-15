@@ -7,7 +7,7 @@ scope: personal
 source: distilled
 applies_to: mid-market
 workspace_id: 9f1c2a7b3e4d
-workspace_name: you@acme.example
+workspace_name: you@company.example
 created: 2026-05-02T09:14:00.000Z
 last_observed: 2026-06-14T17:30:00.000Z
 decay_exempt: false

@@ -262,29 +262,29 @@ a review pack first.
 
 ```text
 SDR: Run prospecting-pipeline on the mid-market RevOps ICP segment.
-     I have five accounts: Globex, Initech, Umbrella Corp, Example Co, Dynacorp.
+     I have five accounts: Sample Co, Demo Co, Umbrella Corp, Example Co, Dynacorp.
 
 Pipeline →
   Step 0: account-memory — Example Co brief fresh (8 days); reuse. Others: cold.
   Step 1: account-researcher (4 new + 1 refresh)
-    - Globex: TRIGGER — new VP RevOps hired 3 weeks ago (LinkedIn). FACT.
-    - Initech: TRIGGER — Series B announced 10 days ago (Crunchbase). FACT.
+    - Sample Co: TRIGGER — new VP RevOps hired 3 weeks ago (LinkedIn). FACT.
+    - Demo Co: TRIGGER — Series B announced 10 days ago (Crunchbase). FACT.
     - Umbrella: No trigger found in 90-day window → deprioritized.
     - Example Co (refresh): existing HubSpot deal (Stage 2, stalled 45 days). FACT.
     - Dynacorp: TRIGGER — 3 open RevOps roles (job board). INFERENCE (growth signal).
   Step 2: prospect-researcher → primary contacts identified per account.
   Step 3: signal-scorer
-    - Globex: 81 (High) · Initech: 76 (High) · Example Co: 68 (Medium, stalled deal)
+    - Sample Co: 81 (High) · Demo Co: 76 (High) · Example Co: 68 (Medium, stalled deal)
     - Dynacorp: 55 (Medium) · Umbrella: 38 (Low — deprioritized)
   Step 4: warm-path-mapper
-    - Globex: Tier 1 (B=0.95 — mutual board advisor, engaged last 30 days)
-    - Initech: Tier 2 (B=0.45 — second-degree via customer intro)
+    - Sample Co: Tier 1 (B=0.95 — mutual board advisor, engaged last 30 days)
+    - Demo Co: Tier 2 (B=0.45 — second-degree via customer intro)
     - Example Co: Tier 1 (B=0.88 — existing champion in HubSpot; ping them first)
     - Dynacorp: Tier 3 — cold; trigger-hook only
   Step 5: outreach-drafter → 4 drafts created (Umbrella skipped, no trigger)
-    - Globex: "Saw you just brought on <Name> as VP RevOps — timing felt right…"
+    - Sample Co: "Saw you just brought on <Name> as VP RevOps — timing felt right…"
       Proof: PP-031 (1-day onboarding metric, approved) · 1 CTA: 15-min call
-    - Initech: "Congrats on the Series B — scaling RevOps ops is typically the
+    - Demo Co: "Congrats on the Series B — scaling RevOps ops is typically the
       first friction point…" · awaiting CS intro; cold fallback ready
     - Example Co: "Checking in on the pipeline visibility piece — noticed it's been
       quiet on our end. Happy to share what's moved for similar teams." · no
@@ -292,7 +292,7 @@ Pipeline →
     - Dynacorp: "Three open RevOps roles usually signals a forecasting crunch…"
       Proof: VP-009 (retention visibility value-prop, approved) · 1 CTA
   Step 6: outbound-reviewer
-    - Globex: 88 PASS · Initech: 82 PASS · Example Co: 77 PASS · Dynacorp: 71 PASS
+    - Sample Co: 88 PASS · Demo Co: 82 PASS · Example Co: 77 PASS · Dynacorp: 71 PASS
 
 OUTPUT: 4 drafts surfaced · 1 deprioritized (Umbrella, no trigger)
         All in Gmail draft folder — nothing sent.

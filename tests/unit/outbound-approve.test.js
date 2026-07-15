@@ -54,11 +54,11 @@ test('approveOutbound approves a clean draft and the send-gate then allows it', 
 test('approveOutbound blocks a draft to an open-deal account and remembers the block', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
     const draft = { to: 'x@y.example', subject: 'Hi', body: 'You could cut review time — keen for a look?' };
-    const records = { open_deals: [{ id: 'd1' }], account_id: 'acme-1' };
+    const records = { open_deals: [{ id: 'd1' }], account_id: 'example-co-1' };
     const r = approve.approveOutbound({ draft, records, review: { verdict: 'approved', confidence: 0.9 } });
     assert.equal(r.approved, false);
     assert.ok(r.blocks.some(b => b.gate === 'contactability'));
-    assert.ok(dnc.findActiveBlock({ key: 'acme-1' }), 'the account is written to the do-not-contact list');
+    assert.ok(dnc.findActiveBlock({ key: 'example-co-1' }), 'the account is written to the do-not-contact list');
     // and with no token, the gate blocks the draft too
     assert.ok(gate.run(draftCall(draft)).exitCode === 2);
   });
@@ -67,30 +67,30 @@ test('approveOutbound blocks a draft to an open-deal account and remembers the b
 test('a logged override approves despite a block and does NOT persist the block', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
     const draft = { to: 'x@y.example', subject: 'Hi', body: 'You could cut review time — keen?' };
-    const records = { open_deals: [{ id: 'd1' }], account_id: 'acme-2' };
+    const records = { open_deals: [{ id: 'd1' }], account_id: 'example-co-2' };
     const r = approve.approveOutbound({ draft, records, override: 'manager approved — strategic account' });
     assert.equal(r.approved, true);
     assert.equal(r.override, true);
     assert.match(r.overrideReason, /strategic account/);
-    assert.equal(dnc.findActiveBlock({ key: 'acme-2' }), null, 'override does not blocklist the account');
+    assert.equal(dnc.findActiveBlock({ key: 'example-co-2' }), null, 'override does not blocklist the account');
     assert.equal(gate.run(draftCall(draft)), undefined, 'overridden draft passes the send-gate');
   });
 });
 
 test('an approval row carries the canonical account key and is account-queryable (ADR-0018)', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
-    const draft = { to: 'jane@acme.example', subject: 'Hi', body: 'Worth a look at reporting?' };
-    const records = { notes: [], lead_status: 'new', open_deals: [], priorEngagement: false, account_id: 'acme.example' };
+    const draft = { to: 'jane@company.example', subject: 'Hi', body: 'Worth a look at reporting?' };
+    const records = { notes: [], lead_status: 'new', open_deals: [], priorEngagement: false, account_id: 'company.example' };
     const r = approve.approveOutbound({ draft, records, review: { verdict: 'approved', confidence: 0.9 }, now: new Date().toISOString() });
     assert.equal(r.approved, true);
 
     const { createStateStoreSync } = require('../../scripts/lib/state-store/index.js');
     const store = createStateStoreSync();
     try {
-      const rows = store.getGovernanceByAccount('domain_acme.example');
+      const rows = store.getGovernanceByAccount('domain_company.example');
       assert.equal(rows.length, 1, 'approval row found by canonical account key');
       assert.equal(rows[0].event_type, 'outbound_approval');
-      assert.equal(rows[0].payload.recipient, 'jane@acme.example');
+      assert.equal(rows[0].payload.recipient, 'jane@company.example');
     } finally {
       store.close();
     }
@@ -99,13 +99,13 @@ test('an approval row carries the canonical account key and is account-queryable
 
 test('with no records.account_id the recipient email resolves the account key', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
-    const draft = { to: 'ops@globex.test', subject: 'Hi', body: 'Quick look at scheduling?' };
+    const draft = { to: 'ops@sample.test', subject: 'Hi', body: 'Quick look at scheduling?' };
     const r = approve.approveOutbound({ draft, records: { notes: [], open_deals: [] }, review: { verdict: 'approved', confidence: 0.9 }, now: new Date().toISOString() });
     assert.equal(r.approved, true);
     const { createStateStoreSync } = require('../../scripts/lib/state-store/index.js');
     const store = createStateStoreSync();
     try {
-      assert.equal(store.getGovernanceByAccount('domain_globex.test').length, 1);
+      assert.equal(store.getGovernanceByAccount('domain_sample.test').length, 1);
     } finally {
       store.close();
     }
@@ -144,15 +144,15 @@ test('a below-floor or non-approval reviewer verdict is BLOCKED', () => {
 
 test('a clean-gates draft WITH a valid reviewer verdict approves, and the token records the attestation', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
-    const draft = { to: 'sam@acme.example', subject: 'Reporting', body: 'You could save your team hours — worth a quick look?' };
-    const r = approve.approveOutbound({ draft, records: { ...CLEAN, account_id: 'acme.example' }, review: { verdict: 'clean', confidence: 0.92, reviewer: 'outbound-reviewer' }, now: new Date().toISOString() });
+    const draft = { to: 'sam@company.example', subject: 'Reporting', body: 'You could save your team hours — worth a quick look?' };
+    const r = approve.approveOutbound({ draft, records: { ...CLEAN, account_id: 'company.example' }, review: { verdict: 'clean', confidence: 0.92, reviewer: 'outbound-reviewer' }, now: new Date().toISOString() });
     assert.equal(r.approved, true);
     assert.equal(r.review.verdict, 'clean');
     assert.equal(gate.run(draftCall(draft)), undefined, 'the reviewed + approved draft passes the send-gate');
     const { createStateStoreSync } = require('../../scripts/lib/state-store/index.js');
     const store = createStateStoreSync();
     try {
-      const rows = store.getGovernanceByAccount('domain_acme.example').filter(x => x.event_type === 'outbound_approval');
+      const rows = store.getGovernanceByAccount('domain_company.example').filter(x => x.event_type === 'outbound_approval');
       assert.equal(rows.length, 1);
       assert.equal(rows[0].payload.review.reviewer, 'outbound-reviewer');
       assert.ok(rows[0].payload.review.confidence >= 0.8, 'the attestation confidence is persisted');

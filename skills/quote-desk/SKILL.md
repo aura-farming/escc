@@ -157,7 +157,7 @@ CRM log: routed to crm-operator — deal record updated, governance-capture reco
 **Ramp deal, escalated to VP Sales:**
 
 ```text
-Deal: Globex, 80 seats Y1 / 120 seats Y2 / 160 seats Y3, Enterprise tier.
+Deal: Sample Co, 80 seats Y1 / 120 seats Y2 / 160 seats Y3, Enterprise tier.
 List price (SKU ENT-80+): $1,800/seat/year
 Year 1 net ACV: 80 x $1,800 x (1 - 20%) = $115,200
 Year 2 net ACV: 120 x $1,800 x (1 - 15%) = $183,600
@@ -174,7 +174,7 @@ Next action: VP Sales sponsors the CRO + Finance approval request.
 **Discount request, Tier 0 (self-serve):**
 
 ```text
-Inbound request: can I give 8% off to close Initech this quarter?
+Inbound request: can I give 8% off to close Demo Co this quarter?
 List ACV: $22,000. Requested discount 8%.
 Net ACV: $20,240.
 Tier check (rules/approval-matrix.md): 8% <= rep-autonomy ceiling -> Tier 0, self-serve.

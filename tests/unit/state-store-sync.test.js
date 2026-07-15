@@ -29,7 +29,7 @@ test('createStateStoreSync round-trips a promise via listOpenPromises', () => {
   try {
     store.upsertPromise({
       id: 'p-sync-1',
-      account_id: 'acme',
+      account_id: 'example-co',
       deal_id: 'deal-1',
       text: 'Send the security questionnaire',
       due_date: '2026-06-20',
@@ -38,7 +38,7 @@ test('createStateStoreSync round-trips a promise via listOpenPromises', () => {
     assert.equal(open.length, 1);
     assert.equal(open[0].id, 'p-sync-1');
     assert.equal(open[0].status, 'open');
-    assert.equal(open[0].account_id, 'acme');
+    assert.equal(open[0].account_id, 'example-co');
   } finally {
     store.close();
   }

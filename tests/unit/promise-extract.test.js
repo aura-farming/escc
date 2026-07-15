@@ -34,9 +34,9 @@ test('resolves "tomorrow" relative to the injected now', () => {
 });
 
 test('attaches account/deal/session and yields a stable, account-scoped id', () => {
-  const ctx = { now: NOW, accountId: 'acme', dealId: 'deal-1', sessionId: 'sess-9' };
+  const ctx = { now: NOW, accountId: 'example-co', dealId: 'deal-1', sessionId: 'sess-9' };
   const [p] = pe.extractPromises("I'll send the proposal.", ctx);
-  assert.equal(p.account_id, 'acme');
+  assert.equal(p.account_id, 'example-co');
   assert.equal(p.deal_id, 'deal-1');
   assert.equal(p.source_session, 'sess-9');
   assert.equal(p.status, 'open');
@@ -46,13 +46,13 @@ test('attaches account/deal/session and yields a stable, account-scoped id', () 
   assert.equal(p.id, again.id, 'id is stable across sessions for the same account+text');
 
   // Different account => different id (per-account attribution, C8 multi-account).
-  const [other] = pe.extractPromises("I'll send the proposal.", { ...ctx, accountId: 'globex' });
+  const [other] = pe.extractPromises("I'll send the proposal.", { ...ctx, accountId: 'sample-co' });
   assert.notEqual(p.id, other.id);
 });
 
 test('dedupes repeated commitments within one transcript', () => {
   const text = "I'll follow up Thursday.\nLater: I'll follow up Thursday.";
-  const promises = pe.extractPromises(text, { now: NOW, accountId: 'acme' });
+  const promises = pe.extractPromises(text, { now: NOW, accountId: 'example-co' });
   assert.equal(promises.length, 1, 'identical commitments collapse to one record');
 });
 

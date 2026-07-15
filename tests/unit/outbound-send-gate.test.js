@@ -94,18 +94,18 @@ test('BLESSED PATH: a Gmail draft passes once an approval token is recorded', ()
 });
 
 test('an account-scope do-not-contact block beats a valid per-recipient token (ADR-0018 canonical key)', () => {
-  const toolInput = { to: 'jane@acme.example', subject: 'Hi', body: 'Worth a look at reporting?' };
+  const toolInput = { to: 'jane@company.example', subject: 'Hi', body: 'Worth a look at reporting?' };
   const key = review.outboundContentKey(review.extractOutboundPayload(DRAFT_TOOL, toolInput));
   // Baseline: a valid token admits the draft when nothing is blocked.
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
-    review.recordApproval({ sessionId: 'sess-1', key, recipient: 'jane@acme.example', confidence: 0.95 });
+    review.recordApproval({ sessionId: 'sess-1', key, recipient: 'jane@company.example', confidence: 0.95 });
     assert.equal(gate.run(gateInput(DRAFT_TOOL, toolInput)), undefined, 'token admits the draft with no block');
   });
   // Same valid token, but the recipient's ACCOUNT is later blocked (open deal):
-  // the account key derived from the email (domain_acme.example) must beat the token.
+  // the account key derived from the email (domain_company.example) must beat the token.
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
-    review.recordApproval({ sessionId: 'sess-1', key, recipient: 'jane@acme.example', confidence: 0.95 });
-    dnc.recordDoNotContact({ key: 'domain_acme.example', scope: 'account', reason: 'account has an open deal' });
+    review.recordApproval({ sessionId: 'sess-1', key, recipient: 'jane@company.example', confidence: 0.95 });
+    dnc.recordDoNotContact({ key: 'domain_company.example', scope: 'account', reason: 'account has an open deal' });
     const result = gate.run(gateInput(DRAFT_TOOL, toolInput));
     assert.ok(result && result.exitCode === 2, 'account-scope block must beat the valid token');
     assert.match(result.stderr, /account is on the do-not-contact/i);
@@ -144,10 +144,10 @@ test('a HubSpot OUTBOUND email engagement is gated, and passes once approved', (
 
 test('an approved draft to a do-not-contact recipient is STILL blocked', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
-    const toolInput = { to: 'sam@acme.example', subject: 'Hi', body: 'Hi Sam' };
+    const toolInput = { to: 'sam@company.example', subject: 'Hi', body: 'Hi Sam' };
     const key = review.outboundContentKey(review.extractOutboundPayload(DRAFT_TOOL, toolInput));
-    review.recordApproval({ key, recipient: 'sam@acme.example', confidence: 0.95 });
-    dnc.recordDoNotContact({ key: 'sam@acme.example', scope: 'contact', reason: 'asked us to stop' });
+    review.recordApproval({ key, recipient: 'sam@company.example', confidence: 0.95 });
+    dnc.recordDoNotContact({ key: 'sam@company.example', scope: 'contact', reason: 'asked us to stop' });
     const result = gate.run(gateInput(DRAFT_TOOL, toolInput));
     assert.ok(result && result.exitCode === 2, 'blocklist beats an approval token');
     assert.match(result.stderr, /do-not-contact/i);

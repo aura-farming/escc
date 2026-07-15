@@ -112,7 +112,7 @@ test('I2: a real outcome event MOVES an instinct\'s confidence above its frequen
 
     // Now a real outreach outcome lands and we re-distill.
     const withOutcome = createStateStoreSync({ memory: true });
-    withOutcome.insertOutcome({ id: 'o1', type: 'reply_received', account_id: 'acme', created_at: NOW });
+    withOutcome.insertOutcome({ id: 'o1', type: 'reply_received', account_id: 'example-co', created_at: NOW });
     distill.distill({ store: withOutcome, now: NOW });
     const weighted = store.readInstincts('personal')[0].confidence;
 

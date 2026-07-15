@@ -120,7 +120,7 @@ the plan **before** anything is read or written:
 ```
 Ingest plan (dry-run) -- nothing read or written yet:
   1. sales-emails-Q2.txt   -> brand-voice VOICE PROFILE        [STYLE, auto-apply]
-  2. acme-call-0617.txt     -> transcript-analyzer -> discovery-notes (CRM)
+  2. example-co-call-0617.txt     -> transcript-analyzer -> discovery-notes (CRM)
                                 + objections/pains -> product candidates
   3. case-study-retail.pdf  -> product-knowledge CANDIDATE (operator approves)
   4. rival-onepager.pdf      -> competitor battlecard CANDIDATE + vocab suggestion
@@ -179,9 +179,9 @@ cat > /tmp/ingest-items.json <<'JSON'
 { "items": [
   { "type": "objection", "pattern": "we already use a competitor for this",
     "response": "(candidate -- operator drafts + approves the rebuttal)",
-    "source_type": "call", "source_ref": "acme-call-0617" },
+    "source_type": "call", "source_ref": "example-co-call-0617" },
   { "type": "pain", "role": "finance", "text": "month-end reconciliation takes 3 days",
-    "source_type": "call", "source_ref": "acme-call-0617" }
+    "source_type": "call", "source_ref": "example-co-call-0617" }
 ] }
 JSON
 escc product mine --input /tmp/ingest-items.json

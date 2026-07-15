@@ -58,7 +58,7 @@ function contextOf(result) {
 function seedOverduePromise(text) {
   const store = createStateStoreSync();
   try {
-    store.upsertPromise({ id: `p-${text.length}`, account_id: 'acme', deal_id: 'deal-1', text, due_date: '2020-01-01' });
+    store.upsertPromise({ id: `p-${text.length}`, account_id: 'example-co', deal_id: 'deal-1', text, due_date: '2020-01-01' });
   } finally {
     store.close();
   }
@@ -84,7 +84,7 @@ test('injects overdue promises ahead of everything (C2/C3)', () => {
 
 test('resume-from-compaction block is injected when a scratch file exists (C4)', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'acme', ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'example-co', ESCC_INSTINCTS_DIR: undefined }, () => {
     // Build a compaction scratch via the pre:compact hook's own writer.
     const tdir = path.join(home, 'transcripts');
     fs.mkdirSync(tdir, { recursive: true });
@@ -120,10 +120,10 @@ test('injects a prepared-day summary (counts + safe pointers, no brief bodies)',
 
 test('hydrates the active account context (C1)', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'globex', ESCC_INSTINCTS_DIR: undefined }, () => {
-    accountMemory.appendEvent('globex', { type: 'note', text: 'Champion is the VP of RevOps', segment: 'enterprise' });
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'sample-co', ESCC_INSTINCTS_DIR: undefined }, () => {
+    accountMemory.appendEvent('sample-co', { type: 'note', text: 'Champion is the VP of RevOps', segment: 'enterprise' });
     const ctx = contextOf(hook.run(startInput('startup')));
-    assert.ok(/globex/i.test(ctx), 'active account named');
+    assert.ok(/sample-co/i.test(ctx), 'active account named');
     assert.ok(/VP of RevOps/i.test(ctx), 'active account memory hydrated into context');
   });
 });
@@ -134,7 +134,7 @@ test('surfaces a recent summary with a welcome-back note after a >7-day gap (C2)
     const dir = path.join(home, 'session-data');
     fs.mkdirSync(dir, { recursive: true });
     const fp = path.join(dir, '2026-05-01-old-session.tmp');
-    fs.writeFileSync(fp, '# Session\n**Worktree:** ' + process.cwd() + '\n---\n<!-- ESCC:SUMMARY:START -->\nWorked the Initech deal.\n<!-- ESCC:SUMMARY:END -->\n');
+    fs.writeFileSync(fp, '# Session\n**Worktree:** ' + process.cwd() + '\n---\n<!-- ESCC:SUMMARY:START -->\nWorked the Demo Co deal.\n<!-- ESCC:SUMMARY:END -->\n');
     const old = Date.now() - 20 * 24 * 60 * 60 * 1000;
     fs.utimesSync(fp, new Date(old), new Date(old));
 
@@ -151,8 +151,8 @@ test('injects instincts filtered by the active account segment (C6)', () => {
   fs.writeFileSync(path.join(instDir, 'b.md'), '---\nid: smb-only\nconfidence: 0.9\napplies_to: smb\n---\n## Action\nKeep SMB cadence short.\n');
   fs.writeFileSync(path.join(instDir, 'c.md'), '---\nid: draft-before-send\nconfidence: 0.9\n---\n## Action\nAlways draft before sending.\n');
 
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'acme', ESCC_INSTINCTS_DIR: instDir }, () => {
-    accountMemory.appendEvent('acme', { type: 'segment', segment: 'enterprise' });
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'example-co', ESCC_INSTINCTS_DIR: instDir }, () => {
+    accountMemory.appendEvent('example-co', { type: 'segment', segment: 'enterprise' });
     const ctx = contextOf(hook.run(startInput('startup')));
     assert.ok(/enterprise inbound within SLA/i.test(ctx), 'segment-matching instinct injected');
     assert.ok(/draft before sending/i.test(ctx), 'generic (no applies_to) instinct injected');

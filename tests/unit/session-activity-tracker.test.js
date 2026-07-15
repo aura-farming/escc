@@ -92,9 +92,9 @@ test('tracks accounts touched from objectType + objectId', () => {
 test('tracks accounts touched from an email domain', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
-    hook.run(postInput('mcp__claude_ai_Gmail__create_draft', { to: 'jane@acme.test', body: 'hi' }));
+    hook.run(postInput('mcp__claude_ai_Gmail__create_draft', { to: 'jane@company.test', body: 'hi' }));
     const rec = readRecord(home);
-    assert.ok(rec.accounts.includes('domain:acme.test'));
+    assert.ok(rec.accounts.includes('domain:company.test'));
   });
 });
 
@@ -103,11 +103,11 @@ test('extractReferences pulls typed ids, raw ids, file paths, and domains', () =
     objectType: 'company',
     objectId: '42',
     file_path: '/repo/z.md',
-    notes: 'cc bob@globex.example',
+    notes: 'cc bob@sample.example',
   });
   assert.ok(refs.accounts.includes('company:42'));
   assert.ok(refs.accounts.includes('id:42'));
-  assert.ok(refs.accounts.includes('domain:globex.example'));
+  assert.ok(refs.accounts.includes('domain:sample.example'));
   assert.ok(refs.files.includes('/repo/z.md'));
 });
 

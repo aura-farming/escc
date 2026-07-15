@@ -14,7 +14,7 @@
       "orange": "Context used < 80%",
       "red_bold": "Context used >= 80%"
     },
-    "output_example": "Opus 4.8 | Drafting follow-up to Example Co | $1.23 47t 5f 15m | ae/acme-corp ███████░░░ 68%",
+    "output_example": "Opus 4.8 | Drafting follow-up to Example Co | $1.23 47t 5f 15m | ae/example-co ███████░░░ 68%",
     "dependencies": "Reads the session-bridge file written by the post:metrics-bridge PostToolUse hook (escc-metrics-${session_id}.json). Both must be active for full metrics. The HUD contract is schemas/hud-status-contract.schema.json.",
     "usage": "Copy the statusLine object to your settings.json (~/.claude/settings.json or project .claude/settings.json)."
   }

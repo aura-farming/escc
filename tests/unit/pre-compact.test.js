@@ -68,7 +68,7 @@ function compactInput(sessionId, transcriptPath, trigger) {
 
 test('writes a resumable scratch file with task intent and pending actions', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'acme' }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'example-co' }, () => {
     const tp = writeTranscript(home, LINES);
     hook.run(compactInput('sess-pc-1', tp));
 
@@ -76,7 +76,7 @@ test('writes a resumable scratch file with task intent and pending actions', () 
     assert.ok(state, 'scratch file is readable');
     assert.ok(/close plan/i.test(state.task_intent), 'task intent captured from last user message');
     assert.ok(state.pending_actions.some(a => /legal|MSA|pricing/i.test(a)), 'pending actions captured');
-    assert.equal(state.active_account, 'acme', 'active account recorded');
+    assert.equal(state.active_account, 'example-co', 'active account recorded');
     assert.equal(state.trigger, 'auto');
   });
 });

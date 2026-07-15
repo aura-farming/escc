@@ -43,7 +43,7 @@ test('leak guard: a planted buyer claim/number never reaches the rendered overla
   process.env.ESCC_AGENT_DATA_HOME = home;
   try {
     const register = reg.extractRegister(BUYER_TEXTS);
-    const file = overlay.writeOverlay('domain:acme.test', register);
+    const file = overlay.writeOverlay('domain:company.test', register);
     const md = fs.readFileSync(file, 'utf8');
 
     for (const claim of PLANTED) {
@@ -71,7 +71,7 @@ test('leak guard: the overlay never echoes a source sentence verbatim', () => {
   const prev = process.env.ESCC_AGENT_DATA_HOME;
   process.env.ESCC_AGENT_DATA_HOME = home;
   try {
-    const md = overlay.renderOverlay('acme', reg.extractRegister(BUYER_TEXTS));
+    const md = overlay.renderOverlay('example-co', reg.extractRegister(BUYER_TEXTS));
     for (const sentence of BUYER_TEXTS) {
       assert.ok(!md.includes(sentence), 'no whole buyer sentence is reproduced in the overlay');
     }

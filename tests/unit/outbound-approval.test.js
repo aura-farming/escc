@@ -40,18 +40,18 @@ function withEnv(overrides, fn) {
 // --- content key ---
 
 test('outboundContentKey is stable and ignores recipient/field aliases + case', () => {
-  const a = review.outboundContentKey({ to: 'Sam@acme.example', subject: 'Reporting', body: 'Hi Sam' });
-  const b = review.outboundContentKey({ recipient: 'sam@acme.example', subject: 'Reporting', body: 'Hi Sam' });
+  const a = review.outboundContentKey({ to: 'Sam@company.example', subject: 'Reporting', body: 'Hi Sam' });
+  const b = review.outboundContentKey({ recipient: 'sam@company.example', subject: 'Reporting', body: 'Hi Sam' });
   assert.equal(a, b, 'recipient alias + case must not change the key');
-  const c = review.outboundContentKey({ to: 'sam@acme.example', subject: 'Reporting', body: 'Hi Sam!!' });
+  const c = review.outboundContentKey({ to: 'sam@company.example', subject: 'Reporting', body: 'Hi Sam!!' });
   assert.notEqual(a, c, 'different body changes the key');
 });
 
 test('the SAME content via a Gmail draft and a HubSpot email yields the SAME key (tool-agnostic)', () => {
-  const draftPayload = review.extractOutboundPayload(DRAFT_TOOL, { to: 'sam@acme.example', subject: 'Reporting', body: 'Hi Sam' });
+  const draftPayload = review.extractOutboundPayload(DRAFT_TOOL, { to: 'sam@company.example', subject: 'Reporting', body: 'Hi Sam' });
   const crmPayload = review.extractOutboundPayload(HUBSPOT, {
     objectType: 'emails',
-    properties: { hs_email_to_email: 'sam@acme.example', hs_email_subject: 'Reporting', hs_email_html: 'Hi Sam' },
+    properties: { hs_email_to_email: 'sam@company.example', hs_email_subject: 'Reporting', hs_email_html: 'Hi Sam' },
   });
   assert.equal(review.outboundContentKey(draftPayload), review.outboundContentKey(crmPayload),
     'one approval must cover the draft and the later send of the same content');

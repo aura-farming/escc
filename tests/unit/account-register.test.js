@@ -122,12 +122,12 @@ test('writeOverlay then readOverlay round-trips at the sanitized account path', 
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
     const r = reg.extractRegister(['Invoicing matters. Invoicing again.', 'Reporting and invoicing.']);
-    const file = overlay.writeOverlay('domain:acme.test', r);
-    assert.ok(file.endsWith(path.join('escc', 'voice', 'account', 'domain_acme.test.md')), `overlay at sanitized path (was ${file})`);
+    const file = overlay.writeOverlay('domain:company.test', r);
+    assert.ok(file.endsWith(path.join('escc', 'voice', 'account', 'domain_company.test.md')), `overlay at sanitized path (was ${file})`);
     assert.ok(fs.existsSync(file), 'overlay file written');
 
-    const md = overlay.readOverlay('domain:acme.test');
-    assert.ok(md.includes('# Account voice overlay: domain:acme.test'));
+    const md = overlay.readOverlay('domain:company.test');
+    assert.ok(md.includes('# Account voice overlay: domain:company.test'));
     assert.ok(md.includes('Formality:'));
     assert.ok(md.includes('invoicing'), 'mirrored lexicon term present');
     assert.ok(/STYLE OVERLAY ONLY/.test(md), 'overlay states the style-only rule');

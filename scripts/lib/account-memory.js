@@ -52,7 +52,7 @@ function resolveAccountsDir(options = {}) {
 
 /**
  * The CANONICAL stem for an account id (ADR-0018): alias index first, then
- * grammar canonicalization — so "Example Co" (once linked), "acme.example", and
+ * grammar canonicalization — so "Example Co" (once linked), "company.example", and
  * "company:<hubspot-id>" all land in ONE store.
  */
 function canonicalStem(accountId) {

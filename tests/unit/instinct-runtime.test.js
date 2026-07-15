@@ -118,8 +118,8 @@ test('R1: session:start injects a high-confidence instinct from the engine works
 // --- R2: C6 segment filter on team instincts --------------------------------
 
 test('R2: session:start applies the C6 segment filter to team-scoped instincts', () => {
-  withEnv(rtEnv({ ESCC_ACTIVE_ACCOUNT: 'acme' }), () => {
-    accountMemory.appendEvent('acme', { type: 'segment', segment: 'enterprise' });
+  withEnv(rtEnv({ ESCC_ACTIVE_ACCOUNT: 'example-co' }), () => {
+    accountMemory.appendEvent('example-co', { type: 'segment', segment: 'enterprise' });
     store.writeInstinct(instinct({
       id: 'multithread', scope: 'team', applies_to: 'enterprise', confidence: 0.85,
       action: 'Multithread into the enterprise buying committee early',

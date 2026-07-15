@@ -182,7 +182,7 @@ Output to rep:
 **Approve a pending request (Sales Manager view)**
 
 ```text
-Manager: "I want to approve the Initech 15% discount at $62k net ACV."
+Manager: "I want to approve the Demo Co 15% discount at $62k net ACV."
 Step 1: crm-operator retrieves pending approval on deal 67890.
   On file: 15% discount, $62k net ACV, no non-standard escalators.
 Step 2: rules/approval-matrix.md: 10-20%, ACV >= $50k -> Sales Manager + RevOps.
@@ -196,7 +196,7 @@ Output to manager:
 **Deny: term above ceiling with no path forward**
 
 ```text
-Rep: "Can I give 40% off to win Globex?"
+Rep: "Can I give 40% off to win Sample Co?"
 Step 1: quote-desk: net ACV $90k, discount 40%.
 Step 2: > 35% discount -> CRO + Finance tier.
 Step 4: crm-operator writes approval_requested; tier: CRO + Finance.
@@ -207,7 +207,7 @@ Output to rep:
   Denied by CRO. Reason: margin floor exceeded.
   You may revise and re-submit a term at or below 35% for VP Sales consideration,
   or escalate a strategic exception with a written business case.
-  No 40% offer may be made to Globex. Denial is on-record.
+  No 40% offer may be made to Sample Co. Denial is on-record.
 ```
 
 ## Anti-patterns

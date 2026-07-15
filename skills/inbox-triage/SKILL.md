@@ -213,12 +213,12 @@ Inbox: 8 unread
 
 1. noreply@hubspot.com — "Deal stage updated" → skip
 2. alerts@linkedin.com — "New connection" → skip
-3. sarah@acme.example (CC) — "FYI: Legal signed off" → info_only
+3. sarah@company.example (CC) — "FYI: Legal signed off" → info_only
    Summary: Example Co legal approved vendor terms. No action needed.
 4. tom@bigco.example — "Re: our call Thursday" — calendar invite .ics → meeting_info
    Meeting: Discovery call | Thu 2026-06-18 10:00 AEDT | Zoom: present | No conflict.
-5. priya@globex.example — "Following up on our proposal" — open deal found → deal_action
-   Deal: Globex Q3 Expansion | Stage: Proposal Sent | MEDDPICC: Champion = Priya,
+5. priya@sample.example — "Following up on our proposal" — open deal found → deal_action
+   Deal: Sample Co Q3 Expansion | Stage: Proposal Sent | MEDDPICC: Champion = Priya,
    Economic Buyer = unknown (gap). Draft: [reply addressing proposal status].
 6. marcus@newco.example — "Question about your pricing" — no open deal → action_required
    Draft: [reply with one CTA — 15-min call to discuss].
@@ -233,12 +233,12 @@ All drafts are DRAFT. outbound-send-gate controls delivery.
 **Opt-out inside a deal thread:**
 
 ```text
-Email from priya@globex.example — open deal thread — message body:
+Email from priya@sample.example — open deal thread — message body:
 "Actually, please take me off your list."
 
 Classification: opt_out_request (overrides deal_action — suppression priority).
 Action: route to opt-out-handling. Do NOT draft a deal reply.
-Note to rep: "Globex / Priya opted out during deal thread. Review deal impact
+Note to rep: "Sample Co / Priya opted out during deal thread. Review deal impact
 with manager before any further contact."
 ```
 

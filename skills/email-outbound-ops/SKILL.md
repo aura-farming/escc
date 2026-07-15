@@ -266,9 +266,9 @@ crm-operator: propose activity log "Meeting confirmation sent to Marcus, BigCo".
 **Send verification request:**
 
 ```text
-Rep asks: "Did the Globex proposal email go out yesterday?"
+Rep asks: "Did the Sample Co proposal email go out yesterday?"
 
-Sent-folder query: search sender=ae@company.example, to=priya@globex.example,
+Sent-folder query: search sender=ae@company.example, to=priya@sample.example,
 subject contains "proposal", date=2026-06-15.
 
 Tool result: message found in Sent, timestamp 2026-06-15 14:32 AEDT.
@@ -292,7 +292,7 @@ NEXT STEP: rep to review draft and approve via send gate, or discard.
 **Sender account ambiguity — stop and surface:**
 
 ```text
-Task: reply to priya@globex.example — thread started by previous SDR (former employee).
+Task: reply to priya@sample.example — thread started by previous SDR (former employee).
 Problem: the thread account (former.sdr@company.example) no longer exists.
 
 Stop: cannot reply from a decommissioned account. Surfacing to rep:

@@ -177,7 +177,7 @@ function purge(args = {}) {
 
   // --- account-memory + voice: the subject's own files across the WHOLE
   // identity cluster (ADR-0018) — the canonical key, every alias pointing at
-  // it, and the raw legacy stems. Purging "acme.example" must also reach the
+  // it, and the raw legacy stems. Purging "company.example" must also reach the
   // company_12345 store it was linked to, and vice versa.
   const accountFiles = [];
   const ownPaths = new Set();

@@ -11,10 +11,10 @@ function toolInput(name, input) {
 }
 
 test('nudges to log a HubSpot email activity after a Gmail draft', () => {
-  const result = hook.run(toolInput('mcp__claude_ai_Gmail__create_draft', { to: 'cfo@acme.example', subject: 'Pricing' }));
+  const result = hook.run(toolInput('mcp__claude_ai_Gmail__create_draft', { to: 'cfo@company.example', subject: 'Pricing' }));
   assert.ok(result && typeof result.additionalContext === 'string');
   assert.match(result.additionalContext, /HubSpot email activity/i);
-  assert.match(result.additionalContext, /cfo@acme\.example/);
+  assert.match(result.additionalContext, /cfo@company\.example/);
 });
 
 test('nudges to log a HubSpot meeting after a Calendar event', () => {
