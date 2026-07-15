@@ -147,7 +147,7 @@ function markPreparedDone(id, options = {}) {
 
 function formatList(items) {
   if (!items.length) return 'No prepared items.';
-  return items.map(i => `  [${i.status}] ${i.title}${i.crmAsOf ? ` (CRM ${i.crmAsOf})` : ''}`).join('\n');
+  return items.map(i => `  [${i.status}] ${i.title}${i.crmAsOf ? ` (CRM ${i.crmAsOf})` : ''}\n      id: ${i.id}`).join('\n');
 }
 
 /**

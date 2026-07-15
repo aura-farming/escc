@@ -328,7 +328,12 @@ function handleStatus(flags) {
 
 /** Read the outbound JSON payload from --input <file> or stdin. */
 function readOutboundInput(flags) {
-  const raw = flags.input ? fs.readFileSync(flags.input, 'utf8') : fs.readFileSync(0, 'utf8');
+  // --input accepts a FILE PATH or an inline JSON string (skills instruct both
+  // `--input file.json` and `--input '{"texts":[...]}'`) — detect a leading
+  // '{'/'[' as inline JSON; otherwise read the file; no flag = read stdin.
+  const raw = !flags.input
+    ? fs.readFileSync(0, 'utf8')
+    : (/^\s*[[{]/.test(flags.input) ? flags.input : fs.readFileSync(flags.input, 'utf8'));
   return JSON.parse(raw);
 }
 
@@ -387,7 +392,12 @@ function handleOutbound(positional, flags) {
 
 /** Read a product JSON payload from --input <file> or stdin. */
 function readProductInput(flags) {
-  const raw = flags.input ? fs.readFileSync(flags.input, 'utf8') : fs.readFileSync(0, 'utf8');
+  // --input accepts a FILE PATH or an inline JSON string (skills instruct both
+  // `--input file.json` and `--input '{"texts":[...]}'`) — detect a leading
+  // '{'/'[' as inline JSON; otherwise read the file; no flag = read stdin.
+  const raw = !flags.input
+    ? fs.readFileSync(0, 'utf8')
+    : (/^\s*[[{]/.test(flags.input) ? flags.input : fs.readFileSync(flags.input, 'utf8'));
   return JSON.parse(raw);
 }
 

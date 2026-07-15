@@ -105,6 +105,19 @@ test('BATCH on-ramp is precise: single-message and prospect-list asks are untouc
   assert.equal(routedSkill('batch prospect these 20 accounts'), 'worklist');
 });
 
+test('routing-precision fixes (review batch): disambiguated pairs route correctly', () => {
+  // demo-prep vs call-prep (call-prep no longer swallows "prep for my demo")
+  assert.equal(routedSkill('prep for my demo with Acme tomorrow'), 'demo-prep');
+  assert.equal(routedSkill('prep for my call with Acme tomorrow'), 'call-prep');
+  // cold-outreach catches the plural "cold emails"
+  assert.equal(routedSkill('draft cold emails to these leads'), 'cold-outreach');
+  // "approve this discount" is deal-desk (approval), not quote-desk (pricing math)
+  assert.equal(routedSkill('can I approve this discount'), 'deal-desk');
+  assert.equal(routedSkill('what discount can I give on this quote'), 'quote-desk');
+  // natural-language forecast-accuracy no longer falls through to forecast-rollup
+  assert.equal(routedSkill('how accurate were our forecasts last quarter'), 'forecast-accuracy');
+});
+
 test('ATTACK on-ramp: plan-of-attack / get-into phrasings reach account-attack-plan', () => {
   assert.equal(routedSkill('build me a plan of attack for Globex'), 'account-attack-plan');
   assert.equal(routedSkill('how do I get into Acme Corp'), 'account-attack-plan');
