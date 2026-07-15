@@ -10,7 +10,7 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
-## [1.10.0] - unreleased
+## [1.10.0] - 2026-07-15
 
 Adds the A-Z account attack-plan capability, makes an inbound opt-out
 hook-enforced end-to-end (`escc dnc`), and hardens the whole surface from a
