@@ -150,3 +150,57 @@ test('help advertises the dnc verb', () => {
   assert.match(escc.HELP, /dnc record --key/);
   assert.match(escc.HELP, /--evidence/);
 });
+
+// --- max-quality hardening: addressee forms + not-before (v1.10.0) ----------
+
+test('a display-name recipient ("Sam <sam@…>") cannot slip past the blocklist', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
+    const toolInput = { to: 'Sam Jones <sam@acme.example>', subject: 'Hi', body: 'Quick one.' };
+    approveDraft(toolInput); // valid token minted on the SAME display-name form
+    assert.equal(gate.run(gateInput(toolInput)), undefined, 'sanity: display-name draft passes pre-opt-out (keys agree end-to-end)');
+
+    escc.run(['dnc', 'record', '--key', 'sam@acme.example', '--reason', 'asked us to stop']);
+    const blocked = gate.run(gateInput(toolInput));
+    assert.ok(blocked && blocked.exitCode === 2, 'the bare-email block must catch the display-name form');
+    assert.match(blocked.stderr, /sam@acme\.example is on the do-not-contact/i);
+  });
+});
+
+test('a multi-recipient send is blocked when ANY addressee is suppressed', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
+    const toolInput = { to: 'ok@corp.example, Sam <sam@acme.example>', subject: 'Team', body: 'Hello both.' };
+    approveDraft(toolInput);
+    assert.equal(gate.run(gateInput(toolInput)), undefined, 'sanity: passes before the opt-out');
+
+    escc.run(['dnc', 'record', '--key', 'sam@acme.example', '--reason', 'asked us to stop']);
+    const blocked = gate.run(gateInput(toolInput));
+    assert.ok(blocked && blocked.exitCode === 2, 'the second addressee must still be screened');
+  });
+});
+
+test('an account-scope block also catches a display-name recipient at that domain', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
+    escc.run(['dnc', 'record', '--key', 'acme.example', '--scope', 'account', '--reason', 'org-wide']);
+    const toolInput = { to: 'New Person <new.person@acme.example>', subject: 'Hi', body: 'Hello.' };
+    approveDraft(toolInput);
+    const blocked = gate.run(gateInput(toolInput));
+    assert.ok(blocked && blocked.exitCode === 2);
+    assert.match(blocked.stderr, /account is on the do-not-contact/i);
+  });
+});
+
+test('record refuses an unparseable --not-before instead of writing a block that never fires', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
+    const res = escc.run(['dnc', 'record', '--key', 'sam@acme.example', '--not-before', 'next tuesday']);
+    assert.equal(res.code, 1);
+    assert.match(res.text, /not a parseable date/);
+    assert.equal(dnc.listDoNotContact().length, 0);
+  });
+});
+
+test('FAIL CLOSED: a stored row with a garbled not_before still blocks (never reads as expired)', () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
+    dnc.recordDoNotContact({ key: 'sam@acme.example', notBefore: 'corrupted-date-value', reason: 'timing block' });
+    assert.ok(dnc.findActiveBlock({ key: 'sam@acme.example' }), 'garbage not_before must read as still-blocked');
+  });
+});

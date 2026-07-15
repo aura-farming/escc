@@ -26,6 +26,12 @@ const { execFileSync } = require('child_process');
  */
 function isDangerousInvisibleCodePoint(cp) {
   return (
+    // Raw control characters (C0 except tab/LF/CR, DEL, C1). A single raw NUL
+    // hid in scripts/lib/outbound-review.js for weeks: file(1) classified the
+    // outbound REVIEW ENGINE as binary, so every plain grep silently skipped
+    // it. Control bytes belong in source only as escapes (\u0000), never raw.
+    (cp <= 0x08) || cp === 0x0B || cp === 0x0C || (cp >= 0x0E && cp <= 0x1F) ||
+    (cp >= 0x7F && cp <= 0x9F) || // DEL + C1 controls
     cp === 0x00A0 || // NBSP
     (cp >= 0x200B && cp <= 0x200D) || // zero-width space / non-joiner / joiner
     cp === 0x2060 || // word joiner

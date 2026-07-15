@@ -252,8 +252,9 @@ function probeServerSync(serverName, resolvedConfig) {
 
     // Best signal first: the server answered JSON-RPC on stdout. Healthy no
     // matter how it exited — SDK-built stdio servers exit(0) on stdin EOF, and
-    // before v1.10.0 that clean fast exit was misread as a failed probe.
-    if (/"jsonrpc"/.test(String(result.stdout || ''))) {
+    // before v1.10.0 that clean fast exit was misread as a failed probe. The
+    // versioned match keeps arbitrary log chatter from counting as an answer.
+    if (/"jsonrpc"\s*:\s*"2\.0"/.test(String(result.stdout || ''))) {
       return { ok: true, failureCode: null, reason: `${serverName} answered the initialize probe` };
     }
     // Killed by the timeout -> the server kept running past the spawn, i.e. it

@@ -112,16 +112,24 @@ function run(raw, ctx = {}) {
     // the ADR-0018 canonical identity, best-effort so a resolution error can
     // never break this fail-closed gate. ---
     if (recipient) {
-      const keysToCheck = [recipient];
-      try {
-        const acct = identity.accountKey(recipient);
-        if (acct && acct !== recipient) keysToCheck.push(acct);
-      } catch (_e) { /* identity resolution is best-effort; the contact check still runs */ }
+      // Enumerate EVERY addressee — a display-name form ("Sam <sam@a.example>")
+      // or a multi-recipient list must not hide an address the blocklist knows
+      // by its bare form. Falls back to the raw value when nothing email-shaped
+      // is present, so the check never gets weaker than it was.
+      const emails = review.recipientEmails(recipient);
+      const contactKeys = emails.length ? emails : [recipient];
+      const keysToCheck = [...contactKeys];
+      for (const email of contactKeys) {
+        try {
+          const acct = identity.accountKey(email);
+          if (acct && acct !== email) keysToCheck.push(acct);
+        } catch (_e) { /* identity resolution is best-effort; the contact check still runs */ }
+      }
       for (const dncKey of keysToCheck) {
         const blocked = dnc.findActiveBlock({ key: dncKey });
         if (blocked) {
           const until = blocked.not_before ? ` (not before ${String(blocked.not_before).slice(0, 10)})` : ' (indefinite)';
-          const who = dncKey === recipient ? 'recipient is' : "the recipient's account is";
+          const who = contactKeys.includes(dncKey) ? `recipient ${dncKey} is` : "the recipient's account is";
           review.recordSendDecision({ sessionId, fingerprint: contentKey, decision: 'unapproved' });
           return block(`${who} on the do-not-contact list — ${blocked.reason}${until}. Clear the block or wait until the not-before date before contacting them.`);
         }

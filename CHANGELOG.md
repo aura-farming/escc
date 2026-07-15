@@ -111,6 +111,27 @@ ADR-0021. See [docs/releases/v1.10.0.md](docs/releases/v1.10.0.md).
   usage line now lists `void`.
 - **Dead `discovery-prep` reference repointed to `call-prep`** in
   `account-research` + `inbound-lead-response` (was a dead-end SDR hand-off).
+- **SECURITY: raw NUL bytes purged and permanently banned.** A raw `0x00` sat in
+  `scripts/lib/outbound-review.js` (the outbound review engine) as a hash
+  separator, making `file(1)` classify it as *binary* — so every plain `grep`
+  and most diff/review tooling silently skipped the most security-critical lib
+  in the repo. Three more raw control bytes hid in `state-store/index.js` and a
+  design doc. All are replaced with source escapes (`\u0000` — byte-identical
+  at runtime, so fingerprints, content keys, and store keys are unchanged), and
+  `check-unicode-safety` now treats ALL raw control characters (C0 except
+  tab/LF/CR, DEL, C1) as always-dangerous errors.
+- **Send-gate: display-name and multi-recipient addressees can no longer slip
+  past the blocklist.** `to: "Sam <sam@acme.example>"` (or a comma list /
+  array) previously never matched a do-not-contact row keyed on the bare
+  address — while still earning a matching approval token. Recipients are now
+  canonicalized to bare lowercased email(s) at the shared normalization point
+  (`recipientEmails`), the gate screens EVERY addressee (contact + derived
+  account key each), and the approve path mints keys on the same canonical
+  form, so both sides always agree.
+- **Do-not-contact `not_before` fails closed.** A garbled/unparseable
+  not-before date on a stored suppression now reads as STILL BLOCKED (it
+  previously compared as expired and silently disarmed the block), and
+  `escc dnc record` refuses an unparseable `--not-before` up front.
 
 ### Changed
 

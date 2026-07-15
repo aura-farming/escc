@@ -78,7 +78,11 @@ function findActiveBlock(args = {}) {
   const row = rows[0]; // folded last-write-wins by key → at most one
   if (row.cleared) return null;
   if (row.not_before == null) return row; // indefinite suppression
-  return new Date(row.not_before) > now ? row : null;
+  const notBefore = new Date(row.not_before);
+  // Fail closed: an unparseable not-before must read as STILL BLOCKED, never
+  // as expired — a garbled date would otherwise silently disarm a suppression.
+  if (Number.isNaN(notBefore.getTime())) return row;
+  return notBefore > now ? row : null;
 }
 
 /** List all (folded) do-not-contact rows. */
@@ -139,6 +143,9 @@ function runDnc(positional = [], flags = {}) {
       const scope = flags.scope === 'account' ? 'account' : 'contact';
       const resolved = resolveDncKey(rawKey, scope);
       if (resolved.error) return { code: 1, text: `dnc record: ${resolved.error}`, data: null };
+      if (flags.notBefore && Number.isNaN(new Date(flags.notBefore).getTime())) {
+        return { code: 1, text: `dnc record: --not-before "${flags.notBefore}" is not a parseable date — use ISO form (e.g. 2026-09-01). Omit it for an indefinite block.`, data: null };
+      }
       const reason = flags.source
         ? `${flags.reason || 'do-not-contact'} [via ${flags.source}]`
         : (flags.reason || 'do-not-contact');
