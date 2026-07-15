@@ -38,7 +38,7 @@ function withEnv(overrides, fn) {
 
 test('sanitizeAccountId maps typed keys to safe filename stems', () => {
   assert.equal(mem.sanitizeAccountId('deal:7788'), 'deal_7788');
-  assert.equal(mem.sanitizeAccountId('domain:acme.test'), 'domain_acme.test');
+  assert.equal(mem.sanitizeAccountId('domain:company.test'), 'domain_company.test');
   assert.equal(mem.sanitizeAccountId('company:42'), 'company_42');
 });
 
@@ -88,13 +88,13 @@ test('readEvents returns [] for an account with no file', () => {
 test('hydrate folds segment, deals, open loops and recent events', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
-    mem.appendEvent('acme', { type: 'segment', segment: 'enterprise', ts: '2026-06-01T00:00:00.000Z' });
-    mem.appendEvent('acme', { type: 'deal', deal_id: 'deal-1', close_date: '2026-06-30', stage: 'negotiation', ts: '2026-06-02T00:00:00.000Z' });
-    mem.appendEvent('acme', { type: 'loop', deal_id: 'deal-1', text: 'Send MSA redlines', status: 'open', ts: '2026-06-03T00:00:00.000Z' });
-    mem.appendEvent('acme', { type: 'loop', text: 'Old loop', status: 'done', ts: '2026-06-04T00:00:00.000Z' });
+    mem.appendEvent('example-co', { type: 'segment', segment: 'enterprise', ts: '2026-06-01T00:00:00.000Z' });
+    mem.appendEvent('example-co', { type: 'deal', deal_id: 'deal-1', close_date: '2026-06-30', stage: 'negotiation', ts: '2026-06-02T00:00:00.000Z' });
+    mem.appendEvent('example-co', { type: 'loop', deal_id: 'deal-1', text: 'Send MSA redlines', status: 'open', ts: '2026-06-03T00:00:00.000Z' });
+    mem.appendEvent('example-co', { type: 'loop', text: 'Old loop', status: 'done', ts: '2026-06-04T00:00:00.000Z' });
 
-    const h = mem.hydrate('acme');
-    assert.equal(h.accountId, 'acme');
+    const h = mem.hydrate('example-co');
+    assert.equal(h.accountId, 'example-co');
     assert.equal(h.segment, 'enterprise', 'segment folds from segment event');
     assert.ok(h.deals['deal-1'], 'deal folded by deal_id');
     assert.equal(h.deals['deal-1'].close_date, '2026-06-30');
@@ -108,11 +108,11 @@ test('renderDigest produces markdown and respects the char cap', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
     for (let i = 0; i < 20; i++) {
-      mem.appendEvent('acme', { type: 'note', text: `note number ${i} with some length to it`, ts: `2026-06-${String(i + 1).padStart(2, '0')}T00:00:00.000Z` });
+      mem.appendEvent('example-co', { type: 'note', text: `note number ${i} with some length to it`, ts: `2026-06-${String(i + 1).padStart(2, '0')}T00:00:00.000Z` });
     }
-    const h = mem.hydrate('acme');
+    const h = mem.hydrate('example-co');
     const full = mem.renderDigest(h);
-    assert.ok(full.includes('acme'), 'digest names the account');
+    assert.ok(full.includes('example-co'), 'digest names the account');
     const capped = mem.renderDigest(h, 120);
     assert.ok(capped.length <= 120, `capped digest within budget (was ${capped.length})`);
   });
@@ -122,10 +122,10 @@ test('renderDigest produces markdown and respects the char cap', () => {
 
 test('resolveActiveAccount honors the ESCC_ACTIVE_ACCOUNT override', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'globex' }, () => {
-    mem.appendEvent('globex', { type: 'deal', deal_id: 'deal-9', segment: 'mid-market' });
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'sample-co' }, () => {
+    mem.appendEvent('sample-co', { type: 'deal', deal_id: 'deal-9', segment: 'mid-market' });
     const active = mem.resolveActiveAccount();
-    assert.equal(active.accountId, 'globex');
+    assert.equal(active.accountId, 'sample-co');
     assert.equal(active.dealId, 'deal-9');
   });
 });
@@ -153,9 +153,9 @@ test('resolveActiveAccount returns null when there is no memory', () => {
 test('listNearCloseDeals returns deals closing within the window, excluding closed/won', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
-    mem.appendEvent('acme', { type: 'deal', deal_id: 'soon', close_date: '2026-06-20', stage: 'negotiation' });
-    mem.appendEvent('globex', { type: 'deal', deal_id: 'far', close_date: '2026-12-31', stage: 'discovery' });
-    mem.appendEvent('initech', { type: 'deal', deal_id: 'wonalready', close_date: '2026-06-18', status: 'closed' });
+    mem.appendEvent('example-co', { type: 'deal', deal_id: 'soon', close_date: '2026-06-20', stage: 'negotiation' });
+    mem.appendEvent('sample-co', { type: 'deal', deal_id: 'far', close_date: '2026-12-31', stage: 'discovery' });
+    mem.appendEvent('demo-co', { type: 'deal', deal_id: 'wonalready', close_date: '2026-06-18', status: 'closed' });
 
     const near = mem.listNearCloseDeals(14, { now: '2026-06-15T00:00:00.000Z' });
     const ids = near.map(d => d.deal_id);
@@ -170,8 +170,8 @@ test('listNearCloseDeals returns deals closing within the window, excluding clos
 test('appendEvent refreshes a markdown companion view for handoff', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
-    mem.appendEvent('acme', { type: 'note', text: 'Champion identified' });
-    const md = path.join(home, 'escc', 'accounts', 'acme.md');
+    mem.appendEvent('example-co', { type: 'note', text: 'Champion identified' });
+    const md = path.join(home, 'escc', 'accounts', 'example-co.md');
     assert.ok(fs.existsSync(md), 'markdown handoff view written alongside jsonl');
     assert.ok(fs.readFileSync(md, 'utf8').includes('Champion identified'));
   });
@@ -180,9 +180,9 @@ test('appendEvent refreshes a markdown companion view for handoff', () => {
 test('a closing event of any type resolves a tracked loop by id (C3)', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
-    mem.appendEvent('acme', { id: 'L1', type: 'loop', text: 'Send MSA', status: 'open', ts: '2026-06-01T00:00:00.000Z' });
-    mem.appendEvent('acme', { id: 'L1', type: 'note', text: 'MSA sent', status: 'done', ts: '2026-06-02T00:00:00.000Z' });
-    const h = mem.hydrate('acme');
+    mem.appendEvent('example-co', { id: 'L1', type: 'loop', text: 'Send MSA', status: 'open', ts: '2026-06-01T00:00:00.000Z' });
+    mem.appendEvent('example-co', { id: 'L1', type: 'note', text: 'MSA sent', status: 'done', ts: '2026-06-02T00:00:00.000Z' });
+    const h = mem.hydrate('example-co');
     assert.ok(!h.openLoops.some(l => l.id === 'L1'), 'a done marker of a non-loop type still clears the loop');
   });
 });

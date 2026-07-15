@@ -292,7 +292,7 @@ Subject: Congrats on your new role!
 
 Hi Priya,
 
-Congrats on joining Globex as VP Revenue Ops — that's really exciting.
+Congrats on joining Sample Co as VP Revenue Ops — that's really exciting.
 
 I work with revenue operations leaders and thought you might be interested
 in what we do. We help companies with forecasting and pipeline management
@@ -304,7 +304,7 @@ Tom
 
 ---
 GATE FAILURES:
-A — Priya joined Globex 8 months ago. A stale role-change congratulation is
+A — Priya joined Sample Co 8 months ago. A stale role-change congratulation is
     not a current trigger — it signals you did not look for a real signal.
 B — "Maybe we could find some time for a chat sometime soon" — hedged, no
     specific ask, soft close.
@@ -314,11 +314,11 @@ D — "I think there might be some fit" is inference stated as vague claim.
 
 ```text
 GOOD:
-Subject: Globex's Q3 forecast process
+Subject: Sample Co's Q3 forecast process
 
 Hi Priya,
 
-Noticed Globex posted a RevOps analyst role last week — usually a sign
+Noticed Sample Co posted a RevOps analyst role last week — usually a sign
 the team is investing in forecast infrastructure.
 
 We work with VP RevOps teams going through that build-out phase; the

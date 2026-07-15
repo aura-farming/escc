@@ -104,11 +104,11 @@ WORKLIST REVIEW PACK  (owner: <rep>, <date>)
   In: 40 · worked: 31 · dropped in triage: 9
 
 SENDABLE (24)
-  - acme.example / Sam Lee <sam@acme.example> — first-touch, gates clear, reviewer clean
+  - company.example / Sam Lee <sam@company.example> — first-touch, gates clear, reviewer clean
   ...
 EXCLUDED (7)
-  - globex.example / Priya <priya@globex.example> — timing: "call back in six weeks" (not before 2026-07-13)
-  - initech.example / open deal — contactability: account has an open deal (handed to AE)
+  - sample.example / Priya <priya@sample.example> — timing: "call back in six weeks" (not before 2026-07-13)
+  - demo-co.example / open deal — contactability: account has an open deal (handed to AE)
   ...
 NEXT: approve the sendable set to send via the gated path, or override an exclusion with a reason.
 ```
@@ -150,8 +150,8 @@ Gate + review: 19 sendable, 7 excluded (3 timing, 2 open-deal, 2 WIIFM rewrite).
 **An exclusion with a logged override:**
 
 ```text
-Rep: "Override globex — the CFO told me on a call to email him today."
-→ escc outbound approve --input globex.json --override "CFO requested email today (call 2026-06-22)"
+Rep: "Override sample-co — the CFO told me on a call to email him today."
+→ escc outbound approve --input sample-co.json --override "CFO requested email today (call 2026-06-22)"
 APPROVED (override logged). Draft placed via email-outbound-ops; activity logged.
 ```
 

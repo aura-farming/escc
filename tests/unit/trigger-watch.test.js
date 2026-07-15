@@ -47,13 +47,13 @@ const NOW = '2026-06-16T12:00:00.000Z';
 
 function seedSignals() {
   // A deal closing inside the 14-day horizon, and one far outside it.
-  accountMemory.appendEvent('acme', { type: 'note', deal_id: 'd1', name: 'Example Co', stage: 'negotiation', close_date: '2026-06-20', status: 'open' });
+  accountMemory.appendEvent('example-co', { type: 'note', deal_id: 'd1', name: 'Example Co', stage: 'negotiation', close_date: '2026-06-20', status: 'open' });
   accountMemory.appendEvent('zeta', { type: 'note', deal_id: 'd9', name: 'Zeta', stage: 'discovery', close_date: '2026-12-01', status: 'open' });
 
   // An overdue open promise, and an open-but-not-yet-due one.
   const store = createStateStoreSync();
   try {
-    store.upsertPromise({ id: 'p1', text: 'send pricing', due_date: '2026-06-01', account_id: 'acme', status: 'open' });
+    store.upsertPromise({ id: 'p1', text: 'send pricing', due_date: '2026-06-01', account_id: 'example-co', status: 'open' });
     store.upsertPromise({ id: 'p2', text: 'check in', due_date: '2026-07-01', account_id: 'beta', status: 'open' });
   } finally {
     store.close();
@@ -81,7 +81,7 @@ test('runWatch notifies once with escalated severity when an overdue signal exis
     assert.equal(res.data.delivered, true);
     assert.equal(calls.length, 1, 'exactly one digest notification');
     assert.equal(calls[0].severity, 'high', 'overdue promise escalates severity');
-    assert.ok(/acme/i.test(calls[0].message), 'digest names the at-risk account');
+    assert.ok(/example-co/i.test(calls[0].message), 'digest names the at-risk account');
   });
 });
 

@@ -46,7 +46,7 @@ test('flags an overdue promise as a breached deadline SLA', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined }, () => {
     const store = createStateStoreSync();
     try {
-      store.upsertPromise({ id: 'p1', account_id: 'acme', text: 'Send pricing', due_date: '2020-01-01' });
+      store.upsertPromise({ id: 'p1', account_id: 'example-co', text: 'Send pricing', due_date: '2020-01-01' });
     } finally {
       store.close();
     }
@@ -59,8 +59,8 @@ test('flags an overdue promise as a breached deadline SLA', () => {
 
 test('flags an active-account inbound loop awaiting response beyond the SLA window', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'acme', ESCC_RESPONSE_SLA_HOURS: '24' }, () => {
-    accountMemory.appendEvent('acme', { type: 'inbound', text: 'Buyer replied with questions', status: 'open', ts: '2020-01-01T00:00:00.000Z' });
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'example-co', ESCC_RESPONSE_SLA_HOURS: '24' }, () => {
+    accountMemory.appendEvent('example-co', { type: 'inbound', text: 'Buyer replied with questions', status: 'open', ts: '2020-01-01T00:00:00.000Z' });
     const result = hook.run(stopInput('s2'));
     assert.ok(result && /response|awaiting/i.test(result.additionalContext), 'flags the response-SLA breach');
   });
@@ -71,7 +71,7 @@ test('stays silent when no SLA is breached', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: undefined }, () => {
     const store = createStateStoreSync();
     try {
-      store.upsertPromise({ id: 'p-future', account_id: 'acme', text: 'Later thing', due_date: '2099-01-01' });
+      store.upsertPromise({ id: 'p-future', account_id: 'example-co', text: 'Later thing', due_date: '2099-01-01' });
     } finally {
       store.close();
     }
@@ -89,10 +89,10 @@ test('never blocks — fails open on internal error', () => {
 
 test('does not flag a rep promise as a response-SLA breach (no double-count)', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'acme', ESCC_RESPONSE_SLA_HOURS: '24' }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_ACTIVE_ACCOUNT: 'example-co', ESCC_RESPONSE_SLA_HOURS: '24' }, () => {
     // A rep's own promise persisted to account memory (type:'promise', not yet due)
     // is a DEADLINE item, never an inbound loop awaiting the rep's response.
-    accountMemory.appendEvent('acme', {
+    accountMemory.appendEvent('example-co', {
       id: 'pr1', type: 'promise', text: 'I will send the deck', status: 'open',
       due_date: '2099-01-01', ts: '2020-01-01T00:00:00.000Z',
     });

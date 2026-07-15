@@ -187,7 +187,7 @@ crm-operator:
 **Not-now — snooze with resurface trigger:**
 
 ```text
-Prospect reply (priya@globex.example):
+Prospect reply (priya@sample.example):
 "We're mid-renewal with our current vendor. Come back in September."
 
 Thread read: touch 1, cold outreach. No open deal. Priya is VP RevOps.
@@ -195,7 +195,7 @@ Thread read: touch 1, cold outreach. No open deal. Priya is VP RevOps.
 Disposition: not-now. Timing: post-renewal, September.
 
 Email draft (via email-outbound-ops, voice profile applied):
-  Subject: Re: Globex pipeline visibility
+  Subject: Re: Sample Co pipeline visibility
 
   Hi Priya,
 
@@ -209,7 +209,7 @@ Email draft (via email-outbound-ops, voice profile applied):
 
 crm-operator:
   - Contact note: "Snooze: mid-renewal with incumbent. Resurface 2026-09-01."
-  - Task due 2026-08-25: "Priya Globex resurface — renewal should be done."
+  - Task due 2026-08-25: "Priya Sample Co resurface — renewal should be done."
   - Log: "Disposition: not-now. Snooze set."
 ```
 
@@ -272,7 +272,7 @@ No sales reply drafted. No deal advancement. Suppression first.
 **Objection — price:**
 
 ```text
-Reply from sarah@acme.example:
+Reply from sarah@company.example:
 "Looks interesting but we're worried about cost — it feels expensive for our stage."
 
 Disposition: objection (price / stage).

@@ -65,19 +65,19 @@ function contextOf(result) {
 
 test('A. a promise + account context written at session end resurfaces at the next session start', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'company:acme', ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'company:example-co', ESCC_INSTINCTS_DIR: undefined }, () => {
     // Session 1 ends: rep promised to send the proposal and worked the Example Co deal.
     const tp = writeTranscript(home, 's1', [
       { type: 'user', message: { role: 'user', content: 'Move the Example Co deal forward.' } },
       { type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: "Logged discovery. I'll send the proposal by 2099-01-01." }] } },
     ]);
-    seedActivity(home, 's1', ['company:acme', 'deal:deal-1']);
+    seedActivity(home, 's1', ['company:example-co', 'deal:deal-1']);
     sessionEnd.run(JSON.stringify({ hook_event_name: 'SessionEnd', session_id: 's1', transcript_path: tp }));
 
     // A brand-new session starts.
     const ctx = contextOf(sessionStart.run(JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', session_id: 's2' })));
     assert.ok(/proposal/i.test(ctx), 'the promise made last session is surfaced as an open loop');
-    assert.ok(/acme/i.test(ctx), 'the active account context is hydrated');
+    assert.ok(/example-co/i.test(ctx), 'the active account context is hydrated');
   });
 });
 
@@ -91,7 +91,7 @@ test('B. an open loop from >7 days ago still surfaces, with a welcome-back note'
     try {
       store.upsertPromise({
         id: 'p-old',
-        account_id: 'initech',
+        account_id: 'demo-co',
         text: 'Send the signed order form',
         due_date: '2026-01-01',
         created_at: '2026-01-01T00:00:00.000Z',
@@ -104,7 +104,7 @@ test('B. an open loop from >7 days ago still surfaces, with a welcome-back note'
     const sdir = path.join(home, 'session-data');
     fs.mkdirSync(sdir, { recursive: true });
     const fp = path.join(sdir, '2026-05-20-old-session.tmp');
-    fs.writeFileSync(fp, '# Session\n---\n<!-- ESCC:SUMMARY:START -->\nWorked the Initech order form.\n<!-- ESCC:SUMMARY:END -->\n');
+    fs.writeFileSync(fp, '# Session\n---\n<!-- ESCC:SUMMARY:START -->\nWorked the Demo Co order form.\n<!-- ESCC:SUMMARY:END -->\n');
     const old = Date.now() - 20 * 24 * 60 * 60 * 1000;
     fs.utimesSync(fp, new Date(old), new Date(old));
 
@@ -137,31 +137,31 @@ test('C. working state saved at pre:compact is restored at the next session star
 
 test('D. promises are attributed per account and recalled per account', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'acme', ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'example-co', ESCC_INSTINCTS_DIR: undefined }, () => {
     const store = createStateStoreSync();
     try {
-      store.upsertPromise({ id: 'pa', account_id: 'acme', text: 'Example Co: send the SOW', due_date: '2020-01-01' });
-      store.upsertPromise({ id: 'pg', account_id: 'globex', text: 'Globex: book the exec sync', due_date: '2020-01-01' });
+      store.upsertPromise({ id: 'pa', account_id: 'example-co', text: 'Example Co: send the SOW', due_date: '2020-01-01' });
+      store.upsertPromise({ id: 'pg', account_id: 'sample-co', text: 'Sample Co: book the exec sync', due_date: '2020-01-01' });
     } finally {
       store.close();
     }
     // Per-account recall is exact.
     const store2 = createStateStoreSync();
     try {
-      const acme = store2.getPromisesByAccount('acme');
-      const globex = store2.getPromisesByAccount('globex');
-      assert.equal(acme.length, 1);
-      assert.equal(acme[0].text, 'Example Co: send the SOW');
-      assert.equal(globex.length, 1);
-      assert.equal(globex[0].account_id, 'globex');
+      const exampleCo = store2.getPromisesByAccount('example-co');
+      const sampleCo = store2.getPromisesByAccount('sample-co');
+      assert.equal(exampleCo.length, 1);
+      assert.equal(exampleCo[0].text, 'Example Co: send the SOW');
+      assert.equal(sampleCo.length, 1);
+      assert.equal(sampleCo[0].account_id, 'sample-co');
     } finally {
       store2.close();
     }
 
     // Active-account context hydrates ONLY the active account; overdue list spans all.
-    accountMemory.appendEvent('acme', { type: 'note', text: 'Example Co champion: VP Sales' });
+    accountMemory.appendEvent('example-co', { type: 'note', text: 'Example Co champion: VP Sales' });
     const ctx = contextOf(sessionStart.run(JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', session_id: 'sd' })));
-    assert.ok(/VP Sales/i.test(ctx), 'active account (acme) memory is hydrated');
+    assert.ok(/VP Sales/i.test(ctx), 'active account (example-co) memory is hydrated');
     assert.ok(/send the SOW/i.test(ctx) && /book the exec sync/i.test(ctx), 'overdue list spans all accounts');
   });
 });
@@ -174,17 +174,17 @@ test('D. promises are attributed per account and recalled per account', () => {
 
 test('E. a deal-scoped promise + account context from a session >7 days ago resurface for the active deal', () => {
   const home = freshHome();
-  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'company:initech', ESCC_INSTINCTS_DIR: undefined }, () => {
+  withEnv({ ESCC_AGENT_DATA_HOME: home, ESCC_INSTINCT_HOME: home, ESCC_ACTIVE_ACCOUNT: 'company:demo-co', ESCC_INSTINCTS_DIR: undefined }, () => {
     const longAgoIso = '2026-01-01T00:00:00.000Z'; // well over 7 days before "now"
 
-    // Session 1 ends: the rep worked the Initech renewal and recorded the champion.
+    // Session 1 ends: the rep worked the Demo Co renewal and recorded the champion.
     const tp = writeTranscript(home, 's1-old', [
-      { type: 'user', message: { role: 'user', content: 'Work the Initech renewal — procurement is reviewing the order form.' } },
-      { type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: 'Logged discovery on the Initech renewal; next step is the signed order form.' }] } },
+      { type: 'user', message: { role: 'user', content: 'Work the Demo Co renewal — procurement is reviewing the order form.' } },
+      { type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: 'Logged discovery on the Demo Co renewal; next step is the signed order form.' }] } },
     ]);
-    seedActivity(home, 's1-old', ['company:initech', 'deal:initech-renewal']);
+    seedActivity(home, 's1-old', ['company:demo-co', 'deal:demo-co-renewal']);
     sessionEnd.run(JSON.stringify({ hook_event_name: 'SessionEnd', session_id: 's1-old', transcript_path: tp }));
-    accountMemory.appendEvent('company:initech', { type: 'note', text: 'Initech champion: VP Ops' });
+    accountMemory.appendEvent('company:demo-co', { type: 'note', text: 'Demo Co champion: VP Ops' });
 
     // Back-date everything session 1 produced so the gap to "now" is > 7 days.
     const sdir = path.join(home, 'session-data');
@@ -197,9 +197,9 @@ test('E. a deal-scoped promise + account context from a session >7 days ago resu
     const store = createStateStoreSync();
     try {
       store.upsertPromise({
-        id: 'p-initech-of',
-        account_id: 'company:initech',
-        deal_id: 'initech-renewal',
+        id: 'p-demo-co-of',
+        account_id: 'company:demo-co',
+        deal_id: 'demo-co-renewal',
         text: 'Send the signed order form',
         due_date: '2026-01-05',
         created_at: longAgoIso,
@@ -211,9 +211,9 @@ test('E. a deal-scoped promise + account context from a session >7 days ago resu
 
     // Session N (a fresh session, much later) must STILL surface both the
     // deal-scoped open loop and the active-deal account context.
-    const ctx = contextOf(sessionStart.run(JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', session_id: 'sN-initech' })));
+    const ctx = contextOf(sessionStart.run(JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', session_id: 'sN-demo-co' })));
     assert.ok(/order form/i.test(ctx), 'the deal-scoped promise from the earlier session resurfaces (decoupled from the 7-day gate)');
     assert.ok(/overdue/i.test(ctx), 'the months-old promise is flagged overdue');
-    assert.ok(/VP Ops/i.test(ctx), 'the active-deal (Initech) account context is hydrated alongside the open loop');
+    assert.ok(/VP Ops/i.test(ctx), 'the active-deal (Demo Co) account context is hydrated alongside the open loop');
   });
 });

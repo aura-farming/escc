@@ -136,7 +136,7 @@ test('auto-update --dry-run is wired and skips git', () => {
 test('privacy-purge requires an identifier and otherwise dry-runs', () => {
   withEnv(freshWorkspaceEnv(), () => {
     assert.equal(cli.run(['privacy-purge']).code, 1, 'no identifier refused');
-    const res = cli.run(['privacy-purge', 'acme.test']);
+    const res = cli.run(['privacy-purge', 'company.test']);
     assert.equal(res.code, 0);
     assert.ok(/dry run/i.test(res.text), 'defaults to a dry run (no --confirm)');
     assert.equal(res.data.confirmed, false);

@@ -65,29 +65,29 @@ function instinct(overrides = {}) {
   };
 }
 
-const SUBJECT = 'acme.test';
+const SUBJECT = 'company.test';
 
 // Seed all the stores with a mix of subject-referencing and unrelated data.
 function seedStores() {
   // account-memory: the subject's own record + an unrelated account that merely
   // mentions the subject.
-  accountMemory.appendEvent(SUBJECT, { type: 'note', text: 'met the CEO at acme.test' });
-  accountMemory.appendEvent('beta-corp', { type: 'note', text: 'beta intro via acme.test contact' });
+  accountMemory.appendEvent(SUBJECT, { type: 'note', text: 'met the CEO at company.test' });
+  accountMemory.appendEvent('beta-corp', { type: 'note', text: 'beta intro via company.test contact' });
 
   // observations: one references the subject, one does not.
-  store.appendObservation({ kind: 'tool_use', tool: 'hubspot', text: 'logged acme.test deal' });
+  store.appendObservation({ kind: 'tool_use', tool: 'hubspot', text: 'logged company.test deal' });
   store.appendObservation({ kind: 'tool_use', tool: 'editor', text: 'unrelated note' });
 
   // instincts: scrub-target (one evidence line mentions subject), remove-target
   // (trigger mentions subject), and a clean one.
-  store.writeInstinct(instinct({ id: 'scrub-me', evidence: ['acme.test renewal pattern', 'general cadence note'] }));
-  store.writeInstinct(instinct({ id: 'remove-me', trigger: 'when emailing acme.test buyers' }));
+  store.writeInstinct(instinct({ id: 'scrub-me', evidence: ['company.test renewal pattern', 'general cadence note'] }));
+  store.writeInstinct(instinct({ id: 'remove-me', trigger: 'when emailing company.test buyers' }));
   store.writeInstinct(instinct({ id: 'clean', evidence: ['unrelated signal'] }));
 
   // session-data: one summary references the subject, one does not.
   const dir = session.getSessionDataDir();
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, '2026-06-16-aaa-session.tmp'), '# Session\nNotes on acme.test discovery call\n');
+  fs.writeFileSync(path.join(dir, '2026-06-16-aaa-session.tmp'), '# Session\nNotes on company.test discovery call\n');
   fs.writeFileSync(path.join(dir, '2026-06-16-bbb-session.tmp'), '# Session\nNothing relevant here\n');
 }
 
@@ -181,7 +181,7 @@ test('runPurge refuses an identifier too short to purge safely', () => {
 test('applies_to is matched by exact segment token, not substring (no over-removal)', () => {
   withEnv(freshEnv(), () => {
     store.writeInstinct(instinct({ id: 'seg-a', applies_to: 'enterprise,mid-market', evidence: ['x'] }));
-    store.writeInstinct(instinct({ id: 'seg-b', applies_to: 'acme.test', evidence: ['y'] }));
+    store.writeInstinct(instinct({ id: 'seg-b', applies_to: 'company.test', evidence: ['y'] }));
 
     // 'mid' is a substring of 'mid-market' but NOT an exact token -> nothing removed.
     const r1 = purgeLib.purge({ identifier: 'mid', confirm: true });
@@ -189,18 +189,18 @@ test('applies_to is matched by exact segment token, not substring (no over-remov
     assert.equal(store.readInstincts('personal').length, 2, 'both instincts survive a substring match');
 
     // an exact applies_to token still erases the account-scoped instinct.
-    const r2 = purgeLib.purge({ identifier: 'acme.test', confirm: true });
+    const r2 = purgeLib.purge({ identifier: 'company.test', confirm: true });
     assert.deepEqual(r2.erased.instinctsRemoved.sort(), ['seg-b'], 'exact applies_to token still erases');
   });
 });
 
 test('the legacy sessions/ directory is also scanned for references', () => {
   withEnv(freshEnv(), () => {
-    accountMemory.appendEvent('acme.test', { type: 'note', text: 'x' });
+    accountMemory.appendEvent('company.test', { type: 'note', text: 'x' });
     const legacyDir = path.join(session.getSessionDataDir(), '..', 'sessions');
     fs.mkdirSync(legacyDir, { recursive: true });
-    fs.writeFileSync(path.join(legacyDir, '2025-01-01-legacy-session.tmp'), 'old notes about acme.test\n');
-    const res = purgeLib.purge({ identifier: 'acme.test' });
+    fs.writeFileSync(path.join(legacyDir, '2025-01-01-legacy-session.tmp'), 'old notes about company.test\n');
+    const res = purgeLib.purge({ identifier: 'company.test' });
     assert.ok(res.manualReview.sessionFiles.some(p => /legacy-session/.test(p)), 'a legacy session reference is surfaced');
   });
 });

@@ -216,8 +216,8 @@ APPLY ONLY AFTER EXPLICIT APPROVAL.
 **Pre-creation dedup: company match found**
 
 ```text
-Rep attempts to create "Example Co Corp" (acme.example).
-crm-hygiene check: search by domain acme.example.
+Rep attempts to create "Example Co Corp" (company.example).
+crm-hygiene check: search by domain company.example.
 Found: existing company "Example Co Corporation" (ID: 11111), created 2025-03-01,
   3 contacts, 1 open deal, 12 activities.
 Rep's new record would be: "Example Co Corp", no associations yet.
@@ -263,8 +263,8 @@ crm-operator applies:
 **Rejected merge: deal-quarter conflict**
 
 ```text
-Found: two deal records for Initech — "Initech Q2 Expansion" (stage: Proposal,
-  close: 2026-06-30) and "Initech New Logo" (stage: Discovery, close: 2026-09-30).
+Found: two deal records for Demo Co — "Demo Co Q2 Expansion" (stage: Proposal,
+  close: 2026-06-30) and "Demo Co New Logo" (stage: Discovery, close: 2026-09-30).
 Survivorship check: different close-date quarters.
 Rule: do not merge deals across different close-date quarters without explicit approval.
 Output: these may be two genuinely separate opportunities (expansion and new logo).

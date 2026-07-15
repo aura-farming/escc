@@ -46,7 +46,7 @@ function draftCall(draft) {
   });
 }
 
-const BLOCKED_RECORDS = { open_deals: [{ id: 'd1' }], account_id: 'acme-sod' };
+const BLOCKED_RECORDS = { open_deals: [{ id: 'd1' }], account_id: 'example-co-sod' };
 
 // --- separation of duties ---------------------------------------------------------
 
@@ -58,7 +58,7 @@ test('SoD: strict profile refuses a rep-role override at APPROVE time (no token,
     assert.equal(r.sodRefused, true);
     assert.ok(r.blocks.some(b => b.gate === 'override-sod'));
     const dnc = require('../../scripts/lib/do-not-contact');
-    assert.equal(dnc.findActiveBlock({ key: 'acme-sod' }), null, 'refused override writes NO blocklist rows');
+    assert.equal(dnc.findActiveBlock({ key: 'example-co-sod' }), null, 'refused override writes NO blocklist rows');
     assert.equal(gate.run(draftCall(draft)).exitCode, 2, 'no token minted -> gate still blocks');
   });
 });
@@ -143,7 +143,7 @@ test('notify drain prints the queue; --approve-self mints a token the gate admit
     assert.equal(admitted, undefined, 'self-digest draft passes the fail-closed gate');
 
     // …and the token must be USELESS for any other recipient or content.
-    assert.equal(gate.run(draftCall({ to: 'prospect@acme.example', subject: drained.data.subject, body: drained.data.body })).exitCode, 2, 'token cannot launder a prospect draft');
+    assert.equal(gate.run(draftCall({ to: 'prospect@company.example', subject: drained.data.subject, body: drained.data.body })).exitCode, 2, 'token cannot launder a prospect draft');
     assert.equal(gate.run(draftCall({ to: 'me@myco.example', subject: drained.data.subject, body: `${drained.data.body}\nP.S. buy now` })).exitCode, 2, 'token is bound to the exact content');
   });
 });

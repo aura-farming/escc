@@ -150,7 +150,7 @@ test('validateVocabTags rejects free-text role/segment/competitor', () => {
   assert.equal(pk.validateVocabTags({ role: 'finance', segment: 'manufacturing, wholesale', competitor: 'competitor-x' }, { vocab }).ok, true);
   assert.equal(pk.validateVocabTags({ role: 'wizard' }, { vocab }).ok, false);
   assert.equal(pk.validateVocabTags({ segment: 'narnia' }, { vocab }).ok, false);
-  assert.equal(pk.validateVocabTags({ competitor: 'acme-corp' }, { vocab }).ok, false);
+  assert.equal(pk.validateVocabTags({ competitor: 'example-co' }, { vocab }).ok, false);
 });
 
 test('backward compatible: an industry-only query returns the segment entry, legacy entries retrieve unchanged', () => {

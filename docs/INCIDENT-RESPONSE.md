@@ -107,7 +107,7 @@ then complete the CRM and manual-review steps it reports.
 Run it with an account id, deal id, email, or domain (minimum 3 characters):
 
 ```bash
-escc privacy-purge acme.example
+escc privacy-purge company.example
 ```
 
 It is **dry-run by default**. The scan is identical in both modes, so the dry-run
@@ -116,7 +116,7 @@ confirmation flag (the deletion-approval gate, per `CLAUDE.md` section 5 --
 approval required before deletes):
 
 ```bash
-escc privacy-purge acme.example --confirm
+escc privacy-purge company.example --confirm
 ```
 
 `--yes` is accepted as an alias for `--confirm`.

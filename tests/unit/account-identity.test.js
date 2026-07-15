@@ -46,11 +46,11 @@ test('canonicalizeInput: HubSpot company ids are tier-1 authority', () => {
 });
 
 test('canonicalizeInput: domains, emails, and www all collapse to one domain key', () => {
-  assert.equal(identity.canonicalizeInput('acme.example').key, 'domain_acme.example');
-  assert.equal(identity.canonicalizeInput('www.acme.example').key, 'domain_acme.example');
-  assert.equal(identity.canonicalizeInput('domain:acme.example').key, 'domain_acme.example');
-  assert.equal(identity.canonicalizeInput('jane.doe@acme.example').key, 'domain_acme.example');
-  assert.equal(identity.canonicalizeInput('domain_acme.example').key, 'domain_acme.example', 'idempotent over own output');
+  assert.equal(identity.canonicalizeInput('company.example').key, 'domain_company.example');
+  assert.equal(identity.canonicalizeInput('www.company.example').key, 'domain_company.example');
+  assert.equal(identity.canonicalizeInput('domain:company.example').key, 'domain_company.example');
+  assert.equal(identity.canonicalizeInput('jane.doe@company.example').key, 'domain_company.example');
+  assert.equal(identity.canonicalizeInput('domain_company.example').key, 'domain_company.example', 'idempotent over own output');
 });
 
 test('canonicalizeInput: deals and names keep their legacy stems (lossy tiers)', () => {
@@ -74,25 +74,25 @@ test('linkAlias + resolveAccountKey: a linked name resolves to the canonical key
     assert.equal(r.via, 'example_co_pty_ltd');
 
     // Unlinked ids still canonicalize by grammar.
-    assert.equal(identity.resolveAccountKey('globex.example').key, 'domain_globex.example');
+    assert.equal(identity.resolveAccountKey('sample.example').key, 'domain_sample.example');
   });
 });
 
 test('a canonical key itself can be re-linked forward (one hop, domain -> company)', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
-    identity.linkAlias('domain:acme.example', 'company:12345');
-    assert.equal(identity.resolveAccountKey('acme.example').key, 'company_12345', 'bare domain follows the forward link');
-    assert.equal(identity.resolveAccountKey('j@acme.example').key, 'company_12345', 'email follows too');
+    identity.linkAlias('domain:company.example', 'company:12345');
+    assert.equal(identity.resolveAccountKey('company.example').key, 'company_12345', 'bare domain follows the forward link');
+    assert.equal(identity.resolveAccountKey('j@company.example').key, 'company_12345', 'email follows too');
   });
 });
 
 test('alias cache invalidates on new links (mtime-keyed)', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
-    assert.equal(identity.resolveAccountKey('Initech').key, 'initech', 'name tier before linking');
-    identity.linkAlias('Initech', 'company:777');
-    assert.equal(identity.resolveAccountKey('Initech').key, 'company_777', 'link visible immediately');
+    assert.equal(identity.resolveAccountKey('Demo Co').key, 'demo_co', 'name tier before linking');
+    identity.linkAlias('Demo Co', 'company:777');
+    assert.equal(identity.resolveAccountKey('Demo Co').key, 'company_777', 'link visible immediately');
   });
 });
 
@@ -100,7 +100,7 @@ test('linkAlias refuses unusable or self-referential links', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
     assert.throws(() => identity.linkAlias('', 'company:1'));
-    assert.throws(() => identity.linkAlias('acme', ''));
+    assert.throws(() => identity.linkAlias('example-co', ''));
     assert.throws(() => identity.linkAlias('company:1', 'company:1'));
   });
 });
@@ -109,12 +109,12 @@ test('equivalentStems returns the full identity cluster for purge', () => {
   const home = freshHome();
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
     identity.linkAlias('Example Co Pty Ltd', 'company:12345');
-    identity.linkAlias('domain:acme.example', 'company:12345');
-    const stems = identity.equivalentStems('acme.example');
+    identity.linkAlias('domain:company.example', 'company:12345');
+    const stems = identity.equivalentStems('company.example');
     assert.ok(stems.includes('company_12345'), 'canonical included');
-    assert.ok(stems.includes('domain_acme.example'), 'domain stem included');
+    assert.ok(stems.includes('domain_company.example'), 'domain stem included');
     assert.ok(stems.includes('example_co_pty_ltd'), 'sibling alias included');
-    assert.ok(stems.includes('acme.example'), 'raw legacy stem included');
+    assert.ok(stems.includes('company.example'), 'raw legacy stem included');
   });
 });
 
@@ -127,7 +127,7 @@ test('account-memory + voice-overlay join on the canonical key once linked', () 
 
     mem.appendEvent('Example Co', { type: 'note', text: 'met the CFO' });
     mem.appendEvent('company:12345', { type: 'note', text: 'sent pricing' });
-    const events = mem.readEvents('acme.example'.replace('acme.example', 'Example Co')); // via alias
+    const events = mem.readEvents('company.example'.replace('company.example', 'Example Co')); // via alias
     assert.equal(events.length, 2, 'both writes landed in ONE canonical store');
     assert.ok(fs.existsSync(path.join(home, 'escc', 'accounts', 'company_12345.jsonl')));
 
@@ -141,8 +141,8 @@ test('legacy behavior unchanged for unlinked deal:/domain:/name ids', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
     mem.appendEvent('deal:7788', { type: 'note', text: 'x' });
     assert.ok(fs.existsSync(path.join(home, 'escc', 'accounts', 'deal_7788.jsonl')));
-    mem.appendEvent('domain:acme.test', { type: 'note', text: 'y' });
-    assert.ok(fs.existsSync(path.join(home, 'escc', 'accounts', 'domain_acme.test.jsonl')));
+    mem.appendEvent('domain:company.test', { type: 'note', text: 'y' });
+    assert.ok(fs.existsSync(path.join(home, 'escc', 'accounts', 'domain_company.test.jsonl')));
   });
 });
 
@@ -154,29 +154,29 @@ test('backfill dry-run plans the merge; apply merges with backup; second run is 
     // Simulate the historical split: three fragments for one company.
     const accountsDir = path.join(home, 'escc', 'accounts');
     fs.mkdirSync(accountsDir, { recursive: true });
-    fs.writeFileSync(path.join(accountsDir, 'acme.example.jsonl'),
-      `${JSON.stringify({ id: 'e1', ts: '2026-01-01T00:00:00Z', type: 'note', account_id: 'acme.example', text: 'from bare-domain store' })}\n`);
+    fs.writeFileSync(path.join(accountsDir, 'company.example.jsonl'),
+      `${JSON.stringify({ id: 'e1', ts: '2026-01-01T00:00:00Z', type: 'note', account_id: 'company.example', text: 'from bare-domain store' })}\n`);
     fs.writeFileSync(path.join(accountsDir, 'example_co_pty_ltd.jsonl'),
       `${JSON.stringify({ id: 'e2', ts: '2026-01-02T00:00:00Z', type: 'note', account_id: 'Example Co Pty Ltd', text: 'from name store' })}\n`);
     identity.linkAlias('Example Co Pty Ltd', 'company:12345');
-    identity.linkAlias('domain:acme.example', 'company:12345');
+    identity.linkAlias('domain:company.example', 'company:12345');
 
     // Seed an open promise keyed on the legacy raw id.
     const store = createStateStoreSync();
-    store.upsertPromise({ id: 'p1', account_id: 'acme.example', text: 'send the quote' });
+    store.upsertPromise({ id: 'p1', account_id: 'company.example', text: 'send the quote' });
     store.close();
 
     const plan = identity.backfillPlan();
     assert.equal(plan.empty, false);
     const group = plan.groups.find(g => g.canonical === 'company_12345');
     assert.ok(group, 'plan groups by canonical key');
-    assert.deepEqual(group.accountStems.sort(), ['acme.example', 'example_co_pty_ltd']);
+    assert.deepEqual(group.accountStems.sort(), ['company.example', 'example_co_pty_ltd']);
     assert.ok(plan.promiseUpdates.some(u => u.id === 'p1' && u.to === 'company_12345'));
 
     const result = identity.backfillApply(plan, { now: '2026-07-07T00:00:00.000Z' });
     assert.equal(result.mergedAccounts, 2);
     assert.ok(fs.existsSync(result.backupDir), 'backup dir written (reversible)');
-    assert.ok(!fs.existsSync(path.join(accountsDir, 'acme.example.jsonl')), 'fragment removed after merge');
+    assert.ok(!fs.existsSync(path.join(accountsDir, 'company.example.jsonl')), 'fragment removed after merge');
 
     const merged = mem.readEvents('company:12345');
     const texts = merged.map(e => e.text || '');
@@ -199,7 +199,7 @@ test('privacy-purge reaches the whole identity cluster (legacy stems + voice + a
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
     const purgeLib = require('../../scripts/lib/privacy-purge');
     identity.linkAlias('Example Co Pty Ltd', 'company:12345');
-    identity.linkAlias('domain:acme.example', 'company:12345');
+    identity.linkAlias('domain:company.example', 'company:12345');
     mem.appendEvent('company:12345', { type: 'note', text: 'canonical store' });
     // A pre-backfill legacy fragment that only the cluster expansion can find.
     const accountsDir = path.join(home, 'escc', 'accounts');
@@ -207,14 +207,14 @@ test('privacy-purge reaches the whole identity cluster (legacy stems + voice + a
       `${JSON.stringify({ id: 'l1', type: 'note', account_id: 'Example Co Pty Ltd', text: 'legacy fragment' })}\n`);
     overlay.writeOverlay('company:12345', { formality: 'neutral', lexicon: ['invoicing'], sampleCount: 1 });
 
-    const dry = purgeLib.purge({ identifier: 'acme.example', confirm: false });
+    const dry = purgeLib.purge({ identifier: 'company.example', confirm: false });
     const files = dry.erased.accountFiles.map(p => path.basename(p));
     assert.ok(files.includes('company_12345.jsonl'), 'canonical jsonl in scope');
     assert.ok(files.includes('example_co_pty_ltd.jsonl'), 'sibling legacy fragment in scope');
     assert.ok(files.includes('company_12345.md'), 'voice overlay / md in scope');
     assert.ok(dry.erased.aliasRowsRemoved >= 2, 'alias rows counted');
 
-    const done = purgeLib.purge({ identifier: 'acme.example', confirm: true });
+    const done = purgeLib.purge({ identifier: 'company.example', confirm: true });
     assert.ok(done.confirmed);
     assert.ok(!fs.existsSync(path.join(accountsDir, 'company_12345.jsonl')), 'canonical erased');
     assert.ok(!fs.existsSync(path.join(accountsDir, 'example_co_pty_ltd.jsonl')), 'legacy fragment erased');

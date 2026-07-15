@@ -32,13 +32,13 @@ function withEnv(overrides, fn) {
 }
 
 test('normalizeContactKey lowercases and trims', () => {
-  assert.equal(dnc.normalizeContactKey('  Sam@acme.example '), 'sam@acme.example');
+  assert.equal(dnc.normalizeContactKey('  Sam@company.example '), 'sam@company.example');
 });
 
 test('an indefinite block is active forever', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
-    dnc.recordDoNotContact({ key: 'sam@acme.example', scope: 'contact', reason: 'said do not contact' });
-    const hit = dnc.findActiveBlock({ key: 'Sam@acme.example', now: '2030-01-01' });
+    dnc.recordDoNotContact({ key: 'sam@company.example', scope: 'contact', reason: 'said do not contact' });
+    const hit = dnc.findActiveBlock({ key: 'Sam@company.example', now: '2030-01-01' });
     assert.ok(hit, 'indefinite block is still active years later');
     assert.equal(hit.not_before, null);
   });
@@ -63,11 +63,11 @@ test('clearing a block lifts it (last-write-wins by key)', () => {
 
 test('account-scoped blocks are stored and listed', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshHome() }, () => {
-    dnc.recordDoNotContact({ key: 'acme-123', scope: 'account', reason: 'open deal' });
+    dnc.recordDoNotContact({ key: 'example-co-123', scope: 'account', reason: 'open deal' });
     const rows = dnc.listDoNotContact();
     assert.equal(rows.length, 1);
     assert.equal(rows[0].scope, 'account');
-    assert.equal(rows[0].key, 'acme-123');
+    assert.equal(rows[0].key, 'example-co-123');
   });
 });
 

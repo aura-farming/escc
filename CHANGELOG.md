@@ -10,6 +10,17 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [Unreleased]
+
+### Changed
+
+- **Fixture hygiene: no borrowed brand names.** The three brand-flavored
+  fixture identities previously used in examples/tests are replaced with the
+  neutral placeholder family (`company.example`, `Example Co`, `Sample Co`,
+  `Demo Co`), and all three retired names joined the banned-company-tokens
+  list (see that config), so CI fails if any of them ever returns. Fixture
+  text only — no behavior change.
+
 ## [1.10.0] - 2026-07-15
 
 Adds the A-Z account attack-plan capability, makes an inbound opt-out
@@ -121,7 +132,7 @@ ADR-0021. See [docs/releases/v1.10.0.md](docs/releases/v1.10.0.md).
   `check-unicode-safety` now treats ALL raw control characters (C0 except
   tab/LF/CR, DEL, C1) as always-dangerous errors.
 - **Send-gate: display-name and multi-recipient addressees can no longer slip
-  past the blocklist.** `to: "Sam <sam@acme.example>"` (or a comma list /
+  past the blocklist.** `to: "Sam <sam@company.example>"` (or a comma list /
   array) previously never matched a do-not-contact row keyed on the bare
   address — while still earning a matching approval token. Recipients are now
   canonicalized to bare lowercased email(s) at the shared normalization point
@@ -254,7 +265,7 @@ class un-regressable. No behavior surface changes. See
 
 - **Every example identity is now impossible-by-construction.** All fixture
   domains and email addresses across docs, skills, examples, and tests moved
-  to IANA-reserved TLDs (`.example` / `.test` — e.g. `acme.example`,
+  to IANA-reserved TLDs (`.example` / `.test` — e.g. `company.example`,
   `jane@example-co.example`) that cannot belong to any real company or
   mailbox; example CRM ids are abstract (`company:<hubspot-id>`); the
   fictional example company is `Example Co`. Nothing committed can be

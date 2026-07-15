@@ -15,8 +15,8 @@
 > These indicators map to recommended skills/rules/hooks via `config/gtm-stack-mappings.json`.
 
 ## Sender identity
-- Send-as: `agent-sdr@acme.example` (a distinct agent identity — see `rules/common/security.md`)
-- Reply-to / human owner: `you@acme.example`
+- Send-as: `agent-sdr@company.example` (a distinct agent identity — see `rules/common/security.md`)
+- Reply-to / human owner: `you@company.example`
 
 ## ICP & targeting
 - ICP: maintained via the `icp-profile` skill (link your ICP doc here).

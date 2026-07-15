@@ -14,8 +14,8 @@
 > Mapped to recommended skills/rules/hooks via `config/gtm-stack-mappings.json`.
 
 ## Sender identity
-- Send-as: `you@acme.example`
-- Reply-to: `you@acme.example`
+- Send-as: `you@company.example`
+- Reply-to: `you@company.example`
 
 ## Methodology & segment
 - Methodology: **MEDDPICC** (`rules/meddpicc/*`).

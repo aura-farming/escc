@@ -43,10 +43,10 @@ test('buildPersonaWorkspace combines persona and workspace', () => {
   const prev = process.env.ESCC_PERSONA;
   delete process.env.ESCC_PERSONA;
   try {
-    assert.equal(sl.buildPersonaWorkspace({ persona: 'ae', workspace_name: 'acme' }, '/x/y'), 'ae/acme');
+    assert.equal(sl.buildPersonaWorkspace({ persona: 'ae', workspace_name: 'example-co' }, '/x/y'), 'ae/example-co');
     assert.equal(sl.buildPersonaWorkspace(null, '/x/myproj'), 'myproj');
     process.env.ESCC_PERSONA = 'sdr';
-    assert.equal(sl.buildPersonaWorkspace({ workspace_name: 'globex' }, '/x/y'), 'sdr/globex');
+    assert.equal(sl.buildPersonaWorkspace({ workspace_name: 'sample-co' }, '/x/y'), 'sdr/sample-co');
   } finally {
     if (prev === undefined) delete process.env.ESCC_PERSONA;
     else process.env.ESCC_PERSONA = prev;
@@ -68,11 +68,11 @@ test('buildMetrics renders $cost Nt Nf and duration', () => {
 
 test('composeStatusline joins present segments with a separator', () => {
   const out = stripAnsi(sl.composeStatusline({
-    model: 'Opus 4.8', task: 'Drafting', metrics: '$1.23 47t', personaWorkspace: 'ae/acme', ctx: ' ███ 30%',
+    model: 'Opus 4.8', task: 'Drafting', metrics: '$1.23 47t', personaWorkspace: 'ae/example-co', ctx: ' ███ 30%',
   }));
   assert.match(out, /Opus 4\.8/);
   assert.match(out, /Drafting/);
-  assert.match(out, /ae\/acme/);
+  assert.match(out, /ae\/example-co/);
   assert.match(out, /│/);
 });
 
@@ -89,7 +89,7 @@ test('hud-status-contract schema compiles and accepts a representative bridge', 
   const validate = ajv.compile(schema);
   const ok = validate({
     session_id: 's1', total_cost_usd: 1.23, tool_count: 47, files_modified_count: 5,
-    first_timestamp: new Date().toISOString(), context_remaining_pct: 62, persona: 'ae', workspace_name: 'acme',
+    first_timestamp: new Date().toISOString(), context_remaining_pct: 62, persona: 'ae', workspace_name: 'example-co',
   });
   assert.ok(ok, `bridge sample failed: ${JSON.stringify(validate.errors)}`);
 });

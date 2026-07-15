@@ -86,8 +86,8 @@ Consistent deal naming: `[Account] — [Use case or Product] — [New | Renewal 
 
 Examples:
 - `Example Co Corp — Forecast Module — New`
-- `Globex — Enterprise Renewal — Renewal`
-- `Initech — Expansion Seats — Expansion`
+- `Sample Co — Enterprise Renewal — Renewal`
+- `Demo Co — Expansion Seats — Expansion`
 
 Deviation from this pattern makes pipeline reporting and filtering unreliable.
 Flag non-conforming deal names in the audit.
@@ -151,12 +151,12 @@ PRIORITY: P1
   [MISSING FIELD] deal:7788 "Example Co Corp — Forecast Module — New"
     Stage: Qualification · Missing: economic_buyer_name
     Remediation: add via /notes or directly in HubSpot -> crm-operator
-  [ORPHANED DEAL] deal:9901 "Initech — Expansion Seats — Expansion"
+  [ORPHANED DEAL] deal:9901 "Demo Co — Expansion Seats — Expansion"
     No primary contact associated.
     Remediation: associate contact -> crm-operator
 
 PRIORITY: P2
-  [STALE NEXT STEP] deal:4455 "Globex — Enterprise Renewal — Renewal"
+  [STALE NEXT STEP] deal:4455 "Sample Co — Enterprise Renewal — Renewal"
     next_step_date: 2026-05-30 (overdue 17 days). Stage: Proposal.
     Remediation: confirm status with rep; update or advance/close.
 
@@ -167,12 +167,12 @@ PRIORITY: P3
     via crm-operator.
 
 PRIORITY: P4
-  [NAMING] deal:6633 "ACME New Business"
+  [NAMING] deal:6633 "Example Co New Business"
     Does not match [Account] -- [Use case] -- [Type] convention.
     Remediation: rename via crm-operator.
 
 POTENTIAL DUPLICATES (route to dedupe-merge)
-  contact:1001 "dana.lee@acme.example" / contact:1042 "d.lee@acme.example"
+  contact:1001 "dana.lee@company.example" / contact:1042 "d.lee@company.example"
     Confidence: HIGH (same domain, similar name). Do not merge here.
     -> Route to dedupe-merge + crm-operator.
 
@@ -230,9 +230,9 @@ SUMMARY
 **Pre-create duplicate check:**
 
 ```text
-Rep wants to create contact "dana.lee@acme.example".
--> crm-operator: search_crm_objects contacts email:"dana.lee@acme.example"
-   FOUND: contact:1001 "Dana Lee" acme.example (created 2026-03-10)
+Rep wants to create contact "dana.lee@company.example".
+-> crm-operator: search_crm_objects contacts email:"dana.lee@company.example"
+   FOUND: contact:1001 "Dana Lee" company.example (created 2026-03-10)
 -> FLAG: potential duplicate (confidence: HIGH — exact email match).
    Do not create. Route to dedupe-merge for survivorship review.
    Rep: confirm this is the same person; if yes, use contact:1001 or

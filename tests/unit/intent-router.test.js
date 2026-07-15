@@ -81,7 +81,7 @@ test('DEAL cluster: review vs inspection vs desk route distinctly', () => {
 
 test('specific-before-general: MEDDPICC audit beats single-deal MEDDPICC', () => {
   assert.equal(routedSkill('run a meddpicc audit across the team pipeline'), 'methodology-audit');
-  assert.equal(routedSkill('run meddpicc on the Globex deal'), 'deal-review');
+  assert.equal(routedSkill('run meddpicc on the Sample Co deal'), 'deal-review');
 });
 
 // --- batch/worklist on-ramp (regression guard for the mass-draft routing gap) --
@@ -107,8 +107,8 @@ test('BATCH on-ramp is precise: single-message and prospect-list asks are untouc
 
 test('routing-precision fixes (review batch): disambiguated pairs route correctly', () => {
   // demo-prep vs call-prep (call-prep no longer swallows "prep for my demo")
-  assert.equal(routedSkill('prep for my demo with Acme tomorrow'), 'demo-prep');
-  assert.equal(routedSkill('prep for my call with Acme tomorrow'), 'call-prep');
+  assert.equal(routedSkill('prep for my demo with Example Co tomorrow'), 'demo-prep');
+  assert.equal(routedSkill('prep for my call with Example Co tomorrow'), 'call-prep');
   // cold-outreach catches the plural "cold emails"
   assert.equal(routedSkill('draft cold emails to these leads'), 'cold-outreach');
   // "approve this discount" is deal-desk (approval), not quote-desk (pricing math)
@@ -132,10 +132,10 @@ test('INGEST on-ramp beats vocabulary overlap: doc drops reach knowledge-intake,
 });
 
 test('ATTACK on-ramp: plan-of-attack / get-into phrasings reach account-attack-plan', () => {
-  assert.equal(routedSkill('build me a plan of attack for Globex'), 'account-attack-plan');
-  assert.equal(routedSkill('how do I get into Acme Corp'), 'account-attack-plan');
+  assert.equal(routedSkill('build me a plan of attack for Sample Co'), 'account-attack-plan');
+  assert.equal(routedSkill('how do I get into Example Co'), 'account-attack-plan');
   assert.equal(routedSkill('what is the best way into this account'), 'account-attack-plan');
-  assert.equal(routedSkill('game plan for cracking Initech'), 'account-attack-plan');
+  assert.equal(routedSkill('game plan for cracking Demo Co'), 'account-attack-plan');
   // must NOT steal the brief-only or list asks:
   assert.equal(routedSkill('research this account for me'), 'account-research');
   assert.equal(routedSkill('who should I target in mid-market'), 'prospecting-pipeline');

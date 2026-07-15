@@ -143,7 +143,7 @@ A milestone with no `buyer_owner` and no `evidence` is an amber placeholder -- f
 **Build a new MAP from MEDDPICC evidence:**
 
 ```text
-Deal: Globex Corp · Stage: Validation · Target close: 2026-09-30
+Deal: Sample Co Corp · Stage: Validation · Target close: 2026-09-30
 Decision process (from deal-review): EB signs off after IT security review + legal MSA.
 Paper-process (from paper-process): MSA draft in progress; DPA needed; security review
   not yet scheduled.
@@ -190,7 +190,7 @@ Preparing buyer-facing version:
   - Remove internal notes (close-plan confidence scores, internal stage reasoning).
   - Flag #3 as "Proposed -- pending your confirmation of EB meeting date."
   - Flag #4, #5 as "Proposed -- please introduce your procurement and legal contacts."
-  - Output: PROPOSED MAP (buyer version) · Globex Corp · 2026-07-10
+  - Output: PROPOSED MAP (buyer version) · Sample Co Corp · 2026-07-10
   Status: PROPOSED. Confirmed when Dana W. acknowledges (email or meeting note).
   (Do not log as confirmed until tool-result proves acknowledgement.)
 ```

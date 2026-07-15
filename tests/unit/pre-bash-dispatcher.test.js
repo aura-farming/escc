@@ -46,7 +46,7 @@ test('run BLOCKS an obvious CLI bulk-mail pattern', () => {
 });
 
 test('run warns on a single CLI mail send (bypasses the gate)', () => {
-  const result = hook.run(bashInput('echo body | mail -s "hello" prospect@acme.example'));
+  const result = hook.run(bashInput('echo body | mail -s "hello" prospect@company.example'));
   assert.ok(result && result.additionalContext);
   assert.match(result.additionalContext, /outbound-send-gate/i);
 });

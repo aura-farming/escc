@@ -52,8 +52,8 @@ test('surfaces all open promises and flags overdue ones (warn-only)', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: home }, () => {
     const store = createStateStoreSync();
     try {
-      store.upsertPromise({ id: 'p-overdue', account_id: 'acme', text: 'Send the overdue quote', due_date: '2020-01-01' });
-      store.upsertPromise({ id: 'p-open', account_id: 'globex', text: 'Schedule the demo', due_date: '2099-01-01' });
+      store.upsertPromise({ id: 'p-overdue', account_id: 'example-co', text: 'Send the overdue quote', due_date: '2020-01-01' });
+      store.upsertPromise({ id: 'p-open', account_id: 'sample-co', text: 'Schedule the demo', due_date: '2099-01-01' });
     } finally {
       store.close();
     }

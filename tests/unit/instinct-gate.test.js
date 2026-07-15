@@ -74,7 +74,7 @@ test('A.3 GATE (I2): an instinct\'s confidence moves on a synthetic outcome even
     const before = store.readInstincts('personal')[0].confidence;
 
     const withOutcome = createStateStoreSync({ memory: true });
-    withOutcome.insertOutcome({ id: 'o1', type: 'meeting_booked', account_id: 'acme', created_at: NOW });
+    withOutcome.insertOutcome({ id: 'o1', type: 'meeting_booked', account_id: 'example-co', created_at: NOW });
     distill.distill({ store: withOutcome, now: NOW });
     const after = store.readInstincts('personal')[0].confidence;
 

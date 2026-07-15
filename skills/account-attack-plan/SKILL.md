@@ -10,7 +10,7 @@ origin: ESCC
 # Account Attack Plan
 
 The **single A-Z on-ramp for one named target account.** A rep names a business
-("give me a plan of attack for Globex") and this skill returns two things in one
+("give me a plan of attack for Sample Co") and this skill returns two things in one
 pass: a deep, sourced **research brief** AND a **sequenced, multi-channel plan of
 attack** — the specific first move, the order of stakeholders, the channel per
 touch, the proof to lead with, the CTA, and the dates.
@@ -208,9 +208,9 @@ NEXT: approve the first touch (draft-only) or stage the full sequence via /escc-
 **Cold enterprise target with a trigger:**
 
 ```text
-/attack Globex — mid-market ops software, we sell scheduling
+/attack Sample Co — mid-market ops software, we sell scheduling
 
-Pre-flight: canonical globex.example; no prior CRM history; contactability CLEAR.
+Pre-flight: canonical sample.example; no prior CRM history; contactability CLEAR.
 Research (parallel): account-researcher + prospect-researcher + competitor-analyst
   + warm-path-mapper + signal-scorer.
 Findings: 1,400 HC, 12 sites; incumbent = LegacyStack (renewal ~Q3, inference);
@@ -225,10 +225,10 @@ Plan of attack: entry via the new VP Ops (LinkedIn, warm-intro assist) — "new-
 **Blocked account — stop at pre-flight:**
 
 ```text
-/attack Initech
+/attack Demo Co
 
-Pre-flight: Initech has an OPEN DEAL owned by another AE (crm-operator read).
-STOP: not a prospecting target. Surfaced to rep: "Initech is an active deal owned
+Pre-flight: Demo Co has an OPEN DEAL owned by another AE (crm-operator read).
+STOP: not a prospecting target. Surfaced to rep: "Demo Co is an active deal owned
 by <AE> — route through them, don't run a cold attack." No research spend.
 ```
 

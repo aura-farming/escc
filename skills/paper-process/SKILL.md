@@ -242,7 +242,7 @@ Jurisdiction routing (rules/jurisdiction-routing.md):
 **Security questionnaire — gap identified:**
 
 ```text
-Buyer: AcmeCorp InfoSec questionnaire returned 2026-08-22.
+Buyer: Example Co InfoSec questionnaire returned 2026-08-22.
 Item 43: "Does the vendor support on-premise deployment?"
   Answer required: YES — buyer's policy prohibits SaaS for this data class.
 

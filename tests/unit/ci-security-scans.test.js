@@ -9,7 +9,7 @@
  * cover EVERY git-tracked file — no directory is exempt (the v1.8.1 lesson:
  * leaks hide precisely in the files a scan allowlist never reaches).
  *
- * Uses neutral example tokens ('cat', 'acme') so this file carries no real
+ * Uses neutral example tokens ('cat', 'example-co') so this file carries no real
  * banned token. It IS exempt from validate-no-secrets (it contains fixture
  * secret shapes by design), but it needs no exemption from the company-token
  * scan because it never mentions a real banned brand.
@@ -32,13 +32,13 @@ test('findBannedTokens: a word token matches standalone but never as a substring
 });
 
 test('findBannedTokens: a word token still matches inside emails and domains', () => {
-  assert.equal(findBannedTokens('mail bob@acme.io now', ['acme']).length, 1, 'inside an email host');
-  assert.equal(findBannedTokens('see https://help.acme.io/docs', ['acme']).length, 1, 'inside a domain');
+  assert.equal(findBannedTokens('mail bob@example-co.io now', ['example-co']).length, 1, 'inside an email host');
+  assert.equal(findBannedTokens('see https://help.example-co.io/docs', ['example-co']).length, 1, 'inside a domain');
 });
 
 test('findBannedTokens: a dotted token matches literally (the dot is not any-char)', () => {
-  assert.equal(findBannedTokens('go to help.acme.io please', ['help.acme.io']).length, 1);
-  assert.deepEqual(findBannedTokens('helpXacmeYio', ['help.acme.io']), []);
+  assert.equal(findBannedTokens('go to help.example-co.io please', ['help.example-co.io']).length, 1);
+  assert.deepEqual(findBannedTokens('helpXexample-coYio', ['help.example-co.io']), []);
 });
 
 test('findBannedTokenHashes: matches a hashed word token with boundary semantics', () => {
@@ -50,10 +50,10 @@ test('findBannedTokenHashes: matches a hashed word token with boundary semantics
 });
 
 test('findBannedTokenHashes: matches a hashed host token label-aligned, incl. email hosts', () => {
-  const hashes = [sha256('help.acme.example')];
-  assert.deepEqual(findBannedTokenHashes('see https://help.acme.example/docs', hashes), ['help.acme.example']);
-  assert.deepEqual(findBannedTokenHashes('mail sam@sub.help.acme.example now', hashes), ['help.acme.example'], 'suffix of a longer host');
-  assert.deepEqual(findBannedTokenHashes('helpXacmeYexample', hashes), []);
+  const hashes = [sha256('help.company.example')];
+  assert.deepEqual(findBannedTokenHashes('see https://help.company.example/docs', hashes), ['help.company.example']);
+  assert.deepEqual(findBannedTokenHashes('mail sam@sub.help.company.example now', hashes), ['help.company.example'], 'suffix of a longer host');
+  assert.deepEqual(findBannedTokenHashes('helpXexample-coYexample', hashes), []);
 });
 
 test('findBannedTokenHashes: the shipped config self-documents without disclosing — hashes never self-trip', () => {
@@ -90,21 +90,21 @@ test('findSecrets: the reported match is truncated so CI never echoes a full sec
 });
 
 test('findForeignEmails: fixture domains, their subdomains, and RFC 2606 TLDs pass', () => {
-  const allowed = ['acme.com', 'globex.io'];
-  assert.deepEqual(findForeignEmails('mail jane@acme.com now', allowed), []);
-  assert.deepEqual(findForeignEmails('ops@mail.globex.io replied', allowed), [], 'subdomain of a fixture domain');
+  const allowed = ['company.com', 'sample-co.io'];
+  assert.deepEqual(findForeignEmails('mail jane@company.com now', allowed), []);
+  assert.deepEqual(findForeignEmails('ops@mail.sample-co.io replied', allowed), [], 'subdomain of a fixture domain');
   assert.deepEqual(findForeignEmails('you@yourco.example and qa@ci.test', []), [], 'reserved TLDs need no allowlist');
-  assert.deepEqual(findForeignEmails('Jane@ACME.com shouted', allowed), [], 'case-insensitive');
+  assert.deepEqual(findForeignEmails('Jane@Example Co.com shouted', allowed), [], 'case-insensitive');
 });
 
 test('findForeignEmails: a real-looking non-fixture address is caught, verbatim', () => {
-  const leaks = findForeignEmails('contact sam.reed@northwindtraders.com today', ['acme.com']);
+  const leaks = findForeignEmails('contact sam.reed@northwindtraders.com today', ['company.com']);
   assert.deepEqual(leaks, ['sam.reed@northwindtraders.com']);
   assert.equal(findForeignEmails('a@b.com c@b.com d@other.net', ['b.com']).length, 1, 'only the foreign one');
 });
 
 test('findForeignEmails: non-email text does not false-positive', () => {
-  assert.deepEqual(findForeignEmails('install ajv@8.17.1 or ajv@latest; see @anthropic-ai/sdk', ['acme.com']), []);
+  assert.deepEqual(findForeignEmails('install ajv@8.17.1 or ajv@latest; see @anthropic-ai/sdk', ['company.com']), []);
   assert.deepEqual(findForeignEmails('no addresses here', []), []);
 });
 

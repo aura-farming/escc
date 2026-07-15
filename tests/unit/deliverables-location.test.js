@@ -21,7 +21,7 @@ test('isStrayDoc flags doc-like files outside deliverables/ and structural dirs'
 });
 
 test('isStrayDoc ignores files already under deliverables/', () => {
-  assert.ok(!hook.isStrayDoc('deliverables/research/acme.md'));
+  assert.ok(!hook.isStrayDoc('deliverables/research/example-co.md'));
   assert.ok(!hook.isStrayDoc('deliverables/outbound/sequences/step-1.md'));
   assert.ok(!hook.isStrayDoc('/abs/deliverables/reports/q3.csv'));
 });
@@ -65,7 +65,7 @@ test('run nudges a stray generated doc toward deliverables/', () => {
 });
 
 test('run passes through a file already under deliverables/', () => {
-  const result = hook.run(writeInput('deliverables/research/acme.md', '# Example Co research'));
+  const result = hook.run(writeInput('deliverables/research/example-co.md', '# Example Co research'));
   assert.equal(result, undefined);
 });
 

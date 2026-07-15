@@ -283,13 +283,13 @@ Account 1: Example Co Corp — Jane Smith (VP RevOps)
   Talk-track: playbook-library/revops-forecast-accuracy
   Voicemail: trigger-event template (last voicemail: none — clear to leave)
 
-Account 2: Globex — Marcus Lee (Head of Sales Ops)
+Account 2: Sample Co — Marcus Lee (Head of Sales Ops)
   Trigger: none verified; Rank 2 pain available (manual reporting, confirmed by job description)
   Opener: Frame 3 (insight) — "I work with a lot of Sales Ops leads who tell me…"
   Talk-track: playbook-library/sales-ops-reporting-pain
   Voicemail: standard template (last voicemail: 2026-06-09 — 6 days ago, clear to leave)
 
-Account 3: Initech — Priya Kapoor (RevOps Manager)
+Account 3: Demo Co — Priya Kapoor (RevOps Manager)
   Trigger: none verified; Rank 4 fallback — use ICP segment pain
   Opener: Frame 1 (permission-based)
   Voicemail: standard template (last voicemail: 2026-06-13 — 3 days ago, DO NOT leave voicemail)

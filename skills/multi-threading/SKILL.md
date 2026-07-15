@@ -167,7 +167,7 @@ NEXT STEPS FOR REP
 **EB missing, champion is a coach, deal at Validation:**
 
 ```text
-MULTI-THREAD PLAN: Initech · Validation · 2026-07-10
+MULTI-THREAD PLAN: Demo Co · Validation · 2026-07-10
 
 THREADING GAP SUMMARY
   Current threads: IT Director (Jamie P.) -- coach, not champion; no EB engagement.
@@ -198,7 +198,7 @@ PRIORITY ORDER
   Channel: email direct
   Personalization signal: VP Eng mentioned as architecture decision owner (call note 2026-06-30).
   [DRAFT-ONLY]
-  Subject: Architecture review -- Initech evaluation
+  Subject: Architecture review -- Demo Co evaluation
   Body: [VP Eng name] -- I'm working with Jamie P. on the evaluation underway. Jamie
   suggested your perspective on the architecture fit would be valuable. Would you have
   30 minutes this week to go deeper on the technical layer?
