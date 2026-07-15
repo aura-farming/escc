@@ -10,6 +10,154 @@ ESCC is adapted from [Everything Claude Code](https://github.com/affaan-m/ECC)
 (ECC) by Affaan Mustafa, under the MIT License. The harness machinery is ported
 with attribution; all engineering content is replaced with sales content.
 
+## [1.10.0] - 2026-07-15
+
+Adds the A-Z account attack-plan capability, makes an inbound opt-out
+hook-enforced end-to-end (`escc dnc`), and hardens the whole surface from a
+full-repo review — routing precision, CLI correctness, an MCP health-probe
+false-positive, install-manifest completeness, and four new CI guards. A rep can
+now name one target business and get a deep multi-agent research brief PLUS a
+sequenced, multi-channel plan of attack — not just a brief. Governed by
+ADR-0021. See [docs/releases/v1.10.0.md](docs/releases/v1.10.0.md).
+
+### Added
+
+- **`account-attack-plan` skill + `/attack` command:** the single A-Z on-ramp for
+  ONE named target account. Screens do-not-contact / contactability first, fans the
+  read-only research agents (`account-researcher`, `prospect-researcher`,
+  `competitor-analyst`, `warm-path-mapper`, `signal-scorer`) out in parallel across
+  an A-P rubric, synthesizes a sequenced plan of attack via `sales-planner` (who
+  first, channel, approved proof, one CTA, dates, objection pre-empts, silent-branch
+  fallback), and hands the first touches into the gated draft path / `/escc-worklist`.
+  Draft-only; every claim sourced. Routing recognizes "plan of attack / get into /
+  break into / game plan for <account>". (ADR-0021)
+- **`escc dnc` — the blessed write path into the send-gate's blocklist.**
+  `dnc record` suppresses a contact (or, with `--scope account`, a whole company
+  via the ADR-0018 canonical key) so the fail-closed send-gate blocks every gated
+  outbound to them; `dnc check` predicts exactly what the gate would do;
+  `dnc clear` refuses without documented `--evidence` of re-consent; `dnc list`
+  shows the folded blocklist. The `opt-out-handling` skill now runs
+  `dnc record` FIRST (before the CRM suppression flag), a content-guard test pins
+  that wiring, and an E2E test proves CLI-record → hook-block → evidence-clear →
+  pass-again against the real hook.
+- **Four new CI guards (future-proofing):**
+  `validate-version-consistency.js` pins the seven version surfaces
+  (package.json, plugin.json, marketplace.json, CLAUDE.md, SOUL.md, AGENTS.md,
+  agent.yaml) to a single version; `validate-file-sizes.js` enforces the
+  CLAUDE.md §4 800-line machinery cap over `scripts/**/*.js`;
+  `validate-manifests.js` now also checks disk→module completeness (a skill on
+  disk that no install module claims fails the build); and
+  `check-unicode-safety.js` gains an emoji drift ratchet (count pinned at the
+  current 34 deliberate glyphs/fixtures — growth fails the default CI run, so
+  new emoji require a conscious re-pin).
+
+### Fixed
+
+- **Account-scope do-not-contact is now enforced at the send-gate.** A per-recipient
+  token minted before an account was blocked no longer outlives the block: the gate
+  re-derives the recipient's canonical account key (ADR-0018) and blocks on an active
+  account-scope suppression, not just a contact-scope one.
+- **`findValidApproval` fails closed on a non-numeric confidence.** A NaN/missing
+  confidence on an approval row is now rejected (was treated as valid), matching the
+  review-attestation path.
+- **`escc doctor` no longer reads as a clean pass when it checked nothing.** On a
+  marketplace / plugin-manager install (no file-copy targets) it says so explicitly
+  and, under `--exit-code`, returns non-zero instead of "0 ok, 0 error(s)".
+- **Intent-router: the worklist `\bbatch\b` route no longer over-captures.** A bare
+  "batch" of non-outbound work (e.g. "batch of transcripts") is no longer hinted
+  toward the outbound batch pipeline; an outbound "batch prospect/draft/…" still is.
+- **SECURITY: `compliance-protection` matches protected paths case-insensitively.**
+  On a case-insensitive filesystem (macOS/Windows) a Write to
+  `rules/common/OUTBOUND-COMPLIANCE.md` previously bypassed the guard while
+  resolving to the real protected file; matching now case-folds (adds protection
+  only), with upper/mixed-case regression tests.
+- **Inbound opt-outs were not hook-enforced.** `opt-out-handling` suppressed only
+  CRM-side via `crm-operator`; the local `do_not_contact` store the send-gate
+  actually reads was never written, so a stale approval token could still draft
+  to an opted-out contact. Closed via the new `escc dnc` verb + skill wiring
+  (see Added).
+- **`mcp-health-check` no longer marks spec-compliant stdio servers unhealthy.**
+  The probe spawned servers with stdin at EOF and treated any clean exit before
+  the timeout as a failed handshake — but SDK-built MCP servers exit(0) on stdin
+  EOF by design, so healthy servers were blocked into a backoff window. The probe
+  now sends a real newline-delimited JSON-RPC `initialize` and treats an answer
+  as healthy; healthy probes return in milliseconds instead of always burning the
+  full 5s timeout (which was previously the ONLY path to "healthy").
+- **`skills/worklist` and `skills/account-attack-plan` are now installable.**
+  Neither was claimed by any install module (`worklist` missing since v1.9.0), so
+  a profile install never shipped them — `worklist` joins `skills-cross`
+  (default-install) and `account-attack-plan` joins `skills-sdr`; the new
+  manifest completeness guard makes this class of gap impossible to reintroduce.
+- **Routing: "ingest this pricing doc" reaches `knowledge-intake`.** The `/ingest`
+  route now precedes `quote-desk`, which also revives the previously shadowed
+  "here's our pricing / battlecard" drop patterns; genuine pricing math stays at
+  `quote-desk`, "how do we beat X" stays at `competitor-battlecards`, and
+  `brand-voice` keeps "writing style" (the intake copy of that pattern was dead
+  and is removed).
+- **Routing precision (review batch): four disambiguated pairs.** "prep for my
+  demo" → `demo-prep` (not `call-prep`); plural "cold emails" → `cold-outreach`;
+  "approve this discount" → `deal-desk` (approval), not `quote-desk` (pricing
+  math); natural-language "how accurate were our forecasts" → `forecast-accuracy`.
+- **CLI correctness:** `escc voice account` / `escc reconcile` `--input` accept
+  inline JSON as well as a file path (inline previously ENOENT'd, silently
+  breaking the voice overlay + morning-sweep reconcile across 6 skills);
+  `worklist list` prints each item's id (the id `worklist done` requires was
+  unobtainable); `outbound review-pack` excludes a no-email record instead of
+  surfacing it as sendable; `worklist list --json` and `outcome list --json`
+  emit machine-readable output; `outcome record|list` refuse an unknown
+  `--type` instead of writing a row no distiller reads / returning a
+  convincing-but-false empty; `product add` refuses a candidate that could never
+  pass `product approve` (missing required shape) at add time; the `outcome`
+  usage line now lists `void`.
+- **Dead `discovery-prep` reference repointed to `call-prep`** in
+  `account-research` + `inbound-lead-response` (was a dead-end SDR hand-off).
+- **SECURITY: raw NUL bytes purged and permanently banned.** A raw `0x00` sat in
+  `scripts/lib/outbound-review.js` (the outbound review engine) as a hash
+  separator, making `file(1)` classify it as *binary* — so every plain `grep`
+  and most diff/review tooling silently skipped the most security-critical lib
+  in the repo. Three more raw control bytes hid in `state-store/index.js` and a
+  design doc. All are replaced with source escapes (`\u0000` — byte-identical
+  at runtime, so fingerprints, content keys, and store keys are unchanged), and
+  `check-unicode-safety` now treats ALL raw control characters (C0 except
+  tab/LF/CR, DEL, C1) as always-dangerous errors.
+- **Send-gate: display-name and multi-recipient addressees can no longer slip
+  past the blocklist.** `to: "Sam <sam@acme.example>"` (or a comma list /
+  array) previously never matched a do-not-contact row keyed on the bare
+  address — while still earning a matching approval token. Recipients are now
+  canonicalized to bare lowercased email(s) at the shared normalization point
+  (`recipientEmails`), the gate screens EVERY addressee (contact + derived
+  account key each), and the approve path mints keys on the same canonical
+  form, so both sides always agree.
+- **Do-not-contact `not_before` fails closed.** A garbled/unparseable
+  not-before date on a stored suppression now reads as STILL BLOCKED (it
+  previously compared as expired and silently disarmed the block), and
+  `escc dnc record` refuses an unparseable `--not-before` up front.
+
+### Changed
+
+- **The `escc.js` dispatcher and the state-store query layer are back under the
+  800-line machinery cap** (966 and 847 lines respectively): the outcome/truth/
+  audit verbs moved to `scripts/lib/ledger-cli.js`, watch-scheduling + notify
+  drain to `scripts/lib/autonomy-cli.js`, and the read-model summary helpers to
+  `scripts/lib/state-store/summaries.js`. Pure relocation — behavior and the
+  `{ code, text, data }` contract are unchanged, and the new
+  `validate-file-sizes.js` guard keeps it that way.
+- **Docs state the hook failure policy precisely** (CLAUDE.md, ARCHITECTURE.md,
+  HOOKS.md): the send-gate is the only hook that fails CLOSED on its own
+  malfunction; `compliance-protection`, `attachment-quarantine`, and
+  `mcp-health-check` block as their *designed verdicts* (and the verifying guards
+  refuse a truncated payload) while still failing open on internal error. The
+  crm-operator "logs every write" claim is now labeled prompt-level, with
+  hook-persisted audit tied to the opt-in `governance-capture` hook.
+- **GETTING-STARTED-SDR covers the full v1.10.0 surface:** `/attack`
+  (account-attack-plan), `/reply` (reply-handling vs follow-up-ops), and the
+  opt-out enforcement path (`escc dnc record`) in Compliance and safety.
+
+### Removed
+
+- **`scripts/lib/session-aliases.js`** — dead module from the ECC port,
+  referenced by nothing.
+
 ## [1.9.1] - 2026-07-10
 
 The adversarial reviewer is now enforced in the approval path, and a batch ask

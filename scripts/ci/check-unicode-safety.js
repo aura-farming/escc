@@ -31,6 +31,14 @@ const TEXT_EXTS = new Set([
 const EMOJI_RE = /(?:\p{Extended_Pictographic}|\p{Regional_Indicator})/gu;
 const ALLOWED_SYMBOL_CODEPOINTS = new Set([0x00A9, 0x00AE, 0x2122]); // (C) (R) TM
 
+// Drift ratchet (v1.10.0): today's emoji findings are all deliberate
+// (hook-output glyphs, fixtures that TEST emoji handling in prospect content),
+// so they warn rather than fail — but CI runs the default (non-strict) mode,
+// so without a ceiling the count could only grow unnoticed. Adding emoji must
+// be a conscious decision: bump this pin in the same change, or the default
+// run fails in main() below.
+const EMOJI_BASELINE = 34;
+
 function isAllowedSymbol(char) {
   return ALLOWED_SYMBOL_CODEPOINTS.has(char.codePointAt(0));
 }
@@ -94,6 +102,13 @@ function main() {
   const failed = dangerous.length + (STRICT ? emoji.length : 0);
   if (failed > 0) {
     console.error(`check-unicode-safety: FAIL (${dangerous.length} dangerous${STRICT ? `, ${emoji.length} emoji` : ''})`);
+    process.exit(1);
+  }
+  if (emoji.length > EMOJI_BASELINE) {
+    console.error(
+      `check-unicode-safety: FAIL — ${emoji.length} emoji findings exceed the pinned baseline (${EMOJI_BASELINE}). ` +
+      'New emoji must be deliberate: remove them, or bump EMOJI_BASELINE in the same change.'
+    );
     process.exit(1);
   }
 

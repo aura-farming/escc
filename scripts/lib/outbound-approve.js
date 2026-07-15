@@ -47,11 +47,16 @@ function approveOutbound(args = {}) {
   const approverRole = args.approverRole
     || process.env.ESCC_ROLE || process.env.ESCC_REP_ROLE || 'rep';
 
-  const recipient = String(draft.recipient || draft.to || '').trim();
+  // Canonical bare email(s): a "Sam <sam@a.example>" draft mints the same key
+  // the gate later computes from the tool payload, and the audit row + account
+  // join carry the address the do-not-contact list knows.
+  const rawRecipient = draft.recipient || draft.to || '';
+  const emails = review.recipientEmails(rawRecipient);
+  const recipient = emails.length ? emails.join(',') : String(rawRecipient).trim();
   const key = review.outboundContentKey({ recipient, subject: draft.subject, body: draft.body });
   // Canonical account key (ADR-0018): the supplied account id when present,
   // else the recipient's email resolves to its domain/company identity.
-  const accountId = identity.accountKey(records.account_id || records.accountId || recipient) || null;
+  const accountId = identity.accountKey(records.account_id || records.accountId || emails[0] || recipient) || null;
   const result = gates.evaluateGates({ draft, records, now });
   // ADR-0020: the adversarial reviewer is part of the sanctioned path, not an
   // optional layer. A clean-gates draft with no (or a failing) reviewer verdict
@@ -107,9 +112,10 @@ function approveOutbound(args = {}) {
   // Blocked, no override: remember the blocks so the eventual send is caught too,
   // and record NO approval token.
   for (const w of result.blocklistWrites) {
-    const bkey = w.scope === 'account'
-      ? (records.account_id || records.accountId || recipient)
-      : recipient;
+    // Account-scope blocks are stored under the CANONICAL account key (ADR-0018)
+    // so the send-gate can re-derive the same key from the recipient's email and
+    // enforce the block even against an older per-recipient token.
+    const bkey = w.scope === 'account' ? (accountId || recipient) : recipient;
     if (bkey) {
       dnc.recordDoNotContact({ key: bkey, scope: w.scope, reason: w.reason, notBefore: w.not_before, sessionId, stateDir });
     }

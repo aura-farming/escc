@@ -98,6 +98,47 @@ test('BATCH cluster: mass/bulk/count/list phrasings reach the worklist on-ramp',
 test('BATCH on-ramp is precise: single-message and prospect-list asks are untouched', () => {
   assert.equal(routedSkill('write a cold email to Jane at Example Co'), 'cold-outreach');
   assert.equal(routedSkill('build me a prospect list for mid-market'), 'prospecting-pipeline');
+  // bare "batch" of NON-outbound work must NOT hijack to the outbound worklist…
+  assert.notEqual(routedSkill('process this batch of call transcripts'), 'worklist');
+  assert.notEqual(routedSkill('run a batch update on these deal stages'), 'worklist');
+  // …but an outbound batch phrasing with "batch" still routes there.
+  assert.equal(routedSkill('batch prospect these 20 accounts'), 'worklist');
+});
+
+test('routing-precision fixes (review batch): disambiguated pairs route correctly', () => {
+  // demo-prep vs call-prep (call-prep no longer swallows "prep for my demo")
+  assert.equal(routedSkill('prep for my demo with Acme tomorrow'), 'demo-prep');
+  assert.equal(routedSkill('prep for my call with Acme tomorrow'), 'call-prep');
+  // cold-outreach catches the plural "cold emails"
+  assert.equal(routedSkill('draft cold emails to these leads'), 'cold-outreach');
+  // "approve this discount" is deal-desk (approval), not quote-desk (pricing math)
+  assert.equal(routedSkill('can I approve this discount'), 'deal-desk');
+  assert.equal(routedSkill('what discount can I give on this quote'), 'quote-desk');
+  // natural-language forecast-accuracy no longer falls through to forecast-rollup
+  assert.equal(routedSkill('how accurate were our forecasts last quarter'), 'forecast-accuracy');
+});
+
+test('INGEST on-ramp beats vocabulary overlap: doc drops reach knowledge-intake, pricing math stays at quote-desk', () => {
+  // "pricing" inside an ingest ask used to shadow-route to quote-desk.
+  assert.equal(routedSkill('ingest this pricing doc'), 'knowledge-intake');
+  // the "here's our <doc>" drop phrasings were dead behind quote-desk/battlecards.
+  assert.equal(routedSkill("here's our pricing from marketing"), 'knowledge-intake');
+  assert.equal(routedSkill('here is our battlecard for the team'), 'knowledge-intake');
+  // …without stealing the genuine pricing-math and competitive asks:
+  assert.equal(routedSkill('what should I quote for 200 seats'), 'quote-desk');
+  assert.equal(routedSkill('how do we beat Dealify'), 'competitor-battlecards');
+  // brand-voice keeps ownership of the writing-style phrasing.
+  assert.equal(routedSkill('learn my writing style from these emails'), 'brand-voice');
+});
+
+test('ATTACK on-ramp: plan-of-attack / get-into phrasings reach account-attack-plan', () => {
+  assert.equal(routedSkill('build me a plan of attack for Globex'), 'account-attack-plan');
+  assert.equal(routedSkill('how do I get into Acme Corp'), 'account-attack-plan');
+  assert.equal(routedSkill('what is the best way into this account'), 'account-attack-plan');
+  assert.equal(routedSkill('game plan for cracking Initech'), 'account-attack-plan');
+  // must NOT steal the brief-only or list asks:
+  assert.equal(routedSkill('research this account for me'), 'account-research');
+  assert.equal(routedSkill('who should I target in mid-market'), 'prospecting-pipeline');
 });
 
 // --- skip rules ---------------------------------------------------------------

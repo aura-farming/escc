@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "totalCommands": 70,
+  "totalCommands": 71,
   "commands": [
     {
       "command": "activity",
@@ -12,6 +12,18 @@
         "activity-audit"
       ],
       "path": "commands/activity.md"
+    },
+    {
+      "command": "attack",
+      "description": "A-Z research + a sequenced, multi-channel plan of attack for ONE named target account.",
+      "type": "orchestration",
+      "primaryAgents": [],
+      "allAgents": [],
+      "skills": [
+        "account-attack-plan",
+        "close-plan"
+      ],
+      "path": "commands/attack.md"
     },
     {
       "command": "battlecard",
@@ -817,7 +829,7 @@
   "statistics": {
     "byType": {
       "general": 12,
-      "orchestration": 2,
+      "orchestration": 3,
       "outreach": 9,
       "planning": 10,
       "research": 3,
@@ -835,15 +847,15 @@
         "count": 8
       },
       {
+        "skill": "close-plan",
+        "count": 4
+      },
+      {
         "skill": "quote-desk",
         "count": 4
       },
       {
         "skill": "account-memory",
-        "count": 3
-      },
-      {
-        "skill": "close-plan",
         "count": 3
       },
       {

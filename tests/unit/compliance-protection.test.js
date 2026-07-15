@@ -18,6 +18,16 @@ test('isProtected flags compliance rule files and jurisdiction overlays', () => 
   assert.ok(hook.isProtected('the-compliance-guide.md'));
 });
 
+test('isProtected is case-insensitive (case-insensitive filesystems resolve to the same file)', () => {
+  // On macOS/Windows, an UPPERCASE path lands on the real lowercase file, so the
+  // guard must match it too — else a drifted agent tampers with compliance rules.
+  assert.ok(hook.isProtected('rules/common/OUTBOUND-COMPLIANCE.md'));
+  assert.ok(hook.isProtected('rules/common/Outbound-Compliance.md'));
+  assert.ok(hook.isProtected('RULES/COMMON/DATA-HANDLING.MD'));
+  assert.ok(hook.isProtected('rules/Jurisdictions/AU.md'));
+  assert.ok(hook.isProtected('The-Compliance-Guide.md'));
+});
+
 test('isProtected does NOT flag unrelated files or same-name files outside rules/', () => {
   assert.ok(!hook.isProtected('src/components/Hero.tsx'));
   assert.ok(!hook.isProtected('notes/data-handling.md'), 'data-handling.md outside rules/ is not protected');

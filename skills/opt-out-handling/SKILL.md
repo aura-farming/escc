@@ -86,19 +86,35 @@ contact.
    "contact me after X months" — treat the current request as an opt-out now.
    Future re-contact requires fresh, documented consent, not a delayed override.
 
-### Step 2 — Suppress across all sequences and lists
+### Step 2 — Suppress: local send-gate blocklist FIRST, then the CRM
 
-1. Via `crm-operator` (write — the sole write-capable agent), set the
+1. **Write the local do-not-contact blocklist — the hook-enforced suppression.**
+   The fail-closed `pre:outbound-send-gate` hook consults this store on every
+   gated outbound (Gmail drafts, live sends, HubSpot email engagements); the
+   CRM flag in the next step does **not** gate sends. Run:
+
+   ```bash
+   escc dnc record --key lisa@startup.test --source email \
+     --reason 'opt-out: "remove me from your mailing list"'
+   ```
+
+   For an organization-wide request ("stop contacting anyone at our company"),
+   also suppress the account:
+   `escc dnc record --key startup.test --scope account --reason '<trigger quote>'`.
+   The command echoes the stored row — carry it into the close-out report.
+   (Re-consent later is `escc dnc clear`, which refuses without documented
+   `--evidence`; this skill never runs it.)
+2. Via `crm-operator` (write — the sole write-capable agent), set the
    suppression flag on the contact record:
    - Mark contact as DNC / unsubscribed.
    - Remove from all active sequences and cadences.
    - Remove from all marketing lists.
    - Flag any open deal-associated contacts: note the opt-out in the deal
      record for rep and manager awareness.
-2. Suppression is **global across all personas and sequences** per
+3. Suppression is **global across all personas and sequences** per
    `rules/common/outbound-compliance.md`. A new sequence or campaign does not
    reset suppression. A different rep in the same account does not bypass it.
-3. Log the suppression write: timestamp, the exact opt-out phrase (provenance),
+4. Log the suppression write: timestamp, the exact opt-out phrase (provenance),
    the channel the request arrived on, and who processed it (this skill).
 
 ### Step 3 — Record with provenance
@@ -113,6 +129,7 @@ The suppression record must carry:
 | opt_out_trigger | the exact phrase or sentence that triggered detection |
 | processed_by | "opt-out-handling" |
 | processed_at | ISO timestamp of suppression write |
+| local_blocklist | the row echoed by `escc dnc record` (key, scope, reason) |
 | jurisdiction | AU / US / EU-UK / unknown (from jurisdiction-routing) |
 | deadline | per jurisdiction overlay — do NOT restate; cite the rule |
 
@@ -156,8 +173,10 @@ Trigger phrase: "[exact quote]"
 Jurisdiction: [AU / US / EU-UK / unknown]
 Deadline: [cite rules/jurisdictions/<overlay>.md — do not restate day-count]
 
-Suppression actions (confirmed via crm-operator):
-  [x] DNC / unsubscribed flag set on contact record
+Suppression actions:
+  [x] Local send-gate blocklist row written (escc dnc record) — gated outbound
+      to this contact is now hook-BLOCKED
+  [x] DNC / unsubscribed flag set on contact record (via crm-operator)
   [x] Removed from active sequences: [list names, or "none active"]
   [x] Removed from marketing lists: [list names, or "none active"]
   [x] Open deal noted: [Deal Name] — rep and manager notified via CRM task
@@ -182,7 +201,11 @@ Trigger phrase: "remove me from your mailing list"
 Step 1: Contact confirmed — lisa@startup.test, Lisa Chen, startup.test.
          No sales reply drafted.
 
-Step 2: crm-operator write:
+Step 2: local blocklist first:
+  escc dnc record --key lisa@startup.test --source email \
+    --reason 'opt-out: "remove me from your mailing list"'
+  -> Recorded: the send-gate now blocks all gated outbound to lisa@startup.test (indefinite).
+  crm-operator write:
   - Suppression flag: DNC + unsubscribed (set)
   - Removed from sequence "Startup SMB Q2 Outreach" (1 active sequence)
   - No marketing lists (none active)
@@ -213,7 +236,9 @@ Trigger phrase: "please stop the emails"
 Step 1: Contact confirmed — marcus@bigco.example, Marcus Webb, BigCo.
          No sales reply drafted. Open deal flagged.
 
-Step 2: crm-operator write:
+Step 2: escc dnc record --key marcus@bigco.example --source email \
+    --reason 'opt-out: "please stop the emails"'   (send-gate blocklist written)
+  crm-operator write:
   - Suppression flag: DNC + unsubscribed (set)
   - Removed from sequence "BigCo Expansion Q2" (1 active)
   - Open deal BigCo AE Tooling: note added "Marcus Webb opted out 2026-06-16.
@@ -239,7 +264,8 @@ Step 1: Contact: dana@co.example (rep confirms email address).
   Source: verbal / phone. Trigger: "don't contact me again."
   No sales reply (no channel to send one via — verbal channel).
 
-Step 2: crm-operator write: suppression flag set, removed from all sequences.
+Step 2: escc dnc record --key dana@co.example --source phone --reason "verbal opt-out"
+  then crm-operator write: suppression flag set, removed from all sequences.
 Step 3: Provenance: opt_out_source = verbal/phone; trigger quoted as reported
   by rep; processed_at = ISO timestamp of this processing.
 Step 4: Compliance reply: N/A (verbal channel). Suppression confirmed sufficient.
@@ -249,6 +275,10 @@ Note: verbal opt-outs carry the same weight as written ones. Record them the sam
 
 ## Anti-patterns
 
+- **CRM-only suppression.** Setting the HubSpot DNC flag without `escc dnc
+  record` leaves the fail-closed send-gate blind: the hook enforces only the
+  local blocklist, so a later draft to this contact could still sail through on
+  a stale approval token. Both writes, always — local first.
 - **Drafting a sales reply to an opt-out.** An opt-out is not a buying objection.
   It is a legal request. Do not draft "happy to help if you change your mind" or
   any commercial message in response. The only permissible reply is a factual
@@ -279,6 +309,9 @@ Note: verbal opt-outs carry the same weight as written ones. Record them the sam
   routes here. Uses identical routing phrase.
 - `reply-handling` — upstream router: classifies `unsubscribe` disposition
   replies and routes here. Uses identical routing phrase.
+- `escc dnc` (`scripts/lib/do-not-contact.js`) — the local blocklist the
+  fail-closed send-gate reads on every gated outbound; `record` is step 2.1 of
+  this workflow, `check` predicts what the gate would do.
 - `crm-operator` — sole write-capable agent; executes all suppression flags,
   list removals, contact notes, and CRM tasks.
 - `rules/common/outbound-compliance.md` — owns the suppression, deadline, and

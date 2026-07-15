@@ -32,6 +32,13 @@ function buildReviewPack(items = [], options = {}) {
     const id = entry.id != null ? entry.id : i;
     const draft = entry.draft || {};
     const recipient = draft.recipient || draft.to || null;
+    // An unreachable record (no email) is excluded up front — the deterministic
+    // review-pack must match the worklist skill's documented "no email" exclusion
+    // class, not surface an unsendable record as sendable.
+    if (!recipient) {
+      excluded.push({ id, recipient: null, reasons: ['unreachable: no recipient email'] });
+      return;
+    }
 
     let result;
     try {

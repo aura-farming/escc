@@ -42,10 +42,15 @@ function normalize(p) {
 function isProtected(filePath) {
   const norm = normalize(filePath);
   if (!norm) return false;
-  const base = path.posix.basename(norm);
+  // Case-FOLD for matching. macOS/Windows filesystems are case-insensitive, so
+  // `rules/common/OUTBOUND-COMPLIANCE.md` resolves to the real protected file —
+  // the guard must too. All protected names/dirs are already lowercase, so
+  // lowercasing only ever ADDS protection (never removes it).
+  const lc = norm.toLowerCase();
+  const base = path.posix.basename(lc);
   if (ALWAYS_PROTECTED.has(base)) return true;
-  if (norm.includes('/rules/jurisdictions/') || norm.startsWith('rules/jurisdictions/')) return true;
-  if (COMPLIANCE_RULE_FILES.has(base) && /(^|\/)rules\//.test(norm)) return true;
+  if (lc.includes('/rules/jurisdictions/') || lc.startsWith('rules/jurisdictions/')) return true;
+  if (COMPLIANCE_RULE_FILES.has(base) && /(^|\/)rules\//.test(lc)) return true;
   return false;
 }
 

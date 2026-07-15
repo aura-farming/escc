@@ -93,6 +93,25 @@ test('BLESSED PATH: a Gmail draft passes once an approval token is recorded', ()
   });
 });
 
+test('an account-scope do-not-contact block beats a valid per-recipient token (ADR-0018 canonical key)', () => {
+  const toolInput = { to: 'jane@acme.example', subject: 'Hi', body: 'Worth a look at reporting?' };
+  const key = review.outboundContentKey(review.extractOutboundPayload(DRAFT_TOOL, toolInput));
+  // Baseline: a valid token admits the draft when nothing is blocked.
+  withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
+    review.recordApproval({ sessionId: 'sess-1', key, recipient: 'jane@acme.example', confidence: 0.95 });
+    assert.equal(gate.run(gateInput(DRAFT_TOOL, toolInput)), undefined, 'token admits the draft with no block');
+  });
+  // Same valid token, but the recipient's ACCOUNT is later blocked (open deal):
+  // the account key derived from the email (domain_acme.example) must beat the token.
+  withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
+    review.recordApproval({ sessionId: 'sess-1', key, recipient: 'jane@acme.example', confidence: 0.95 });
+    dnc.recordDoNotContact({ key: 'domain_acme.example', scope: 'account', reason: 'account has an open deal' });
+    const result = gate.run(gateInput(DRAFT_TOOL, toolInput));
+    assert.ok(result && result.exitCode === 2, 'account-scope block must beat the valid token');
+    assert.match(result.stderr, /account is on the do-not-contact/i);
+  });
+});
+
 test('a benign HubSpot TASK create is NOT blocked (hard constraint)', () => {
   withEnv({ ESCC_AGENT_DATA_HOME: freshStateHome() }, () => {
     const result = gate.run(gateInput(HUBSPOT_TOOL, { objectType: 'tasks', properties: { hs_task_subject: 'Call Sam back next week' } }));

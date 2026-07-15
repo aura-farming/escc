@@ -828,3 +828,45 @@ untouched). Attestation fakeability is equivalent to the existing four-gate
 inputs — a dishonest caller could fabricate `records` too — and is now auditable
 on the token. ADR-0012 (fabrication firewall), ADR-0004 (`crm-operator` sole
 writer), and ADR-0016 (hint-only routing) remain in force. Ships as v1.9.1.
+
+## ADR-0021: One A-Z on-ramp for a single named target — orchestrate, don't add an agent
+
+**Status:** Accepted
+
+**Context.** A rep asking "research <business> and give me a plan of attack for it"
+had no single surface. `account-research` (`/research`) produces a brief and stops
+before any plan; `prospecting-pipeline` (`/prospect`) works a list / segment /
+territory, not one named target deeply; nothing emitted a sequenced plan of
+attack; and the natural phrasings ("plan of attack", "how do I get into <account>",
+"break into <account>", "game plan for <account>") routed nowhere. The specialist
+read-only agents (`account-researcher`, `prospect-researcher`, `competitor-analyst`,
+`warm-path-mapper`, `signal-scorer`) and the planner (`sales-planner`) already
+existed — the gap was orchestration, an artifact, and routing, not raw capability.
+
+**Decision.** Add a new orchestrator SKILL `account-attack-plan` (+ `/attack`) —
+**not a new agent.** It (0) resolves the canonical account (ADR-0018) and screens
+do-not-contact / contactability FIRST, before any research spend; (1) fans the
+existing read-only agents out in parallel across an explicit A-P research rubric,
+treating all fetched content as untrusted; (2) hands the consolidated findings to
+`sales-planner` for a sequenced multi-channel plan of attack — who first, channel,
+approved proof, one CTA, dates, objection pre-empts, and a silent-branch fallback;
+(3) drafts the first touches through the gated path (`cold-outreach` /
+`outreach-drafter` → `outbound-reviewer` → `escc outbound approve` → the send-gate)
+or stages the full sequence via `/escc-worklist`; and (4) persists open loops to
+`account-memory` and proposes CRM tasks via `crm-operator`. No new agent is
+introduced: the strongest research is a parallel fan-out of specialists, which is
+skill-orchestration work, and a redundant "attack" agent would violate the
+least-privilege, minimal-roster ethos.
+
+**Consequences.** One skill (68→69) and one command (70→71); routing gains
+high-precision attack-phrasing patterns placed above `account-research` (no shadow
+of the brief-only or list asks — verified by test). The capability is additive and
+read-only; it changes no enforcement surface. Every proof point is sourced from
+approved `product-knowledge` and scoring from `icp-profile`, so it inherits their
+firewalls; `crm-operator` stays the sole writer and every touch is draft-only
+behind the fail-closed send-gate. ADR-0012 (fabrication firewall), ADR-0004
+(crm-operator sole writer), ADR-0018 (canonical identity), and ADR-0020 (gated
+review) all remain in force. Ships alongside four review-hardening fixes
+(findValidApproval fail-closed on NaN confidence; account-scope do-not-contact
+enforced at the gate; `escc doctor` honest empty-state; worklist batch-pattern
+precision).

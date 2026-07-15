@@ -34,7 +34,7 @@ Activate this skill when:
 - Lead routing is unclear (territory, segment, or specialist assignment).
 
 Do **not** activate for outbound prospecting (use `prospecting-pipeline`), for leads already
-in active deal stages (use `discovery-prep` or `account-research`), or for re-engagement of
+in active deal stages (use `call-prep` or `account-research`), or for re-engagement of
 old recycled leads (use `outbound-sequences` with a re-engage cadence). This skill handles
 first-touch response only; ongoing cadence is `outbound-sequences`.
 
@@ -297,6 +297,6 @@ Step 7: CRM log: disqualify reason: non-commercial, logged via crm-operator.
   assignment).
 - **Writes via:** `crm-operator` (contact creation, lead score, SAL decision, owner assignment).
 - **Distinct from:** `prospecting-pipeline` (outbound, not inbound); `outbound-sequences`
-  (ongoing cadence, not first-touch); `discovery-prep` (meeting prep for leads already
+  (ongoing cadence, not first-touch); `call-prep` (meeting prep for leads already
   accepted and advancing).
 - Invoked by: `/inbound` command.

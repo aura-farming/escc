@@ -147,7 +147,7 @@ function markPreparedDone(id, options = {}) {
 
 function formatList(items) {
   if (!items.length) return 'No prepared items.';
-  return items.map(i => `  [${i.status}] ${i.title}${i.crmAsOf ? ` (CRM ${i.crmAsOf})` : ''}`).join('\n');
+  return items.map(i => `  [${i.status}] ${i.title}${i.crmAsOf ? ` (CRM ${i.crmAsOf})` : ''}\n      id: ${i.id}`).join('\n');
 }
 
 /**
@@ -175,6 +175,7 @@ function runWorklist(positional = [], flags = {}) {
     }
     if (action === 'list') {
       const items = listPreparedItems(flags.all ? {} : { status: 'open' });
+      if (flags.json) return { code: 0, text: JSON.stringify(items, null, 2), data: items };
       return { code: 0, text: formatList(items), data: items };
     }
     return { code: 1, text: `Unknown worklist action: ${action} (use add|list|done).`, data: null };

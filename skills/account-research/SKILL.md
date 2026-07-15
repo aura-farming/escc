@@ -260,8 +260,8 @@ Pre-flight: account-memory query for "Momentum Analytics"
   method.
 - **Persists findings to:** `account-memory` (durable intel store).
 - **Feeds:** `outreach-drafter`, `prospecting-pipeline`, `cold-outreach`,
-  `discovery-prep`, `competitor-battlecards`.
+  `call-prep`, `competitor-battlecards`.
 - **Distinct from:** `account-memory` (the store, not the research process);
-  `signal-scorer` (ICP scoring from signals, not the full brief); `discovery-prep`
+  `signal-scorer` (ICP scoring from signals, not the full brief); `call-prep`
   (meeting-specific coaching that consumes the brief).
 - Invoked by: `/research` command.
